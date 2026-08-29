@@ -6,7 +6,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const feed = document.querySelector(".reels-feed");
     const track = document.querySelector(".reels-track");
-    const slides = Array.from(document.querySelectorAll(".reel-slide"));
+    const slides = Array.from(
+        document.querySelectorAll(".reel-slide")
+    );
+
+    // RANDOMIZE REEL ORDER
+for (let i = slides.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+
+    [slides[i], slides[j]] = [slides[j], slides[i]];
+}
+
+// Put the shuffled reels back into the track
+slides.forEach(slide => {
+    track.appendChild(slide);
+});
+
     const upButton = document.querySelector(".reel-nav-up");
     const downButton = document.querySelector(".reel-nav-down");
     const toast = document.querySelector(".reel-toast");
@@ -15,9 +30,80 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
+
+    /* =====================================================
+       CURRENT / ACTIVE REEL
+    ===================================================== */
+
     let currentIndex = 0;
+    let activeIndex = 0;
+
     let isLocked = false;
     let unlockFallback;
+
+
+    function setActiveSlide(index) {
+
+        activeIndex = index;
+
+        slides.forEach((slide, i) => {
+
+            slide.classList.toggle(
+                "is-active",
+                i === activeIndex
+            );
+
+        });
+
+    }
+
+
+    /* =====================================================
+       REEL POSITION
+    ===================================================== */
+
+    function getSlideStep() {
+
+        return feed.clientHeight * 0.88;
+
+    }
+
+
+    function applyTrackPosition(animate = true) {
+
+        track.style.transition = animate
+            ? "transform 0.48s cubic-bezier(0.22, 0.68, 0.35, 1)"
+            : "none";
+
+        track.style.transform =
+            `translateY(-${currentIndex * getSlideStep()}px`;
+
+    }
+
+
+    /* =====================================================
+       LOCK / UNLOCK TRANSITIONS
+    ===================================================== */
+
+    function unlock() {
+
+        isLocked = false;
+
+    }
+
+
+    function finishTransition() {
+
+        window.clearTimeout(unlockFallback);
+
+        setActiveSlide(currentIndex);
+
+        unlock();
+
+        playCurrentSlide();
+
+    }
+
 
     function lock() {
 
@@ -25,55 +111,67 @@ document.addEventListener("DOMContentLoaded", () => {
 
         window.clearTimeout(unlockFallback);
 
-        /* Safety net in case transitionend never fires */
-        unlockFallback = window.setTimeout(unlock, 700);
+        unlockFallback =
+            window.setTimeout(
+                finishTransition,
+                650
+            );
 
     }
 
-    function unlock() {
-        isLocked = false;
-    }
 
-    track.addEventListener("transitionend", (event) => {
+    track.addEventListener(
+        "transitionend",
+        event => {
 
-        if (event.target !== track || event.propertyName !== "transform") {
-            return;
+            if (
+                event.target !== track ||
+                event.propertyName !== "transform"
+            ) {
+                return;
+            }
+
+            finishTransition();
+
         }
-
-        window.clearTimeout(unlockFallback);
-        unlock();
-
-    });
+    );
 
 
     /* =====================================================
        ORIENTATION DETECTION
-       (confirms/corrects the data-orientation guess once
-       the real video dimensions are known)
     ===================================================== */
 
     slides.forEach(slide => {
 
-        const video = slide.querySelector(".reel-video");
+        const video =
+            slide.querySelector(".reel-video");
 
         if (!video) {
             return;
         }
 
-        video.addEventListener("loadedmetadata", () => {
+        video.addEventListener(
+            "loadedmetadata",
+            () => {
 
-            if (video.videoWidth && video.videoHeight) {
+                if (
+                    video.videoWidth &&
+                    video.videoHeight
+                ) {
 
-                const orientation =
-                    video.videoHeight > video.videoWidth
-                        ? "portrait"
-                        : "landscape";
+                    const orientation =
+                        video.videoHeight >
+                        video.videoWidth
+                            ? "portrait"
+                            : "landscape";
 
-                slide.dataset.orientation = orientation;
+                    slide.dataset.orientation =
+                        orientation;
+
+                }
 
             }
-
-        });
+        );
 
     });
 
@@ -84,12 +182,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     slides.forEach(slide => {
 
-        const video = slide.querySelector(".reel-video");
-        const fill = slide.querySelector(".reel-progress-fill");
+        const video =
+            slide.querySelector(".reel-video");
+
+        const fill =
+            slide.querySelector(
+                ".reel-progress-fill"
+            );
 
         if (!video || !fill) {
             return;
         }
+
 
         function updateProgress() {
 
@@ -97,58 +201,128 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            const percent = (video.currentTime / video.duration) * 100;
-            fill.style.width = `${percent}%`;
+            const percent =
+                (video.currentTime /
+                    video.duration) * 100;
+
+            fill.style.width =
+                `${percent}%`;
 
         }
 
-        video.addEventListener("timeupdate", updateProgress);
-        video.addEventListener("loadedmetadata", updateProgress);
-        video.addEventListener("seeked", updateProgress);
+
+        video.addEventListener(
+            "timeupdate",
+            updateProgress
+        );
+
+        video.addEventListener(
+            "loadedmetadata",
+            updateProgress
+        );
+
+        video.addEventListener(
+            "seeked",
+            updateProgress
+        );
 
     });
 
 
     /* =====================================================
-       PAGING — ONE REEL AT A TIME
+       NAVIGATION BUTTONS
     ===================================================== */
 
     function updateNavButtons() {
 
-        upButton.disabled = currentIndex === 0;
-        downButton.disabled = currentIndex === slides.length - 1;
+        if (upButton) {
+
+            upButton.disabled =
+                currentIndex === 0;
+
+        }
+
+        if (downButton) {
+
+            downButton.disabled =
+                currentIndex ===
+                slides.length - 1;
+
+        }
 
     }
+
+
+    /* =====================================================
+       PLAY CURRENT REEL
+    ===================================================== */
 
     function playCurrentSlide() {
 
         slides.forEach((slide, i) => {
 
-            const video = slide.querySelector(".reel-video");
+            const video =
+                slide.querySelector(".reel-video");
 
             if (!video) {
                 return;
             }
 
+
             if (i === currentIndex) {
+
+                /*
+                 * Only autoplay if the user has not
+                 * manually paused this reel.
+                 */
 
                 if (!slide.dataset.userPaused) {
 
-                    video.play().catch(() => {});
-                    slide.classList.remove("is-paused");
+                    video.play()
+                        .then(() => {
+
+                            slide.classList.remove(
+                                "is-paused"
+                            );
+
+                        })
+                        .catch(() => {
+
+                            /*
+                             * Browser autoplay policy
+                             * may block playback.
+                             */
+
+                        });
 
                 }
 
             } else {
 
+                /*
+                 * Stop every reel that is not active.
+                 */
+
                 video.pause();
+
                 video.currentTime = 0;
+
+                slide.classList.remove(
+                    "is-paused"
+                );
+
+                delete slide.dataset.userPaused;
 
             }
 
         });
 
     }
+
+
+    /* =====================================================
+       GO TO REEL
+    ===================================================== */
 
     function goToIndex(index) {
 
@@ -156,7 +330,10 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        if (index < 0 || index >= slides.length) {
+        if (
+            index < 0 ||
+            index >= slides.length
+        ) {
             return;
         }
 
@@ -164,354 +341,665 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+
+        /*
+         * Clear the manual pause state of the
+         * previous reel so it can restart normally
+         * when revisited.
+         */
+
+        const previousSlide =
+            slides[currentIndex];
+
+        if (previousSlide) {
+
+            delete previousSlide.dataset.userPaused;
+
+        }
+
+
         currentIndex = index;
+
         lock();
 
-        track.style.transform = `translateY(-${currentIndex * 100}%)`;
+        applyTrackPosition(true);
 
         updateNavButtons();
-        playCurrentSlide();
 
     }
 
-    upButton.addEventListener("click", () => {
-        goToIndex(currentIndex - 1);
-    });
-
-    downButton.addEventListener("click", () => {
-        goToIndex(currentIndex + 1);
-    });
-
 
     /* =====================================================
-       WHEEL SCROLL — ONE REEL PER GESTURE
+       UP BUTTON
     ===================================================== */
 
-    feed.addEventListener(
-        "wheel",
-        (event) => {
+    if (upButton) {
 
-            event.preventDefault();
+        upButton.addEventListener(
+            "click",
+            () => {
 
-            if (Math.abs(event.deltaY) < 8) {
-                return;
+                goToIndex(
+                    currentIndex - 1
+                );
+
             }
+        );
 
-            if (event.deltaY > 0) {
-                goToIndex(currentIndex + 1);
-            } else {
-                goToIndex(currentIndex - 1);
-            }
-
-        },
-        { passive: false }
-    );
+    }
 
 
     /* =====================================================
-       TOUCH SWIPE — MOBILE
+       DOWN BUTTON
+    ===================================================== */
+
+    if (downButton) {
+
+        downButton.addEventListener(
+            "click",
+            () => {
+
+                goToIndex(
+                    currentIndex + 1
+                );
+
+            }
+        );
+
+    }
+
+
+   /* =====================================================
+   WHEEL SCROLL — ONE GESTURE = ONE REEL
+===================================================== */
+
+let wheelBlocked = false;
+
+feed.addEventListener(
+    "wheel",
+    event => {
+
+        event.preventDefault();
+
+        /*
+         * Ignore every wheel event while the current
+         * reel is moving.
+         */
+        if (wheelBlocked || isLocked) {
+            return;
+        }
+
+        /*
+         * Ignore extremely tiny movements.
+         */
+        if (Math.abs(event.deltaY) < 20) {
+            return;
+        }
+
+        /*
+         * Lock immediately.
+         */
+        wheelBlocked = true;
+
+        /*
+         * Move exactly ONE reel.
+         */
+        if (event.deltaY > 0) {
+
+            goToIndex(currentIndex + 1);
+
+        } else {
+
+            goToIndex(currentIndex - 1);
+
+        }
+
+        /*
+         * The CSS animation is 480ms.
+         * Give the track a little extra time so the
+         * remaining wheel burst cannot trigger another reel.
+         */
+        window.setTimeout(() => {
+
+            wheelBlocked = false;
+
+        }, 750);
+
+    },
+    {
+        passive: false
+    }
+);
+
+
+    /* =====================================================
+       TOUCH SWIPE
     ===================================================== */
 
     let touchStartY = 0;
 
+
     feed.addEventListener(
         "touchstart",
-        (event) => {
-            touchStartY = event.touches[0].clientY;
+        event => {
+
+            touchStartY =
+                event.touches[0].clientY;
+
         },
-        { passive: true }
+        {
+            passive: true
+        }
     );
+
 
     feed.addEventListener(
         "touchend",
-        (event) => {
+        event => {
 
-            const touchEndY = event.changedTouches[0].clientY;
-            const delta = touchStartY - touchEndY;
+            const touchEndY =
+                event.changedTouches[0].clientY;
+
+            const delta =
+                touchStartY - touchEndY;
+
 
             if (Math.abs(delta) < 50) {
                 return;
             }
 
+
             if (delta > 0) {
-                goToIndex(currentIndex + 1);
+
+                goToIndex(
+                    currentIndex + 1
+                );
+
             } else {
-                goToIndex(currentIndex - 1);
+
+                goToIndex(
+                    currentIndex - 1
+                );
+
             }
 
         },
-        { passive: true }
+        {
+            passive: true
+        }
     );
 
 
     /* =====================================================
-       KEYBOARD
+       KEYBOARD NAVIGATION
     ===================================================== */
 
-    document.addEventListener("keydown", (event) => {
+    document.addEventListener(
+        "keydown",
+        event => {
 
-        if (event.key === "ArrowDown") {
-            goToIndex(currentIndex + 1);
-        }
+            if (
+                event.key === "ArrowDown"
+            ) {
 
-        if (event.key === "ArrowUp") {
-            goToIndex(currentIndex - 1);
-        }
+                goToIndex(
+                    currentIndex + 1
+                );
 
-    });
+            }
 
 
-    /* =====================================================
-       PLAY / PAUSE ON CARD CLICK
-    ===================================================== */
+            if (
+                event.key === "ArrowUp"
+            ) {
 
-    document.querySelectorAll(".reel-card").forEach(card => {
-
-        const video = card.querySelector(".reel-video");
-        const slide = card.closest(".reel-slide");
-        const likeBtn = slide.querySelector(".reel-like-btn");
-        const burst = card.querySelector(".reel-like-burst");
-
-        let clickTimer = null;
-        let lastClickTime = 0;
-
-        function togglePlayPause() {
-
-            if (video.paused) {
-
-                video.play().catch(() => {});
-                slide.classList.remove("is-paused");
-                delete slide.dataset.userPaused;
-
-            } else {
-
-                video.pause();
-                slide.classList.add("is-paused");
-                slide.dataset.userPaused = "true";
+                goToIndex(
+                    currentIndex - 1
+                );
 
             }
 
         }
+    );
 
-        function likeFromDoubleTap() {
 
-            if (likeBtn && !likeBtn.classList.contains("is-liked")) {
+    /* =====================================================
+       PLAY / PAUSE + DOUBLE TAP LIKE
+    ===================================================== */
 
-                likeBtn.classList.add("is-liked");
+    document
+        .querySelectorAll(".reel-card")
+        .forEach(card => {
 
-                const countEl = likeBtn.querySelector(".reel-action-count");
+            const video =
+                card.querySelector(
+                    ".reel-video"
+                );
 
-                if (countEl) {
-                    const base = parseFloat(countEl.dataset.base);
-                    countEl.textContent = formatCount(base + 1);
+            const slide =
+                card.closest(
+                    ".reel-slide"
+                );
+
+            const likeBtn =
+                slide.querySelector(
+                    ".reel-like-btn"
+                );
+
+            const burst =
+                card.querySelector(
+                    ".reel-like-burst"
+                );
+
+            let clickTimer = null;
+            let lastClickTime = 0;
+
+
+            function togglePlayPause() {
+
+                if (video.paused) {
+
+                    video.play()
+                        .then(() => {
+
+                            slide.classList.remove(
+                                "is-paused"
+                            );
+
+                            delete slide.dataset.userPaused;
+
+                        })
+                        .catch(() => {});
+
+                } else {
+
+                    video.pause();
+
+                    slide.classList.add(
+                        "is-paused"
+                    );
+
+                    /*
+                     * Remember that the user manually
+                     * paused this reel.
+                     */
+
+                    slide.dataset.userPaused =
+                        "true";
+
                 }
 
             }
 
-            if (likeBtn) {
 
-                likeBtn.classList.remove("pop");
-                void likeBtn.offsetWidth;
-                likeBtn.classList.add("pop");
+            function likeFromDoubleTap() {
+
+                if (
+                    likeBtn &&
+                    !likeBtn.classList.contains(
+                        "is-liked"
+                    )
+                ) {
+
+                    likeBtn.classList.add(
+                        "is-liked"
+                    );
+
+
+                    const countEl =
+                        likeBtn.querySelector(
+                            ".reel-action-count"
+                        );
+
+
+                    if (countEl) {
+
+                        const base =
+                            parseFloat(
+                                countEl.dataset.base
+                            );
+
+                        countEl.textContent =
+                            formatCount(
+                                base + 1
+                            );
+
+                    }
+
+                }
+
+
+                if (likeBtn) {
+
+                    likeBtn.classList.remove(
+                        "pop"
+                    );
+
+                    void likeBtn.offsetWidth;
+
+                    likeBtn.classList.add(
+                        "pop"
+                    );
+
+                }
+
+
+                if (burst) {
+
+                    burst.classList.remove(
+                        "burst"
+                    );
+
+                    void burst.offsetWidth;
+
+                    burst.classList.add(
+                        "burst"
+                    );
+
+                }
 
             }
 
-            if (burst) {
 
-                burst.classList.remove("burst");
-                void burst.offsetWidth;
-                burst.classList.add("burst");
+            card.addEventListener(
+                "click",
+                () => {
 
-            }
+                    const now =
+                        Date.now();
 
-        }
+                    const delta =
+                        now -
+                        lastClickTime;
 
-        card.addEventListener("click", () => {
 
-            const now = Date.now();
-            const delta = now - lastClickTime;
+                    if (
+                        delta > 0 &&
+                        delta < 300
+                    ) {
 
-            if (delta > 0 && delta < 300) {
+                        window.clearTimeout(
+                            clickTimer
+                        );
 
-                window.clearTimeout(clickTimer);
-                lastClickTime = 0;
-                likeFromDoubleTap();
-                return;
+                        lastClickTime = 0;
 
-            }
+                        likeFromDoubleTap();
 
-            lastClickTime = now;
+                        return;
 
-            clickTimer = window.setTimeout(() => {
-                togglePlayPause();
-            }, 260);
+                    }
+
+
+                    lastClickTime = now;
+
+
+                    clickTimer =
+                        window.setTimeout(
+                            () => {
+
+                                togglePlayPause();
+
+                            },
+                            260
+                        );
+
+                }
+            );
 
         });
-
-    });
 
 
     /* =====================================================
        MUTE BUTTON
     ===================================================== */
 
-    document.querySelectorAll(".reel-mute-btn").forEach(button => {
+    document
+        .querySelectorAll(".reel-mute-btn")
+        .forEach(button => {
 
-        button.addEventListener("click", (event) => {
+            button.addEventListener(
+                "click",
+                event => {
 
-            event.stopPropagation();
+                    event.stopPropagation();
 
-            const video =
-                button.closest(".reel-card").querySelector(".reel-video");
 
-            video.muted = !video.muted;
+                    const video =
+                        button
+                            .closest(".reel-card")
+                            .querySelector(
+                                ".reel-video"
+                            );
 
-            if (video.muted) {
 
-                button.innerHTML = `
-                    <svg viewBox="0 0 24 24">
-                        <path d="M4 10v4h4l5 4V6l-5 4H4z"></path>
-                        <path d="M16 9c1 1 1 5 0 6"></path>
-                    </svg>
-                `;
+                    video.muted =
+                        !video.muted;
 
-            } else {
 
-                button.innerHTML = `
-                    <svg viewBox="0 0 24 24">
-                        <path d="M4 10v4h4l5 4V6l-5 4H4z"></path>
-                        <path d="M16 8c2 2 2 6 0 8"></path>
-                        <path d="M19 5c3 3 3 11 0 14"></path>
-                    </svg>
-                `;
+                    if (video.muted) {
 
-            }
+                        button.innerHTML = `
+                            <svg viewBox="0 0 24 24">
+                                <path d="M4 10v4h4l5 4V6l-5 4H4z"></path>
+                                <path d="M16 9c1 1 1 5 0 6"></path>
+                            </svg>
+                        `;
+
+                    } else {
+
+                        button.innerHTML = `
+                            <svg viewBox="0 0 24 24">
+                                <path d="M4 10v4h4l5 4V6l-5 4H4z"></path>
+                                <path d="M16 8c2 2 2 6 0 8"></path>
+                                <path d="M19 5c3 3 3 11 0 14"></path>
+                            </svg>
+                        `;
+
+                    }
+
+                }
+            );
 
         });
-
-    });
 
 
     /* =====================================================
        LIKE BUTTON
     ===================================================== */
 
-    document.querySelectorAll(".reel-like-btn").forEach(button => {
+    document
+        .querySelectorAll(".reel-like-btn")
+        .forEach(button => {
 
-        button.addEventListener("click", (event) => {
+            button.addEventListener(
+                "click",
+                event => {
 
-            event.stopPropagation();
+                    event.stopPropagation();
 
-            button.classList.toggle("is-liked");
 
-            button.classList.remove("pop");
-            void button.offsetWidth;
-            button.classList.add("pop");
+                    button.classList.toggle(
+                        "is-liked"
+                    );
 
-            const countEl = button.querySelector(".reel-action-count");
 
-            if (countEl) {
+                    button.classList.remove(
+                        "pop"
+                    );
 
-                const base = parseFloat(countEl.dataset.base);
-                const liked = button.classList.contains("is-liked");
+                    void button.offsetWidth;
 
-                countEl.textContent = formatCount(liked ? base + 1 : base);
+                    button.classList.add(
+                        "pop"
+                    );
 
-            }
+
+                    const countEl =
+                        button.querySelector(
+                            ".reel-action-count"
+                        );
+
+
+                    if (countEl) {
+
+                        const base =
+                            parseFloat(
+                                countEl.dataset.base
+                            );
+
+                        const liked =
+                            button.classList.contains(
+                                "is-liked"
+                            );
+
+                        countEl.textContent =
+                            formatCount(
+                                liked
+                                    ? base + 1
+                                    : base
+                            );
+
+                    }
+
+                }
+            );
 
         });
-
-    });
 
 
     /* =====================================================
        SAVE BUTTON
     ===================================================== */
 
-    document.querySelectorAll(".reel-save-btn").forEach(button => {
+    document
+        .querySelectorAll(".reel-save-btn")
+        .forEach(button => {
 
-        button.addEventListener("click", (event) => {
+            button.addEventListener(
+                "click",
+                event => {
 
-            event.stopPropagation();
+                    event.stopPropagation();
 
-            button.classList.toggle("is-saved");
 
-            showToast(
-                button.classList.contains("is-saved")
-                    ? "Saved"
-                    : "Removed from saved"
+                    button.classList.toggle(
+                        "is-saved"
+                    );
+
+
+                    showToast(
+                        button.classList.contains(
+                            "is-saved"
+                        )
+                            ? "Saved"
+                            : "Removed from saved"
+                    );
+
+                }
             );
 
         });
-
-    });
 
 
     /* =====================================================
        SHARE BUTTON
     ===================================================== */
 
-    document.querySelectorAll(".reel-share-btn").forEach(button => {
+    document
+        .querySelectorAll(".reel-share-btn")
+        .forEach(button => {
 
-        button.addEventListener("click", async (event) => {
+            button.addEventListener(
+                "click",
+                async event => {
 
-            event.stopPropagation();
+                    event.stopPropagation();
 
-            if (navigator.share) {
 
-                try {
+                    if (navigator.share) {
 
-                    await navigator.share({
-                        title: "Twigg",
-                        text: "Check out this reel on Twigg."
-                    });
+                        try {
 
-                } catch (error) {
+                            await navigator.share({
+                                title: "Twigg",
+                                text: "Check out this reel on Twigg."
+                            });
 
-                    /* user closed the share menu */
+                        } catch (error) {
+
+                            /*
+                             * User closed share menu.
+                             */
+
+                        }
+
+                    } else {
+
+                        try {
+
+                            await navigator.clipboard
+                                .writeText(
+                                    window.location.href
+                                );
+
+                            showToast(
+                                "Link copied!"
+                            );
+
+                        } catch (error) {
+
+                            showToast(
+                                "Share is not supported in this browser."
+                            );
+
+                        }
+
+                    }
 
                 }
-
-            } else {
-
-                try {
-
-                    await navigator.clipboard.writeText(window.location.href);
-                    showToast("Link copied!");
-
-                } catch (error) {
-
-                    showToast("Share is not supported in this browser.");
-
-                }
-
-            }
+            );
 
         });
-
-    });
 
 
     /* =====================================================
        REPORT BUTTON
     ===================================================== */
 
-    document.querySelectorAll(".reel-report-btn").forEach(button => {
+    document
+        .querySelectorAll(".reel-report-btn")
+        .forEach(button => {
 
-        button.addEventListener("click", (event) => {
+            button.addEventListener(
+                "click",
+                event => {
 
-            event.stopPropagation();
+                    event.stopPropagation();
 
-            if (button.classList.contains("is-reported")) {
-                return;
-            }
 
-            button.classList.add("is-reported");
-            showToast("Reported. Thanks for letting us know.");
+                    if (
+                        button.classList.contains(
+                            "is-reported"
+                        )
+                    ) {
+                        return;
+                    }
+
+
+                    button.classList.add(
+                        "is-reported"
+                    );
+
+
+                    showToast(
+                        "Reported. Thanks for letting us know."
+                    );
+
+                }
+            );
 
         });
-
-    });
 
 
     /* =====================================================
@@ -520,32 +1008,58 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let toastTimeout;
 
+
     function showToast(message) {
 
         if (!toast) {
             return;
         }
 
-        toast.textContent = message;
-        toast.classList.add("is-visible");
 
-        window.clearTimeout(toastTimeout);
+        toast.textContent =
+            message;
 
-        toastTimeout = window.setTimeout(() => {
-            toast.classList.remove("is-visible");
-        }, 1800);
+
+        toast.classList.add(
+            "is-visible"
+        );
+
+
+        window.clearTimeout(
+            toastTimeout
+        );
+
+
+        toastTimeout =
+            window.setTimeout(
+                () => {
+
+                    toast.classList.remove(
+                        "is-visible"
+                    );
+
+                },
+                1800
+            );
 
     }
 
 
     /* =====================================================
-       HELPERS
+       HELPER
     ===================================================== */
 
     function formatCount(num) {
 
         if (num >= 1000) {
-            return (num / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+
+            return (
+                (num / 1000)
+                    .toFixed(1)
+                    .replace(/\.0$/, "")
+                + "k"
+            );
+
         }
 
         return String(num);
@@ -554,39 +1068,73 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =====================================================
-       INIT
+       INITIALIZE
     ===================================================== */
 
+    setActiveSlide(0);
+
     updateNavButtons();
+
+    applyTrackPosition(false);
+
     playCurrentSlide();
+
+
+    /* =====================================================
+       RESIZE
+    ===================================================== */
+
+    window.addEventListener(
+        "resize",
+        () => {
+
+            applyTrackPosition(false);
+
+        }
+    );
 
 });
 
 
 /* =========================================================
-   NAVIGATION ACTIVE STATE (sidebar)
+   NAVIGATION ACTIVE STATE
 ========================================================= */
 
 document
     .querySelectorAll(".nav-item")
     .forEach(item => {
 
-        item.addEventListener("click", function (event) {
+        item.addEventListener(
+            "click",
+            function(event) {
 
-            if (this.getAttribute("href") === "#") {
+                if (
+                    this.getAttribute("href") === "#"
+                ) {
 
-                event.preventDefault();
+                    event.preventDefault();
 
-                document
-                    .querySelectorAll(".nav-item")
-                    .forEach(nav => {
-                        nav.classList.remove("active");
-                    });
 
-                this.classList.add("active");
+                    document
+                        .querySelectorAll(".nav-item")
+                        .forEach(nav => {
+
+                            nav.classList.remove(
+                                "active"
+                            );
+
+                        });
+
+
+                    this.classList.add(
+                        "active"
+                    );
+
+                }
 
             }
-
-        });
+        );
 
     });
+
+    
