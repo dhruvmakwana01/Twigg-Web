@@ -16,7 +16,34 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     let currentIndex = 0;
-    let isAnimating = false;
+    let isLocked = false;
+    let unlockFallback;
+
+    function lock() {
+
+        isLocked = true;
+
+        window.clearTimeout(unlockFallback);
+
+        /* Safety net in case transitionend never fires */
+        unlockFallback = window.setTimeout(unlock, 700);
+
+    }
+
+    function unlock() {
+        isLocked = false;
+    }
+
+    track.addEventListener("transitionend", (event) => {
+
+        if (event.target !== track || event.propertyName !== "transform") {
+            return;
+        }
+
+        window.clearTimeout(unlockFallback);
+        unlock();
+
+    });
 
 
     /* =====================================================
@@ -47,6 +74,37 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
         });
+
+    });
+
+
+    /* =====================================================
+       VIDEO PROGRESS BAR
+    ===================================================== */
+
+    slides.forEach(slide => {
+
+        const video = slide.querySelector(".reel-video");
+        const fill = slide.querySelector(".reel-progress-fill");
+
+        if (!video || !fill) {
+            return;
+        }
+
+        function updateProgress() {
+
+            if (!video.duration) {
+                return;
+            }
+
+            const percent = (video.currentTime / video.duration) * 100;
+            fill.style.width = `${percent}%`;
+
+        }
+
+        video.addEventListener("timeupdate", updateProgress);
+        video.addEventListener("loadedmetadata", updateProgress);
+        video.addEventListener("seeked", updateProgress);
 
     });
 
@@ -94,7 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function goToIndex(index) {
 
-        if (isAnimating) {
+        if (isLocked) {
             return;
         }
 
@@ -102,17 +160,17 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        if (index === currentIndex) {
+            return;
+        }
+
         currentIndex = index;
-        isAnimating = true;
+        lock();
 
         track.style.transform = `translateY(-${currentIndex * 100}%)`;
 
         updateNavButtons();
         playCurrentSlide();
-
-        window.setTimeout(() => {
-            isAnimating = false;
-        }, 500);
 
     }
 
@@ -129,40 +187,25 @@ document.addEventListener("DOMContentLoaded", () => {
        WHEEL SCROLL — ONE REEL PER GESTURE
     ===================================================== */
 
-    let wheelLocked = false;
+    feed.addEventListener(
+        "wheel",
+        (event) => {
 
-feed.addEventListener(
-    "wheel",
-    (event) => {
-        event.preventDefault();
+            event.preventDefault();
 
-        if (wheelLocked || isAnimating) {
-            return;
-        }
+            if (Math.abs(event.deltaY) < 8) {
+                return;
+            }
 
-        if (Math.abs(event.deltaY) < 8) {
-            return;
-        }
+            if (event.deltaY > 0) {
+                goToIndex(currentIndex + 1);
+            } else {
+                goToIndex(currentIndex - 1);
+            }
 
-        wheelLocked = true;
-
-        if (event.deltaY > 0) {
-            goToIndex(currentIndex + 1);
-        } else {
-            goToIndex(currentIndex - 1);
-        }
-
-        /*
-         * Keep the wheel locked long enough that
-         * even a very hard/fast scroll counts as
-         * only ONE reel movement.
-         */
-        window.setTimeout(() => {
-            wheelLocked = false;
-        }, 650);
-    },
-    { passive: false }
-);
+        },
+        { passive: false }
+    );
 
 
     /* =====================================================
@@ -226,8 +269,13 @@ feed.addEventListener(
 
         const video = card.querySelector(".reel-video");
         const slide = card.closest(".reel-slide");
+        const likeBtn = slide.querySelector(".reel-like-btn");
+        const burst = card.querySelector(".reel-like-burst");
 
-        card.addEventListener("click", () => {
+        let clickTimer = null;
+        let lastClickTime = 0;
+
+        function togglePlayPause() {
 
             if (video.paused) {
 
@@ -242,6 +290,61 @@ feed.addEventListener(
                 slide.dataset.userPaused = "true";
 
             }
+
+        }
+
+        function likeFromDoubleTap() {
+
+            if (likeBtn && !likeBtn.classList.contains("is-liked")) {
+
+                likeBtn.classList.add("is-liked");
+
+                const countEl = likeBtn.querySelector(".reel-action-count");
+
+                if (countEl) {
+                    const base = parseFloat(countEl.dataset.base);
+                    countEl.textContent = formatCount(base + 1);
+                }
+
+            }
+
+            if (likeBtn) {
+
+                likeBtn.classList.remove("pop");
+                void likeBtn.offsetWidth;
+                likeBtn.classList.add("pop");
+
+            }
+
+            if (burst) {
+
+                burst.classList.remove("burst");
+                void burst.offsetWidth;
+                burst.classList.add("burst");
+
+            }
+
+        }
+
+        card.addEventListener("click", () => {
+
+            const now = Date.now();
+            const delta = now - lastClickTime;
+
+            if (delta > 0 && delta < 300) {
+
+                window.clearTimeout(clickTimer);
+                lastClickTime = 0;
+                likeFromDoubleTap();
+                return;
+
+            }
+
+            lastClickTime = now;
+
+            clickTimer = window.setTimeout(() => {
+                togglePlayPause();
+            }, 260);
 
         });
 
