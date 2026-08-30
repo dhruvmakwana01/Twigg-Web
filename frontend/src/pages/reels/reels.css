@@ -438,7 +438,7 @@ body {
 
 
 
-background 0.2s ease,
+        background 0.2s ease,
 
 
 
@@ -567,85 +567,37 @@ background 0.2s ease,
 
 
 .reels-feed {
-
-
-
+    --reel-slot: 88vh;
     width: 100%;
-
-
-
     height: 100%;
-
-
-
     overflow: hidden;
-
-
-
     position: relative;
-
-
-
+    padding-top: 6vh;
+    padding-bottom: 6vh;
+    box-sizing: border-box;
 }
 
 
 
 .reels-track {
-
-
-
-    height: 100%;
-
-
-
+    height: auto;
+    min-height: 0;
     display: flex;
-
-
-
     flex-direction: column;
-
-
-
     transition: transform 0.48s cubic-bezier(0.22, 0.68, 0.35, 1);
-
-
-
     will-change: transform;
-
-
-
 }
 
 
 
 .reel-slide {
-
-
-
-    height: 100%;
-
-
-
+    height: var(--reel-slot);
+    flex: 0 0 var(--reel-slot);
     width: 100%;
-
-
-
-    flex: 0 0 100%;
-
-
-
     display: flex;
-
-
-
     align-items: center;
-
-
-
     justify-content: center;
-
-
-
+    overflow: visible;
 }
 
 
@@ -720,7 +672,7 @@ background 0.2s ease,
 
 
 
-    transform: translateX(10px);
+    transform: translate(10px, -100px);
 
 
 
@@ -769,6 +721,24 @@ background 0.2s ease,
 
 
    toward center instead of leaving a visual gap on the left. */
+/* Active reel only: peeking reels show video, not metadata/actions. */
+.reel-info-outside,
+.reel-info-overlay,
+.reel-actions {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.reel-slide.is-active .reel-info-outside,
+.reel-slide.is-active .reel-info-overlay,
+.reel-slide.is-active .reel-actions {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
 
 
 
@@ -846,7 +816,7 @@ background 0.2s ease,
 
 
 
-    transform: translateX(10px) scale(1.05);
+    transform: translate(10px, -100px) scale(1.05);
 
 
 
@@ -1315,39 +1285,14 @@ background 0.2s ease,
 
 
 .reel-card {
-
-
-
     position: relative;
-
-
-
     flex-shrink: 0;
-
-
-
     border-radius: 22px;
-
-
-
     overflow: hidden;
-
-
-
     background: #000000;
-
-
-
     cursor: pointer;
-
-
-
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22);
-
-
-
 }
-
 
 
 .reel-slide[data-orientation="portrait"] .reel-card {
@@ -1387,29 +1332,15 @@ background 0.2s ease,
 
 
 .reel-video {
-
-
-
     display: block;
-
-
-
     width: 100%;
-
-
-
     height: 100%;
-
-
-
     object-fit: cover;
-
-
-
     background: #111111;
-
-
-
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
 }
 
 
@@ -1854,7 +1785,7 @@ background 0.2s ease,
 
 
 
-background 0.2s ease;
+        background 0.2s ease;
 
 
 
@@ -3186,24 +3117,6 @@ background 0.2s ease;
 
     }
 
-
-
-    .action-button {
-
-
-
-        width: 30px;
-
-
-
-        height: 30px;
-
-
-
-    }
-
-
-
     .reel-row {
 
 
@@ -3273,236 +3186,13 @@ background 0.2s ease;
 
 
 }
-
-/* =========================================================
-   REELS — PEEKING NEIGHBOURING REELS + BLURRED FILL
-   ========================================================= */
-
-.reels-feed {
-    --reel-slot: 88vh;
-    padding-top: 6vh;
-    box-sizing: border-box;
-}
-
-.reels-track {
-    height: auto;
-    min-height: 0;
-}
-
-.reel-slide {
-    height: var(--reel-slot);
-    flex: 0 0 var(--reel-slot);
-    overflow: visible;
-}
-
-/* The real video keeps its aspect ratio. The blurred copy fills the
-   otherwise empty space behind it. */
-.reel-card {
-    isolation: isolate;
-    background: #111111;
-}
-
-.reel-video-bg {
+.line-mask {
     position: absolute;
-    inset: -28px;
-    width: calc(100% + 56px);
-    height: calc(100% + 56px);
-    object-fit: cover;
-    z-index: 0;
-    filter: blur(24px) saturate(1.12);
-    transform: scale(1.06);
-    opacity: 0.72;
-    pointer-events: none;
-}
-
-.reel-video {
-    position: relative;
-    z-index: 1;
-    object-fit: contain;
-    background: transparent;
-}
-
-/* Soft gradient treatment at the top and bottom of the blurred fill. */
-.reel-card::before,
-.reel-card::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    z-index: 2;
-    pointer-events: none;
-}
-
-.reel-card::before {
     top: 0;
-    height: 24%;
-    background: linear-gradient(
-        to bottom,
-        rgba(0, 0, 0, 0.34),
-        rgba(0, 0, 0, 0.04) 72%,
-        transparent
-    );
-}
-
-.reel-card::after {
     bottom: 0;
-    height: 24%;
-    background: linear-gradient(
-        to top,
-        rgba(0, 0, 0, 0.34),
-        rgba(0, 0, 0, 0.04) 72%,
-        transparent
-    );
-}
-
-/* Only the completely visible reel gets its metadata and action rail. */
-.reel-info-outside,
-.reel-info-overlay,
-.reel-actions {
-    opacity: 0;
-    visibility: hidden;
+    right: 84px;
+    width: 90px;
+    background: #ffffff;
+    z-index: 40;
     pointer-events: none;
-    transition: opacity 0.2s ease, visibility 0.2s ease;
-}
-
-.reel-slide.is-active .reel-info-outside,
-.reel-slide.is-active .reel-info-overlay,
-.reel-slide.is-active .reel-actions {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
-}
-
-/* Preserve the original orientation-specific placement. */
-.reel-slide[data-orientation="landscape"] .reel-info-outside {
-    display: none;
-}
-
-.reel-slide[data-orientation="landscape"] .reel-info-overlay {
-    display: block;
-}
-
-.reel-slide[data-orientation="portrait"] .reel-info-overlay {
-    display: none;
-}
-
-/* On small screens, put portrait metadata inside the active card too. */
-@media (max-width: 500px) {
-    .reel-slide[data-orientation="portrait"] .reel-info-outside {
-        display: block;
-        position: absolute;
-        left: 14px;
-        bottom: 18px;
-        width: auto;
-        max-width: 72%;
-        z-index: 6;
-        color: #ffffff;
-    }
-
-    .reel-slide[data-orientation="portrait"] .reel-info-outside .reel-service-name,
-    .reel-slide[data-orientation="portrait"] .reel-info-outside .reel-category,
-    .reel-slide[data-orientation="portrait"] .reel-info-outside .reel-rating-value,
-    .reel-slide[data-orientation="portrait"] .reel-info-outside .reel-review-count {
-        color: #ffffff;
-        text-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
-    }
-
-    .reel-slide[data-orientation="portrait"] .reel-info-outside .reel-category {
-        color: rgba(255, 255, 255, 0.85);
-    }
-
-    .reel-slide[data-orientation="portrait"] .reel-info-outside .reel-review-count {
-        color: rgba(255, 255, 255, 0.8);
-    }
-}
-
-/* =========================================================
-   REELS — FINAL ORIENTATION / SPACING FIX
-   Keep the original card sizes. Do not enlarge landscape reels.
-   The reel slot remains the original 88vh paging distance.
-========================================================= */
-.reels-feed {
-    --reel-slot: 88vh;
-}
-
-.reel-slide {
-    height: var(--reel-slot);
-    flex: 0 0 var(--reel-slot);
-    overflow: visible;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Keep the original portrait size. */
-.reel-slide[data-orientation="portrait"] .reel-card {
-    width: 440px;
-    height: min(85vh, 800px);
-    aspect-ratio: 9 / 16;
-}
-
-/* Keep landscape at its original size; never stretch it to portrait height. */
-.reel-slide[data-orientation="landscape"] .reel-card {
-    width: min(64vw, 860px);
-    aspect-ratio: 16 / 9;
-    height: auto;
-}
-
-/* The actual media fills the card without changing the card's dimensions. */
-.reel-video {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-/* Matching poster aspect ratios. */
-.reel-slide[data-orientation="portrait"] .reel-video {
-    aspect-ratio: 9 / 16;
-}
-
-.reel-slide[data-orientation="landscape"] .reel-video {
-    aspect-ratio: 16 / 9;
-}
-
-
-/* =========================================================
-   REELS — VIDEO ONLY
-   No poster images, no blurred duplicate video background.
-========================================================= */
-.reel-card {
-    background: #000000;
-}
-
-.reel-video {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    background: #000000;
-}
-
-.reel-video-bg {
-    display: none !important;
-}
-
-.reel-slide[data-orientation="portrait"] .reel-video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.reel-slide[data-orientation="landscape"] .reel-video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* PORTRAIT INFO — MOVE HIGHER */
-
-.reel-slide[data-orientation="portrait"] .reel-info-outside {
-    transform: translate(10px, -80px);
-}
-
-.reel-slide[data-orientation="portrait"] .reel-info-outside:hover {
-    transform: translate(10px, -80px) scale(1.05);
 }
