@@ -1,1084 +1,1303 @@
-/* =========================================================
-   RESET
-========================================================= */
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-html,
-body {
-    width: 100%;
-    height: 100%;
-}
-
-body {
-    overflow: hidden;
-    background: #f7f7f5;
-    color: #111;
-
-    font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        Helvetica,
-        Arial,
-        sans-serif;
-}
-
-
-/* =========================================================
-   BACKGROUND
-========================================================= */
-
-.background {
-    position: fixed;
-    inset: 0;
-    overflow: hidden;
-
-    background:
-        radial-gradient(
-            circle at 15% 20%,
-            rgba(185, 0, 102, 0.045),
-            transparent 28%
-        ),
-        radial-gradient(
-            circle at 85% 25%,
-            rgba(251, 8, 56, 0.045),
-            transparent 28%
-        ),
-        radial-gradient(
-            circle at 18% 82%,
-            rgba(185, 0, 102, 0.055),
-            transparent 30%
-        ),
-        radial-gradient(
-            circle at 84% 78%,
-            rgba(246, 128, 30, 0.075),
-            transparent 32%
-        );
-
-    pointer-events: none;
-}
-
-
-/* =========================================================
-   GRADIENT ORBS
-========================================================= */
-
-.orb {
-    position: absolute;
-    border-radius: 50%;
-
-    animation:
-        float 12s ease-in-out infinite;
-}
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twigg</title>
 
-/* =========================================================
-   ORB ONE — BOTTOM RIGHT
-========================================================= */
+    <link rel="stylesheet" href="home.css">
+</head>
 
-.orb-one {
-    width: 430px;
-    height: 430px;
+<body>
 
-    right: -170px;
-    bottom: -160px;
-
-    background:
-        radial-gradient(
-            circle at 40% 40%,
-            #f6801e,
-            #fb0838 48%,
-            transparent 72%
-        );
+    <!-- =========================================================
+         SIDEBAR
+    ========================================================= -->
 
-    filter: blur(2px);
+    <aside class="sidebar">
 
-    opacity: 0.14;
+        <div class="logo">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="225 425 630 240" width="100%" height="auto"
+                preserveAspectRatio="xMidYMid meet">
+                <defs>
 
-    animation-delay: -4s;
-}
+                    <linearGradient id="gradient1" gradientUnits="userSpaceOnUse" x1="217.2762" y1="575.5398"
+                        x2="365.8892" y2="438.8525">
+                        <stop offset="0" stop-color="#B90066" />
+                        <stop offset="0.5335" stop-color="#FB0838" />
+                        <stop offset="1" stop-color="#F6801E" />
+                    </linearGradient>
 
+                    <linearGradient id="gradient2" gradientUnits="userSpaceOnUse" x1="246.1549" y1="606.9382"
+                        x2="394.7679" y2="470.2509">
+                        <stop offset="0" stop-color="#B90066" />
+                        <stop offset="0.5335" stop-color="#FB0838" />
+                        <stop offset="1" stop-color="#F6801E" />
+                    </linearGradient>
 
-/* =========================================================
-   ORB TWO — LOWER LEFT
-========================================================= */
+                    <linearGradient id="gradient3" gradientUnits="userSpaceOnUse" x1="290.7614" y1="655.4365"
+                        x2="439.3744" y2="518.7493">
+                        <stop offset="0" stop-color="#B90066" />
+                        <stop offset="0.5335" stop-color="#FB0838" />
+                        <stop offset="1" stop-color="#F6801E" />
+                    </linearGradient>
 
-.orb-two {
-    width: 190px;
-    height: 190px;
+                </defs>
 
-    left: 14%;
-    bottom: 8%;
+                <!-- TWIGG WORDMARK -->
 
-    background:
-        linear-gradient(
-            135deg,
-            #b90066,
-            #fb0838,
-            #f6801e
-        );
+                <g fill="#000000">
 
-    filter: blur(55px);
+                    <path
+                        d="M619.3,550.7l-15.8-43.5c-1-2.9-3.8-4.8-6.8-4.8h0c-3.1,0-5.8,1.9-6.8,4.8l-15.8,43.5l-18-48.2H538l28.9,71.8c1.1,2.8,3.8,4.6,6.7,4.6h0.3c3,0,5.7-1.8,6.8-4.6l16-40.9l16,40.9c1.1,2.8,3.8,4.6,6.8,4.6h0.3c3,0,5.6-1.8,6.7-4.6l28.9-71.8h-18.1L619.3,550.7z" />
 
-    opacity: 0.075;
+                    <rect x="662.4" y="502.5" width="17.5" height="76.4" />
 
-    animation-delay: -7s;
-}
+                    <path
+                        d="M671.1,467.5c-3,0-5.4,1-7.4,3c-2,2-2.9,4.5-2.9,7.5c0,3,1,5.5,2.9,7.5c2,2,4.4,3,7.4,3c3.1,0,5.6-1,7.5-3c1.9-2,2.9-4.5,2.9-7.5c0-3-1-5.5-2.9-7.5C676.7,468.5,674.2,467.5,671.1,467.5z" />
 
+                    <path
+                        d="M727.5,500.8c-20.3,0-36.7,16.4-36.7,36.7s16.4,36.7,36.7,36.7c20.3,0,36.7-16.4,36.7-36.7c0-6.3-1.6-12.2-4.4-17.4l4.4-2.5V504h-21.9C737.7,502,732.7,500.8,727.5,500.8z M727.5,557.4c-11,0-19.9-8.9-19.9-19.9s8.9-19.9,19.9-19.9c11,0,19.9,8.9,19.9,19.9S738.5,557.4,727.5,557.4z" />
 
-/* =========================================================
-   ORB THREE — UPPER RIGHT
-========================================================= */
+                    <path
+                        d="M727.5,597.6c-11,0-19.9-8.9-19.9-19.9h-16.8c0,20.3,16.4,36.7,36.7,36.7c20.3,0,36.7-16.4,36.7-36.7h-16.8C747.4,588.7,738.5,597.6,727.5,597.6z" />
 
-.background::before {
-    content: "";
+                    <path
+                        d="M813.6,597.6c-11,0-19.9-8.9-19.9-19.9h-16.8c0,20.3,16.4,36.7,36.7,36.7c20.3,0,36.7-16.4,36.7-36.7h-16.8C833.5,588.7,824.6,597.6,813.6,597.6z" />
 
-    position: absolute;
+                    <path
+                        d="M850.3,504h-21.9c-4.5-2-9.5-3.1-14.8-3.1c-20.3,0-36.7,16.4-36.7,36.7s16.4,36.7,36.7,36.7c20.3,0,36.7-16.4,36.7-36.7c0-6.3-1.6-12.2-4.4-17.4l4.4-2.5V504z M813.6,557.4c-11,0-19.9-8.9-19.9-19.9s8.9-19.9,19.9-19.9c11,0,19.9,8.9,19.9,19.9S824.6,557.4,813.6,557.4z" />
 
-    width: 220px;
-    height: 220px;
+                    <polygon
+                        points="515.4,478 497.9,478 497.9,502.5 484.4,502.5 484.4,518.4 497.9,518.4 497.9,578.8 515.4,578.8 515.4,518.4 528.9,518.4 528.9,502.5 515.4,502.5" />
 
-    right: 10%;
-    top: 12%;
+                </g>
 
-    border-radius: 50%;
 
-    background:
-        radial-gradient(
-            circle,
-            rgba(185, 0, 102, 0.13),
-            rgba(251, 8, 56, 0.055) 45%,
-            transparent 72%
-        );
+                <!-- TWIGG SYMBOL -->
 
-    filter: blur(35px);
+                <path fill="url(#gradient1)"
+                    d="M295.2,567.6v-130c-38.4,15.1-65.5,52.5-65.5,96.2c0,27.6,10.8,52.6,28.4,71.2l23.7-13.9C290.1,586.1,295.2,577.2,295.2,567.6z" />
 
-    animation:
-        floatOrbThree 15s ease-in-out infinite;
-}
+                <path fill="url(#gradient2)"
+                    d="M338,430.6c-9.8-0.5-19.4,0.4-28.5,2.5v27.4c0,9.7,5.2,18.7,13.6,23.5l112.1,64.4c0.6-4.1,0.9-8.3,1-12.5C437.4,480.5,393.5,433.2,338,430.6z" />
 
+                <path fill="url(#gradient3)"
+                    d="M380.8,551.6l-113.2,62.5c3.2,2.6,6.6,5.1,10.2,7.3c15.3,9.7,32.4,14.9,49.6,15.8c6.7,0.4,11.8,6.4,11.1,13c0,0.1,0,0.1,0,0.2c-1.4,7.6-5.2,16.5-5.2,16.5s72.7-33.5,98-100.7L408,552.1C399.7,547.1,389.3,546.9,380.8,551.6z" />
 
-/* =========================================================
-   ORB FOUR — LEFT CENTER
-========================================================= */
+            </svg>
+        </div>
 
-.background::after {
-    content: "";
+        <!-- FILTER & SORT -->
+         <button class="filter-button">
 
-    position: absolute;
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                <!-- Vertical double-ended arrow -->
+                <path d="M6 2L2 6h3v12H2l4 4 4-4H7V6h3L6 2z" />
+                <!-- Four descending horizontal bars -->
+                <rect x="12" y="4" width="10" height="3" rx="1.5" />
+                <rect x="12" y="9" width="8" height="3" rx="1.5" />
+                <rect x="12" y="14" width="6" height="3" rx="1.5" />
+                <rect x="12" y="19" width="4" height="3" rx="1.5" />
+            </svg>
 
-    width: 170px;
-    height: 170px;
+            <span>Filter &amp; Sort</span>
 
-    left: 5%;
-    top: 43%;
+        </button>
 
-    border-radius: 50%;
 
-    background:
-        radial-gradient(
-            circle,
-            rgba(246, 128, 30, 0.07),
-            rgba(251, 8, 56, 0.035),
-            transparent 70%
-        );
+        <!-- =====================================================
+             NAVIGATION
+        ===================================================== -->
 
-    filter: blur(38px);
+        <nav class="navigation">
 
-    animation:
-        floatOrbFour 17s ease-in-out infinite;
-}
+            <!-- HOME -->
+            <a href="/Users/dhruvmakwana/Dev/Twigg Website/home/home.html" class="nav-item active">
 
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
+                    stroke-linejoin="round">
 
-/* =========================================================
-   EXTRA ORBS
-========================================================= */
+                    <path d="M3 11L12 4l9 7"></path>
+                    <path d="M5 10v10h14V10"></path>
 
-.login-page::before {
-    content: "";
+                </svg>
 
-    position: fixed;
+                <span>Home</span>
 
-    width: 140px;
-    height: 140px;
+            </a>
 
-    right: 30%;
-    top: 8%;
 
-    border-radius: 50%;
+            <!-- REELS -->
+            <a href="#" class="nav-item">
 
-    background:
-        radial-gradient(
-            circle,
-            rgba(246, 128, 30, 0.06),
-            transparent 70%
-        );
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
+                    stroke-linejoin="round">
 
-    filter: blur(30px);
+                    <rect x="4" y="4" width="16" height="16" rx="3">
+                    </rect>
 
-    pointer-events: none;
+                    <path d="M10 9l5 3-5 3z"></path>
 
-    animation:
-        floatOrbFive 14s ease-in-out infinite;
-}
+                </svg>
 
-.login-page::after {
-    content: "";
+                <span>Twigg Reels</span>
 
-    position: fixed;
+            </a>
 
-    width: 120px;
-    height: 120px;
 
-    left: 27%;
-    bottom: 12%;
+            <!-- CREATORS -->
+            <a href="#" class="nav-item">
 
-    border-radius: 50%;
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <!-- Left person -->
+        <circle cx="5" cy="8" r="1.8"></circle>
+        <path d="M2.2 18.5c.2-2.2 1.3-3.5 3.1-3.5 1.1 0 2 .4 2.6 1.2"></path>
 
-    background:
-        radial-gradient(
-            circle,
-            rgba(185, 0, 102, 0.055),
-            transparent 70%
-        );
+        <!-- Right person -->
+        <circle cx="19" cy="8" r="1.8"></circle>
+        <path d="M16.1 16.2c.6-.8 1.5-1.2 2.6-1.2 1.9 0 3 1.3 3.1 3.5"></path>
 
-    filter: blur(30px);
+        <!-- Center person -->
+        <circle cx="12" cy="6.8" r="2.4"></circle>
+        <path d="M8.2 19c.2-3 1.6-4.6 3.8-4.6s3.6 1.6 3.8 4.6"></path>
+    </svg>
 
-    pointer-events: none;
+                <span>Creators</span>
 
-    animation:
-        floatOrbSix 16s ease-in-out infinite;
-}
+            </a>
 
 
-/* =========================================================
-   FLOATING RINGS
-========================================================= */
+            <!-- SEARCH -->
+            <a href="#" class="nav-item">
 
-.ring {
-    position: absolute;
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
 
-    border:
-        1px solid rgba(0, 0, 0, 0.055);
+                    <circle cx="10.5" cy="10.5" r="6">
+                    </circle>
 
-    border-radius: 50%;
-}
+                    <path d="M15 15l5 5"></path>
 
+                </svg>
 
-/* =========================================================
-   LOWER LEFT RING
-========================================================= */
+                <span>Search</span>
 
-.ring-one {
-    width: 500px;
-    height: 500px;
+            </a>
 
-    left: -290px;
-    bottom: -280px;
-}
 
+            <!-- MESSAGE -->
+            <a href="#" class="nav-item">
 
-/* =========================================================
-   UPPER RIGHT RING
-========================================================= */
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
+                    stroke-linejoin="round">
 
-.ring-two {
-    width: 360px;
-    height: 360px;
+                    <rect x="3" y="5" width="18" height="14" rx="3">
+                    </rect>
 
-    right: -155px;
-    top: -165px;
-}
+                    <path d="M7 9l5 4 5-4"></path>
 
+                </svg>
 
-/* =========================================================
-   GRAIN
-========================================================= */
+                <span>Message</span>
 
-.grain {
-    position: absolute;
-    inset: 0;
+            </a>
 
-    opacity: 0.035;
 
-    background-image:
-        url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E");
+            <!-- NOTIFICATION -->
+            <a href="#" class="nav-item">
 
-    pointer-events: none;
-}
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
+                    stroke-linejoin="round">
 
+                    <path d="M6 17h12l-1.5-3V10a4.5 4.5 0 0 0-9 0v4z"></path>
+                    <path d="M10 20h4"></path>
 
-/* =========================================================
-   PAGE
-========================================================= */
+                </svg>
 
-.login-page {
-    position: relative;
-    z-index: 2;
+                <span>Notification</span>
 
-    min-height: 100vh;
+            </a>
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
 
+            <!-- Create -->
+            <a href="#" class="nav-item">
 
-/* =========================================================
-   BRAND
-========================================================= */
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
 
-.brand {
-    position: absolute;
+                    <circle cx="12" cy="12" r="8">
+                    </circle>
 
-    top: 38px;
-    left: 48px;
+                    <path d="M12 8v8"></path>
+                    <path d="M8 12h8"></path>
 
-    width: 130px;
+                </svg>
 
-    z-index: 5;
-}
+                <span>Create</span>
 
-.brand svg {
-    width: 100%;
-    display: block;
-}
+            </a>
 
 
-/* =========================================================
-   LOGIN CARD
-========================================================= */
+            <!-- ACCOUNT -->
+            <a href="#" class="nav-item">
 
-.login-card {
-    position: relative;
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
+                    stroke-linejoin="round">
 
-    width: min(440px, calc(100vw - 40px));
-    min-height: 510px;
+                    <circle cx="12" cy="8" r="3">
+                    </circle>
 
-    padding: 48px;
+                    <path d="M5 20c1-4 3.5-6 7-6s6 2 7 6"></path>
 
-    border:
-        1px solid rgba(255, 255, 255, 0.58);
+                </svg>
 
-    border-radius: 30px;
+                <span>Account</span>
 
-    /*
-       More transparent glass
-    */
-    background:
-        rgba(255, 255, 255, 0.46);
+            </a>
 
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
+        </nav>
 
-    box-shadow:
-        0 30px 80px rgba(0, 0, 0, 0.08),
-        inset 0 1px 0 rgba(255, 255, 255, 0.75),
-        inset 0 -1px 0 rgba(255, 255, 255, 0.20);
+    </aside>
 
-    overflow: hidden;
 
-    animation:
-        cardAppear 0.8s cubic-bezier(.2, .8, .2, 1);
-}
+    <!-- =========================================================
+         MAIN
+    ========================================================= -->
 
+    <main class="main">
 
-/* =========================================================
-   CARD GLASS HIGHLIGHT
-========================================================= */
 
-.login-card::before {
-    content: "";
+        <!-- =====================================================
+             CATEGORIES
+        ===================================================== -->
 
-    position: absolute;
+        <div class="categories">
 
-    inset: 0;
+            <div class="category">
+                <img src="https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=600&q=90">
+                <div class="category-name">Packaging Design</div>
+            </div>
 
-    border-radius: inherit;
+            <div class="category">
+                <img src="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=600&q=90">
+                <div class="category-name">Video Editing</div>
+            </div>
 
-    background:
-        linear-gradient(
-            135deg,
-            rgba(255, 255, 255, 0.20),
-            transparent 40%,
-            rgba(255, 255, 255, 0.06)
-        );
+            <div class="category">
+                <img src="https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&w=600&q=90">
+                <div class="category-name">Logo Designing</div>
+            </div>
 
-    pointer-events: none;
-}
+            <div class="category">
+                <img src="https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=600&q=90">
+                <div class="category-name">Logo Animation</div>
+            </div>
 
+            <div class="category">
+                <img src="https://images.unsplash.com/photo-1547658719-da2b51169166?auto=format&fit=crop&w=600&q=90">
+                <div class="category-name">Web &amp; Mobile Design</div>
+            </div>
 
-/* =========================================================
-   CARD GLOW
-========================================================= */
+            <div class="category">
+                <img src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=600&q=90">
+                <div class="category-name">Social Media Design</div>
+            </div>
 
-.card-glow {
-    position: absolute;
+            <div class="category">
+                <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=600&q=90">
+                <div class="category-name">Book Design</div>
+            </div>
 
-    width: 180px;
-    height: 180px;
+            <div class="category">
+                <img src="https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=600&q=90">
+                <div class="category-name">Branding</div>
+            </div>
 
-    right: -90px;
-    top: -90px;
+            <div class="category">
+                <img src="https://images.unsplash.com/photo-1492724441997-5dc865305da7?auto=format&fit=crop&w=600&q=90">
+                <div class="category-name">Intro &amp; Outro Videos</div>
+            </div>
 
-    border-radius: 50%;
+            <div class="category">
+                <img src="https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=600&q=90">
+                <div class="category-name">3D Product Animations</div>
+            </div>
 
-    background:
-        linear-gradient(
-            135deg,
-            #b90066,
-            #fb0838,
-            #f6801e
-        );
+            <div class="category">
+                <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=90">
+                <div class="category-name">Motion Graphics</div>
+            </div>
 
-    filter: blur(50px);
+        </div>
 
-    opacity: 0.11;
 
-    pointer-events: none;
-}
+        <!-- =====================================================
+             PINTEREST GRID
+        ===================================================== -->
 
+        <div class="pinterest-grid">
 
-/* =========================================================
-   CONTENT
-========================================================= */
 
-.login-content {
-    position: relative;
-    z-index: 2;
-}
+            <!-- CARD 01 VIDEO -->
 
+            <div class="media-card">
 
-/* =========================================================
-   HEADING
-========================================================= */
+                <video muted loop playsinline preload="auto"
+                    poster="https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=900&q=90">
 
-.heading {
-    margin-bottom: 42px;
-}
+                    <source src="videos/video1.mp4" type="video/mp4">
 
-.heading p {
-    display: inline-block;
+                </video>
 
-    margin-left: 9px;
+                <div class="media-actions">
 
-    font-size: 9px;
-    font-weight: 700;
+                    <button class="action-button unmute-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 10v4h4l5 4V6l-5 4H4z"></path>
+                            <path d="M16 9c1 1 1 5 0 6"></path>
+                        </svg>
+                    </button>
 
-    letter-spacing: 2px;
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
 
-    color: #8a8a8a;
-}
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
 
-.dot {
-    display: inline-block;
+                </div>
 
-    width: 6px;
-    height: 6px;
+            </div>
 
-    border-radius: 50%;
 
-    background:
-        linear-gradient(
-            135deg,
-            #b90066,
-            #fb0838,
-            #f6801e
-        );
-}
+            <!-- CARD 02 IMAGE -->
 
-.heading h1 {
-    margin-top: 13px;
+            <div class="media-card">
 
-    font-size: 48px;
-    line-height: 1;
+                <img src="https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=900&q=90">
 
-    letter-spacing: -3px;
+                <div class="media-actions">
 
-    font-weight: 700;
-}
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
 
-.heading h1 .period {
-    display: inline-block;
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
 
-    width: 8px;
-    height: 8px;
+                </div>
 
-    margin-left: 3px;
+            </div>
 
-    border-radius: 50%;
 
-    background:
-        linear-gradient(
-            135deg,
-            #b90066,
-            #fb0838,
-            #f6801e
-        );
+            <!-- CARD 03 IMAGE -->
 
-    vertical-align: baseline;
-}
+            <div class="media-card">
 
+                <img src="https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?auto=format&fit=crop&w=900&q=90">
 
-/* =========================================================
-   FORM
-========================================================= */
+                <div class="media-actions">
 
-#loginForm {
-    display: flex;
-    flex-direction: column;
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
 
-    gap: 24px;
-}
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
 
-.field {
-    display: flex;
-    flex-direction: column;
+                </div>
 
-    gap: 9px;
-}
+            </div>
 
-.field label {
-    font-size: 11px;
-    font-weight: 600;
 
-    color: #333;
-}
+            <!-- CARD 04 VIDEO -->
 
+            <div class="media-card">
 
-/* =========================================================
-   PASSWORD HEADER
-========================================================= */
+                <video muted loop playsinline preload="auto"
+                    poster="https://images.unsplash.com/photo-1547658719-da2b51169166?auto=format&fit=crop&w=900&q=90">
 
-.password-header {
-    display: flex;
+                    <source src="videos/video2.mp4" type="video/mp4">
 
-    justify-content: space-between;
-    align-items: center;
-}
+                </video>
 
-.password-header a {
-    font-size: 10px;
+                <div class="media-actions">
 
-    color: #888;
+                    <button class="action-button unmute-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 10v4h4l5 4V6l-5 4H4z"></path>
+                            <path d="M16 9c1 1 1 5 0 6"></path>
+                        </svg>
+                    </button>
 
-    text-decoration: none;
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
 
-    transition:
-        color 0.2s ease;
-}
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
 
-.password-header a:hover {
-    color: #111;
-}
+                </div>
 
+            </div>
 
-/* =========================================================
-   INPUT
-========================================================= */
 
-.field input {
-    width: 100%;
-    height: 54px;
+            <!-- CARD 05 IMAGE -->
 
-    padding: 0 16px;
+            <div class="media-card">
 
-    border:
-        1px solid rgba(0, 0, 0, 0.09);
+                <img src="https://images.unsplash.com/photo-1558655146-9f40138edfeb?auto=format&fit=crop&w=900&q=90">
 
-    border-radius: 15px;
+                <div class="media-actions">
 
-    outline: none;
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
 
-    background:
-        rgba(255, 255, 255, 0.38);
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
 
-    color: #111;
+                </div>
 
-    font-family: inherit;
-    font-size: 13px;
+            </div>
 
-    transition:
-        border 0.25s ease,
-        box-shadow 0.25s ease,
-        background 0.25s ease;
-}
 
-.field input::placeholder {
-    color: #aaa;
-}
+            <!-- CARD 06 VIDEO -->
 
-.field input:focus {
-    background:
-        rgba(255, 255, 255, 0.72);
+            <div class="media-card">
 
-    border-color: #111;
+                <video muted loop playsinline preload="auto"
+                    poster="https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=90">
 
-    box-shadow:
-        0 0 0 4px rgba(0, 0, 0, 0.035);
-}
+                    <source src="videos/video3.mp4" type="video/mp4">
 
+                </video>
 
-/* =========================================================
-   PASSWORD WRAPPER
-========================================================= */
+                <div class="media-actions">
 
-.password-wrapper {
-    position: relative;
-}
+                    <button class="action-button unmute-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 10v4h4l5 4V6l-5 4H4z"></path>
+                            <path d="M16 9c1 1 1 5 0 6"></path>
+                        </svg>
+                    </button>
 
-.password-wrapper input {
-    padding-right: 65px;
-}
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
 
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
 
-/* =========================================================
-   SHOW PASSWORD
-========================================================= */
+                </div>
 
-.show-password {
-    position: absolute;
+            </div>
 
-    right: 12px;
-    top: 50%;
 
-    transform:
-        translateY(-50%);
+            <!-- CARD 07 IMAGE -->
 
-    border: none;
+            <div class="media-card">
 
-    background: transparent;
+                <img src="https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=900&q=90">
 
-    color: #777;
+                <div class="media-actions">
 
-    font-family: inherit;
-    font-size: 10px;
-    font-weight: 600;
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
 
-    cursor: pointer;
-}
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
 
-.show-password:hover {
-    color: #111;
-}
+                </div>
 
+            </div>
 
-/* =========================================================
-   SIGN IN BUTTON
-========================================================= */
 
-.signin-button {
-    position: relative;
+            <!-- CARD 08 VIDEO -->
 
-    width: 100%;
-    height: 56px;
+            <div class="media-card">
 
-    margin-top: 4px;
+                <video muted loop playsinline preload="auto"
+                    poster="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=900&q=90">
 
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+                    <source src="videos/video4.mp4" type="video/mp4">
 
-    padding: 0 18px;
+                </video>
 
-    border: none;
-    border-radius: 16px;
+                <div class="media-actions">
 
-    background:
-        linear-gradient(
-            110deg,
-            #f58a4f 0%,
-            #f36b67 24%,
-            #ee5b83 48%,
-            #d94b8e 72%,
-            #bd2675 100%
-        );
+                    <button class="action-button unmute-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 10v4h4l5 4V6l-5 4H4z"></path>
+                            <path d="M16 9c1 1 1 5 0 6"></path>
+                        </svg>
+                    </button>
 
-    background-size: 180% 100%;
-    background-position: 0% 50%;
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
 
-    color: #fff;
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
 
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 600;
+                </div>
 
-    cursor: pointer;
+            </div>
 
-    overflow: hidden;
 
-    box-shadow:
-        0 8px 26px rgba(185, 0, 102, 0.14);
+            <!-- CARD 09 IMAGE -->
 
-    transition:
-        transform 0.35s ease,
-        box-shadow 0.35s ease;
-}
+            <div class="media-card">
 
+                <img src="https://images.unsplash.com/photo-1618005198919-d3d4b5a92ead?auto=format&fit=crop&w=900&q=90">
 
-/* =========================================================
-   MOVING HOVER GRADIENT
-========================================================= */
+                <div class="media-actions">
 
-.signin-button::before {
-    content: "";
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
 
-    position: absolute;
-    inset: 0;
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
 
-    background:
-        linear-gradient(
-            110deg,
-            #c72d7b 0%,
-            #e94d88 20%,
-            #f85f6b 40%,
-            #f58a4f 60%,
-            #ee5b83 80%,
-            #b90066 100%
-        );
+                </div>
 
-    background-size: 250% 100%;
-    background-position: 0% 50%;
+            </div>
 
-    opacity: 0;
 
-    transition:
-        opacity 0.45s ease;
-}
+            <!-- CARD 10 VIDEO -->
 
+            <div class="media-card">
 
-/* =========================================================
-   HOVER
-========================================================= */
+                <video muted loop playsinline preload="auto"
+                    poster="https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=900&q=90">
 
-.signin-button:hover::before {
-    opacity: 1;
+                    <source src="videos/video5.mp4" type="video/mp4">
 
-    animation:
-        twiggGradient 3.5s ease-in-out infinite;
-}
+                </video>
 
-.signin-button:hover {
-    transform:
-        translateY(-2px);
+                <div class="media-actions">
 
-    box-shadow:
-        0 14px 34px rgba(185, 0, 102, 0.20);
-}
+                    <button class="action-button unmute-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 10v4h4l5 4V6l-5 4H4z"></path>
+                            <path d="M16 9c1 1 1 5 0 6"></path>
+                        </svg>
+                    </button>
 
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
 
-/* =========================================================
-   BUTTON CONTENT
-========================================================= */
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
 
-.signin-button span {
-    position: relative;
-    z-index: 2;
-}
+                </div>
 
+            </div>
 
-/* =========================================================
-   ARROW
-========================================================= */
 
-.arrow {
-    font-size: 18px;
-    font-weight: 400;
+            <!-- CARD 11 IMAGE -->
 
-    transition:
-        transform 0.35s ease;
-}
+            <div class="media-card">
 
-.signin-button:hover .arrow {
-    transform:
-        translate(3px, -3px);
-}
+                <img src="https://images.unsplash.com/photo-1559028012-481c04fa702d?auto=format&fit=crop&w=900&q=90">
 
+                <div class="media-actions">
 
-/* =========================================================
-   GRADIENT MOVEMENT
-========================================================= */
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
 
-@keyframes twiggGradient {
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
 
-    0% {
-        background-position: 0% 50%;
-    }
+                </div>
 
-    50% {
-        background-position: 100% 50%;
-    }
+            </div>
 
-    100% {
-        background-position: 0% 50%;
-    }
-}
 
+            <!-- CARD 12 VIDEO -->
 
-/* =========================================================
-   SIGN UP
-========================================================= */
+            <div class="media-card">
 
-.signup {
-    margin-top: 30px;
+                <video muted loop playsinline preload="auto"
+                    poster="https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?auto=format&fit=crop&w=900&q=90">
 
-    text-align: center;
+                    <source src="videos/video6.mp4" type="video/mp4">
 
-    font-size: 10px;
+                </video>
 
-    color: #999;
-}
+                <div class="media-actions">
 
-.signup a {
-    margin-left: 4px;
+                    <button class="action-button unmute-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 10v4h4l5 4V6l-5 4H4z"></path>
+                            <path d="M16 9c1 1 1 5 0 6"></path>
+                        </svg>
+                    </button>
 
-    color: #222;
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
 
-    font-weight: 600;
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
 
-    text-decoration: none;
+                </div>
 
-    border-bottom:
-        1px solid #bbb;
+            </div>
 
-    padding-bottom: 2px;
-}
 
-.signup a:hover {
-    border-color: #111;
-}
+            <!-- CARD 13 IMAGE -->
 
+            <div class="media-card">
 
-/* =========================================================
-   SIDE TEXT
-========================================================= */
+                <img src="https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=900&q=90">
 
-.side-text {
-    position: fixed;
+                <div class="media-actions">
 
-    right: 32px;
-    top: 50%;
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
 
-    transform:
-        translateY(-50%)
-        rotate(90deg);
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
 
-    transform-origin: center;
+                </div>
 
-    font-size: 8px;
+            </div>
 
-    letter-spacing: 3px;
 
-    font-weight: 700;
+            <!-- CARD 14 IMAGE -->
 
-    color:
-        rgba(0, 0, 0, 0.28);
-}
+            <div class="media-card">
 
+                <img src="https://images.unsplash.com/photo-1553484771-047a44eee27b?auto=format&fit=crop&w=900&q=90">
 
-/* =========================================================
-   ANIMATIONS
-========================================================= */
+                <div class="media-actions">
 
-@keyframes float {
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
 
-    0%,
-    100% {
-        transform:
-            translate3d(0, 0, 0);
-    }
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
 
-    50% {
-        transform:
-            translate3d(25px, -20px, 0);
-    }
-}
+                </div>
 
+            </div>
 
-@keyframes floatOrbThree {
 
-    0%,
-    100% {
-        transform:
-            translate3d(0, 0, 0);
-    }
+            <!-- CARD 15 VIDEO -->
 
-    50% {
-        transform:
-            translate3d(-20px, 25px, 0);
-    }
-}
+            <div class="media-card">
 
+                <video muted loop playsinline preload="auto"
+                    poster="https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=900&q=90">
 
-@keyframes floatOrbFour {
+                    <source src="videos/video1.mp4" type="video/mp4">
 
-    0%,
-    100% {
-        transform:
-            translate3d(0, 0, 0);
-    }
+                </video>
 
-    50% {
-        transform:
-            translate3d(20px, -18px, 0);
-    }
-}
+                <div class="media-actions">
 
+                    <button class="action-button unmute-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 10v4h4l5 4V6l-5 4H4z"></path>
+                            <path d="M16 9c1 1 1 5 0 6"></path>
+                        </svg>
+                    </button>
 
-@keyframes floatOrbFive {
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
 
-    0%,
-    100% {
-        transform:
-            translate3d(0, 0, 0);
-    }
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
 
-    50% {
-        transform:
-            translate3d(-15px, 20px, 0);
-    }
-}
+                </div>
 
+            </div>
 
-@keyframes floatOrbSix {
 
-    0%,
-    100% {
-        transform:
-            translate3d(0, 0, 0);
-    }
+            <!-- CARD 16 IMAGE -->
 
-    50% {
-        transform:
-            translate3d(18px, -15px, 0);
-    }
-}
+            <div class="media-card">
 
+                <img src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=900&q=90">
 
-@keyframes cardAppear {
+                <div class="media-actions">
 
-    from {
-        opacity: 0;
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
 
-        transform:
-            translateY(25px)
-            scale(0.97);
-    }
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
 
-    to {
-        opacity: 1;
+                </div>
 
-        transform:
-            translateY(0)
-            scale(1);
-    }
-}
+            </div>
 
 
-/* =========================================================
-   TABLET
-========================================================= */
+            <!-- CARD 17 IMAGE -->
 
-@media (max-width: 800px) {
+            <div class="media-card">
 
-    .brand {
-        top: 28px;
-        left: 30px;
+                <img src="https://images.unsplash.com/photo-1557682250-33bd709cbe85?auto=format&fit=crop&w=900&q=90">
 
-        width: 105px;
-    }
+                <div class="media-actions">
 
-    .side-text {
-        display: none;
-    }
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
 
-    .version {
-        right: 25px;
-        bottom: 22px;
-    }
-}
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
 
+                </div>
 
-/* =========================================================
-   MOBILE
-========================================================= */
+            </div>
 
-@media (max-width: 600px) {
 
-    body {
-        overflow: auto;
-    }
+            <!-- CARD 18 VIDEO -->
 
-    .login-page {
-        min-height: 100vh;
+            <div class="media-card">
 
-        padding:
-            100px
-            20px
-            50px;
-    }
+                <video muted loop playsinline preload="auto"
+                    poster="https://images.unsplash.com/photo-1600508774634-4e11d34730e2?auto=format&fit=crop&w=900&q=90">
 
-    .brand {
-        top: 28px;
-        left: 22px;
+                    <source src="videos/video2.mp4" type="video/mp4">
 
-        width: 100px;
-    }
+                </video>
 
-    .login-card {
-        width: 100%;
+                <div class="media-actions">
 
-        min-height: auto;
+                    <button class="action-button unmute-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 10v4h4l5 4V6l-5 4H4z"></path>
+                            <path d="M16 9c1 1 1 5 0 6"></path>
+                        </svg>
+                    </button>
 
-        padding:
-            36px
-            25px;
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
 
-        border-radius: 25px;
-    }
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
 
-    .heading {
-        margin-bottom: 34px;
-    }
+                </div>
 
-    .heading h1 {
-        font-size: 42px;
+            </div>
 
-        letter-spacing: -2.5px;
-    }
 
-    .orb-one {
-        width: 250px;
-        height: 250px;
-    }
+            <!-- CARD 19 IMAGE -->
 
-    .orb-two {
-        width: 300px;
-        height: 300px;
-    }
-}
+            <div class="media-card">
 
+                <img src="https://images.unsplash.com/photo-1542744095-fcf48d80b0fd?auto=format&fit=crop&w=900&q=90">
 
-/* =========================================================
-   SMALL MOBILE
-========================================================= */
+                <div class="media-actions">
 
-@media (max-width: 380px) {
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
 
-    .login-page {
-        padding-left: 14px;
-        padding-right: 14px;
-    }
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
 
-    .login-card {
-        padding:
-            30px
-            21px;
-    }
-}
+                </div>
+
+            </div>
+
+
+            <!-- CARD 20 IMAGE -->
+
+            <div class="media-card">
+
+                <img src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=90">
+
+                <div class="media-actions">
+
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
+
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- CARD 21 VIDEO -->
+
+            <div class="media-card">
+
+                <video muted loop playsinline preload="auto"
+                    poster="https://images.unsplash.com/photo-1545235617-9465d2a55698?auto=format&fit=crop&w=900&q=90">
+
+                    <source src="videos/video3.mp4" type="video/mp4">
+
+                </video>
+
+                <div class="media-actions">
+
+                    <button class="action-button unmute-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 10v4h4l5 4V6l-5 4H4z"></path>
+                            <path d="M16 9c1 1 1 5 0 6"></path>
+                        </svg>
+                    </button>
+
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
+
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- CARD 22 IMAGE -->
+
+            <div class="media-card">
+
+                <img src="https://images.unsplash.com/photo-1561214115-f2f134cc4912?auto=format&fit=crop&w=900&q=90">
+
+                <div class="media-actions">
+
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
+
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- CARD 23 IMAGE -->
+
+            <div class="media-card">
+
+                <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=900&q=90">
+
+                <div class="media-actions">
+
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
+
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- CARD 24 VIDEO -->
+
+            <div class="media-card">
+
+                <video muted loop playsinline preload="auto"
+                    poster="https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?auto=format&fit=crop&w=900&q=90">
+
+                    <source src="videos/video4.mp4" type="video/mp4">
+
+                </video>
+
+                <div class="media-actions">
+
+                    <button class="action-button unmute-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 10v4h4l5 4V6l-5 4H4z"></path>
+                            <path d="M16 9c1 1 1 5 0 6"></path>
+                        </svg>
+                    </button>
+
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
+
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- CARD 25 IMAGE -->
+
+            <div class="media-card">
+
+                <img src="https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=900&q=90">
+
+                <div class="media-actions">
+
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
+
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- CARD 26 IMAGE -->
+
+            <div class="media-card">
+
+                <img src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=900&q=90">
+
+                <div class="media-actions">
+
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
+
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- CARD 27 VIDEO -->
+
+            <div class="media-card">
+
+                <video muted loop playsinline preload="auto"
+                    poster="https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=900&q=90">
+
+                    <source src="videos/video5.mp4" type="video/mp4">
+
+                </video>
+
+                <div class="media-actions">
+
+                    <button class="action-button unmute-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 10v4h4l5 4V6l-5 4H4z"></path>
+                            <path d="M16 9c1 1 1 5 0 6"></path>
+                        </svg>
+                    </button>
+
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
+
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- CARD 28 IMAGE -->
+
+            <div class="media-card">
+
+                <img src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=900&q=90">
+
+                <div class="media-actions">
+
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
+
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- CARD 29 IMAGE -->
+
+            <div class="media-card">
+
+                <img src="https://images.unsplash.com/photo-1542744095-fcf48d80b0fd?auto=format&fit=crop&w=900&q=90">
+
+                <div class="media-actions">
+
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
+
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- CARD 30 VIDEO -->
+
+            <div class="media-card">
+
+                <video muted loop playsinline preload="auto"
+                    poster="https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=900&q=90">
+
+                    <source src="videos/video6.mp4" type="video/mp4">
+
+                </video>
+
+                <div class="media-actions">
+
+                    <button class="action-button unmute-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 10v4h4l5 4V6l-5 4H4z"></path>
+                            <path d="M16 9c1 1 1 5 0 6"></path>
+                        </svg>
+                    </button>
+
+                    <button class="action-button save-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 4h12v16l-6-4-6 4z"></path>
+                        </svg>
+                    </button>
+
+                    <button class="action-button share-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 16V4"></path>
+                            <path d="M7 9l5-5 5 5"></path>
+                            <path d="M5 13v6h14v-6"></path>
+                        </svg>
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <script src="home.js"></script>
+
+</body>
+
+</html>

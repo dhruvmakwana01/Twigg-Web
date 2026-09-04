@@ -1,72 +1,75 @@
 /* =========================================================
-   RANDOMIZE PINTEREST GRID
+   TWIGG HOME — JAVASCRIPT
+========================================================= */
+
+
+/* =========================================================
+   ICONS
+========================================================= */
+
+const ICONS = {
+    muted: `
+        <svg viewBox="0 0 24 24">
+            <path d="M4 10v4h4l5 4V6l-5 4H4z"></path>
+            <path d="M16 9c1 1 1 5 0 6"></path>
+        </svg>
+    `,
+
+    unmuted: `
+        <svg viewBox="0 0 24 24">
+            <path d="M4 10v4h4l5 4V6l-5 4H4z"></path>
+            <path d="M16 8c2 2 2 6 0 8"></path>
+            <path d="M19 5c3 3 3 11 0 14"></path>
+        </svg>
+    `,
+
+    saved: `
+        <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M6 4h12v16l-6-4-6 4z"></path>
+        </svg>
+    `,
+
+    unsaved: `
+        <svg viewBox="0 0 24 24">
+            <path d="M6 4h12v16l-6 4-6 4z"></path>
+        </svg>
+    `
+};
+
+
+/* =========================================================
+   PINTEREST GRID
 ========================================================= */
 
 const grid = document.querySelector(".pinterest-grid");
 
 if (grid) {
 
-    const cards = Array.from(
-        grid.querySelectorAll(".media-card")
-    );
+    const cards = [...grid.querySelectorAll(".media-card")];
 
-    for (let i = cards.length - 1; i > 0; i--) {
+    // Shuffle cards
+    cards.sort(() => Math.random() - 0.5);
 
-        const j = Math.floor(Math.random() * (i + 1));
-
-        [cards[i], cards[j]] = [cards[j], cards[i]];
-
-    }
-
-    cards.forEach(card => {
-        grid.appendChild(card);
-    });
-
+    // Put shuffled cards back into the grid
+    cards.forEach(card => grid.appendChild(card));
 }
 
-/* =========================================================
-   ICONS
-========================================================= */
-
-const mutedIcon = `
-    <svg viewBox="0 0 24 24">
-        <path d="M4 10v4h4l5 4V6l-5 4H4z"></path>
-        <path d="M16 9c1 1 1 5 0 6"></path>
-    </svg>
-`;
-
-const unmutedIcon = `
-    <svg viewBox="0 0 24 24">
-        <path d="M4 10v4h4l5 4V6l-5 4H4z"></path>
-        <path d="M16 8c2 2 2 6 0 8"></path>
-        <path d="M19 5c3 3 3 11 0 14"></path>
-    </svg>
-`;
-
-const savedIcon = `
-    <svg viewBox="0 0 24 24" fill="currentColor">
-        <path d="M6 4h12v16l-6-4-6 4z"></path>
-    </svg>
-`;
-
-const unsavedIcon = `
-    <svg viewBox="0 0 24 24">
-        <path d="M6 4h12v16l-6-4-6 4z"></path>
-    </svg>
-`;
-
 
 /* =========================================================
-   HOVER AUTOPLAY
+   VIDEO CONTROLS
 ========================================================= */
 
 document.querySelectorAll(".media-card").forEach(card => {
 
     const video = card.querySelector("video");
+    const muteButton = card.querySelector(".unmute-button");
 
-    if (!video) {
-        return;
-    }
+    if (!video) return;
+
+
+    /* -------------------------
+       HOVER AUTOPLAY
+    ------------------------- */
 
     card.addEventListener("mouseenter", () => {
 
@@ -83,42 +86,43 @@ document.querySelectorAll(".media-card").forEach(card => {
         video.currentTime = 0;
         video.muted = true;
 
-    });
-
-});
-
-
-/* =========================================================
-   MUTE / UNMUTE
-========================================================= */
-
-document.querySelectorAll(".unmute-button").forEach(button => {
-
-    button.addEventListener("click", event => {
-
-        event.stopPropagation();
-
-        const card = button.closest(".media-card");
-        const video = card.querySelector("video");
-
-        video.muted = !video.muted;
-
-        button.innerHTML =
-            video.muted
-                ? mutedIcon
-                : unmutedIcon;
-
-        if (!video.muted) {
-            video.play().catch(() => {});
+        if (muteButton) {
+            muteButton.innerHTML = ICONS.muted;
         }
 
     });
 
+
+    /* -------------------------
+       MUTE / UNMUTE
+    ------------------------- */
+
+    if (muteButton) {
+
+        muteButton.addEventListener("click", event => {
+
+            event.stopPropagation();
+
+            video.muted = !video.muted;
+
+            muteButton.innerHTML =
+                video.muted
+                    ? ICONS.muted
+                    : ICONS.unmuted;
+
+            if (!video.muted) {
+                video.play().catch(() => {});
+            }
+
+        });
+
+    }
+
 });
 
 
 /* =========================================================
-   SAVE BUTTON
+   SAVE
 ========================================================= */
 
 document.querySelectorAll(".save-button").forEach(button => {
@@ -127,13 +131,12 @@ document.querySelectorAll(".save-button").forEach(button => {
 
         event.stopPropagation();
 
-        const isSaved =
-            button.classList.toggle("saved");
+        const saved = button.classList.toggle("saved");
 
         button.innerHTML =
-            isSaved
-                ? savedIcon
-                : unsavedIcon;
+            saved
+                ? ICONS.saved
+                : ICONS.unsaved;
 
     });
 
@@ -141,7 +144,7 @@ document.querySelectorAll(".save-button").forEach(button => {
 
 
 /* =========================================================
-   SHARE BUTTON
+   SHARE
 ========================================================= */
 
 document.querySelectorAll(".share-button").forEach(button => {
@@ -150,6 +153,8 @@ document.querySelectorAll(".share-button").forEach(button => {
 
         event.stopPropagation();
 
+
+        // Use the device's native share menu when available
         if (navigator.share) {
 
             try {
@@ -160,13 +165,14 @@ document.querySelectorAll(".share-button").forEach(button => {
                 });
 
             } catch {
-                // User closed the share menu.
+                // User cancelled sharing
             }
 
             return;
         }
 
 
+        // Fallback: copy page URL
         try {
 
             await navigator.clipboard.writeText(
@@ -177,9 +183,7 @@ document.querySelectorAll(".share-button").forEach(button => {
 
         } catch {
 
-            alert(
-                "Share is not supported in this browser."
-            );
+            alert("Share is not supported in this browser.");
 
         }
 
@@ -189,19 +193,23 @@ document.querySelectorAll(".share-button").forEach(button => {
 
 
 /* =========================================================
-   NAVIGATION ACTIVE STATE
+   NAVIGATION
 ========================================================= */
 
-document.querySelectorAll(".nav-item").forEach(item => {
+const navItems = document.querySelectorAll(".nav-item");
+
+navItems.forEach(item => {
 
     item.addEventListener("click", event => {
 
         event.preventDefault();
 
-        document
-            .querySelector(".nav-item.active")
-            ?.classList.remove("active");
+        // Remove active state
+        navItems.forEach(navItem => {
+            navItem.classList.remove("active");
+        });
 
+        // Add active state
         item.classList.add("active");
 
     });
