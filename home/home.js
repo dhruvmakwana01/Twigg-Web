@@ -1,295 +1,209 @@
 /* =========================================================
-   HOVER AUTOPLAY
+   RANDOMIZE PINTEREST GRID
 ========================================================= */
 
-document
-    .querySelectorAll(".media-card")
-    .forEach(card => {
+const grid = document.querySelector(".pinterest-grid");
 
-        const video = card.querySelector("video");
+if (grid) {
 
-        /* Image card — ignore */
-        if (!video) {
-            return;
-        }
+    const cards = Array.from(
+        grid.querySelectorAll(".media-card")
+    );
 
-        /* -----------------------------------------------------
-           MOUSE ENTER
-        ----------------------------------------------------- */
+    for (let i = cards.length - 1; i > 0; i--) {
 
-        card.addEventListener(
-            "mouseenter",
-            () => {
+        const j = Math.floor(Math.random() * (i + 1));
 
-                /*
-                 * Always start muted.
-                 * This allows browsers to autoplay the video.
-                 */
+        [cards[i], cards[j]] = [cards[j], cards[i]];
 
-                video.muted = true;
+    }
 
-                video.play()
-                    .then(() => {
-                        console.log("Video playing");
-                    })
-                    .catch(error => {
-                        console.log(
-                            "Could not autoplay video:",
-                            error
-                        );
-                    });
-
-            }
-        );
-
-
-        /* -----------------------------------------------------
-           MOUSE LEAVE
-        ----------------------------------------------------- */
-
-        card.addEventListener(
-            "mouseleave",
-            () => {
-
-                video.pause();
-                video.currentTime = 0;
-                video.muted = true;
-
-            }
-        );
-
+    cards.forEach(card => {
+        grid.appendChild(card);
     });
+
+}
+
+/* =========================================================
+   ICONS
+========================================================= */
+
+const mutedIcon = `
+    <svg viewBox="0 0 24 24">
+        <path d="M4 10v4h4l5 4V6l-5 4H4z"></path>
+        <path d="M16 9c1 1 1 5 0 6"></path>
+    </svg>
+`;
+
+const unmutedIcon = `
+    <svg viewBox="0 0 24 24">
+        <path d="M4 10v4h4l5 4V6l-5 4H4z"></path>
+        <path d="M16 8c2 2 2 6 0 8"></path>
+        <path d="M19 5c3 3 3 11 0 14"></path>
+    </svg>
+`;
+
+const savedIcon = `
+    <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M6 4h12v16l-6-4-6 4z"></path>
+    </svg>
+`;
+
+const unsavedIcon = `
+    <svg viewBox="0 0 24 24">
+        <path d="M6 4h12v16l-6-4-6 4z"></path>
+    </svg>
+`;
 
 
 /* =========================================================
-   UNMUTE BUTTON
+   HOVER AUTOPLAY
 ========================================================= */
 
-document
-    .querySelectorAll(".unmute-button")
-    .forEach(button => {
+document.querySelectorAll(".media-card").forEach(card => {
 
-        button.addEventListener(
-            "click",
-            function(event) {
+    const video = card.querySelector("video");
 
-                event.stopPropagation();
+    if (!video) {
+        return;
+    }
 
-                const card =
-                    this.closest(".media-card");
+    card.addEventListener("mouseenter", () => {
 
-                const video =
-                    card.querySelector("video");
+        video.muted = true;
 
-                video.muted =
-                    !video.muted;
-
-
-                if (video.muted) {
-
-                    this.innerHTML = `
-                        <svg viewBox="0 0 24 24">
-
-                            <path
-                                d="M4 10v4h4l5 4V6l-5 4H4z">
-                            </path>
-
-                            <path
-                                d="M16 9c1 1 1 5 0 6">
-                            </path>
-
-                        </svg>
-                    `;
-
-                }
-
-                else {
-
-                    this.innerHTML = `
-                        <svg viewBox="0 0 24 24">
-
-                            <path
-                                d="M4 10v4h4l5 4V6l-5 4H4z">
-                            </path>
-
-                            <path
-                                d="M16 8c2 2 2 6 0 8">
-                            </path>
-
-                            <path
-                                d="M19 5c3 3 3 11 0 14">
-                            </path>
-
-                        </svg>
-                    `;
-
-                    /*
-                     * Some browsers require the play command
-                     * again after changing audio state.
-                     */
-
-                    video.play()
-                        .catch(() => {});
-
-                }
-
-            }
-        );
+        video.play().catch(() => {});
 
     });
+
+
+    card.addEventListener("mouseleave", () => {
+
+        video.pause();
+        video.currentTime = 0;
+        video.muted = true;
+
+    });
+
+});
+
+
+/* =========================================================
+   MUTE / UNMUTE
+========================================================= */
+
+document.querySelectorAll(".unmute-button").forEach(button => {
+
+    button.addEventListener("click", event => {
+
+        event.stopPropagation();
+
+        const card = button.closest(".media-card");
+        const video = card.querySelector("video");
+
+        video.muted = !video.muted;
+
+        button.innerHTML =
+            video.muted
+                ? mutedIcon
+                : unmutedIcon;
+
+        if (!video.muted) {
+            video.play().catch(() => {});
+        }
+
+    });
+
+});
 
 
 /* =========================================================
    SAVE BUTTON
 ========================================================= */
 
-document
-    .querySelectorAll(".save-button")
-    .forEach(button => {
+document.querySelectorAll(".save-button").forEach(button => {
 
-        button.addEventListener(
-            "click",
-            function(event) {
+    button.addEventListener("click", event => {
 
-                event.stopPropagation();
+        event.stopPropagation();
 
-                this.classList.toggle("saved");
+        const isSaved =
+            button.classList.toggle("saved");
 
-
-                if (
-                    this.classList.contains("saved")
-                ) {
-
-                    this.innerHTML = `
-                        <svg
-                            viewBox="0 0 24 24"
-                            fill="currentColor">
-
-                            <path
-                                d="M6 4h12v16l-6-4-6 4z">
-                            </path>
-
-                        </svg>
-                    `;
-
-                }
-
-                else {
-
-                    this.innerHTML = `
-                        <svg viewBox="0 0 24 24">
-
-                            <path
-                                d="M6 4h12v16l-6-4-6 4z">
-                            </path>
-
-                        </svg>
-                    `;
-
-                }
-
-            }
-        );
+        button.innerHTML =
+            isSaved
+                ? savedIcon
+                : unsavedIcon;
 
     });
+
+});
 
 
 /* =========================================================
    SHARE BUTTON
 ========================================================= */
 
-document
-    .querySelectorAll(".share-button")
-    .forEach(button => {
+document.querySelectorAll(".share-button").forEach(button => {
 
-        button.addEventListener(
-            "click",
-            async function(event) {
+    button.addEventListener("click", async event => {
 
-                event.stopPropagation();
+        event.stopPropagation();
 
+        if (navigator.share) {
 
-                if (navigator.share) {
+            try {
 
-                    try {
+                await navigator.share({
+                    title: "Twigg",
+                    text: "Check out this creative work on Twigg."
+                });
 
-                        await navigator.share({
-                            title: "Twigg",
-                            text:
-                                "Check out this creative work on Twigg."
-                        });
-
-                    }
-
-                    catch (error) {
-
-                        /*
-                         * User closed share menu.
-                         */
-
-                    }
-
-                }
-
-                else {
-
-                    /*
-                     * Fallback: copy page URL.
-                     */
-
-                    try {
-
-                        await navigator.clipboard.writeText(
-                            window.location.href
-                        );
-
-                        alert("Link copied!");
-
-                    }
-
-                    catch (error) {
-
-                        alert(
-                            "Share is not supported in this browser."
-                        );
-
-                    }
-
-                }
-
+            } catch {
+                // User closed the share menu.
             }
-        );
+
+            return;
+        }
+
+
+        try {
+
+            await navigator.clipboard.writeText(
+                window.location.href
+            );
+
+            alert("Link copied!");
+
+        } catch {
+
+            alert(
+                "Share is not supported in this browser."
+            );
+
+        }
 
     });
+
+});
 
 
 /* =========================================================
    NAVIGATION ACTIVE STATE
 ========================================================= */
 
-document
-    .querySelectorAll(".nav-item")
-    .forEach(item => {
+document.querySelectorAll(".nav-item").forEach(item => {
 
-        item.addEventListener(
-            "click",
-            function(event) {
+    item.addEventListener("click", event => {
 
-                event.preventDefault();
+        event.preventDefault();
 
+        document
+            .querySelector(".nav-item.active")
+            ?.classList.remove("active");
 
-                document
-                    .querySelectorAll(".nav-item")
-                    .forEach(nav => {
-
-                        nav.classList.remove("active");
-
-                    });
-
-
-                this.classList.add("active");
-
-            }
-        );
+        item.classList.add("active");
 
     });
+
+});

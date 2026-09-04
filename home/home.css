@@ -94,12 +94,6 @@ body {
     box-shadow: 0 10px 24px rgba(0, 0, 0, 0.10);
 }
 
-.filter-icon {
-    width: 22px;
-    height: 22px;
-    flex-shrink: 0;
-    color: #111111;
-}
 
 
 /* =========================================================
@@ -255,7 +249,7 @@ body {
 
 .pinterest-grid {
     margin-top: 30px;
-    column-count: 5;
+    column-count: 4;
     column-gap: 17px;
 }
 
@@ -539,6 +533,14 @@ body {
     right: 12px;
 }
 
+.save-button svg {
+    fill: none;
+}
+
+.save-button.saved svg {
+    fill: #000;
+}
+
 .share-button {
     right: 12px;
     bottom: 12px;
@@ -553,14 +555,6 @@ body {
 /* =========================================================
    TABLET
 ========================================================= */
-
-@media (max-width: 1450px) {
-
-    .pinterest-grid {
-        column-count: 4;
-    }
-
-}
 
 @media (max-width: 1150px) {
 
@@ -618,10 +612,6 @@ body {
         font-size: 0;
     }
 
-    .filter-icon {
-        width: 24px;
-        height: 24px;
-    }
 
     .navigation {
         margin-top: 28px;
@@ -897,10 +887,6 @@ body {
         height: 44px;
     }
 
-    .filter-icon {
-        width: 23px;
-        height: 23px;
-    }
 
     .nav-item {
         width: 46px;
@@ -925,7 +911,6 @@ body {
     }
 
     .pinterest-grid {
-        column-count: 2;
         column-gap: 8px;
         margin-top: 18px;
     }
