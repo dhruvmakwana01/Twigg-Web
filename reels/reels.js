@@ -13,7 +13,6 @@ document.addEventListener("DOMContentLoaded", () => {
             video: "videos/video1.mp4",
             poster: "https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=800&h=1422&q=90"
         },
-
         {
             name: "Markwell Studio",
             category: "Logo Design",
@@ -22,7 +21,6 @@ document.addEventListener("DOMContentLoaded", () => {
             video: "videos/video3.mp4",
             poster: "https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&w=800&h=1422&q=90"
         },
-
         {
             name: "Pixel & Co",
             category: "Web & Mobile Design",
@@ -31,7 +29,6 @@ document.addEventListener("DOMContentLoaded", () => {
             video: "videos/video5.mp4",
             poster: "https://images.unsplash.com/photo-1547658719-da2b51169166?auto=format&fit=crop&w=800&h=1422&q=90"
         },
-
         {
             name: "Inkwell Press",
             category: "Book Design",
@@ -40,7 +37,6 @@ document.addEventListener("DOMContentLoaded", () => {
             video: "videos/video1.mp4",
             poster: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&h=1422&q=90"
         },
-
         {
             name: "Reel Intro Studio",
             category: "Intro & Outro Videos",
@@ -49,7 +45,6 @@ document.addEventListener("DOMContentLoaded", () => {
             video: "videos/video3.mp4",
             poster: "https://images.unsplash.com/photo-1492724441997-5dc865305da7?auto=format&fit=crop&w=800&h=1422&q=90"
         },
-
         {
             name: "Kinetic House",
             category: "Motion Graphics",
@@ -58,7 +53,6 @@ document.addEventListener("DOMContentLoaded", () => {
             video: "videos/video5.mp4",
             poster: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&h=1422&q=90"
         },
-
         {
             name: "Studio Nova",
             category: "Product Photography",
@@ -67,7 +61,6 @@ document.addEventListener("DOMContentLoaded", () => {
             video: "videos/video6.mp4",
             poster: "https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?auto=format&fit=crop&w=800&h=1422&q=90"
         },
-
         {
             name: "ColorLab Studio",
             category: "Color Grading",
@@ -189,8 +182,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 <div class="reel-row">
 
-                    <!-- REEL INFO -->
-
                     <div class="reel-info-outside">
 
                         <div class="reel-service-name">
@@ -219,8 +210,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     </div>
 
-
-                    <!-- VIDEO -->
 
                     <div class="reel-card">
 
@@ -258,9 +247,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
                         <div class="reel-play-indicator">
+
                             <svg viewBox="0 0 24 24">
                                 <path d="M8 5v14l11-7z"></path>
                             </svg>
+
                         </div>
 
 
@@ -270,8 +261,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     </div>
 
-
-                    <!-- ACTIONS -->
 
                     <div class="reel-actions">
 
@@ -283,7 +272,6 @@ document.addEventListener("DOMContentLoaded", () => {
                             ${icons.like}
                         </button>
 
-
                         <button
                             type="button"
                             class="reel-action-btn reel-save-btn"
@@ -292,7 +280,6 @@ document.addEventListener("DOMContentLoaded", () => {
                             ${icons.save}
                         </button>
 
-
                         <button
                             type="button"
                             class="reel-action-btn reel-share-btn"
@@ -300,7 +287,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         >
                             ${icons.share}
                         </button>
-
 
                         <button
                             type="button"
@@ -327,9 +313,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     for (let i = shuffledReels.length - 1; i > 0; i--) {
 
-        const j = Math.floor(
-            Math.random() * (i + 1)
-        );
+        const j = Math.floor(Math.random() * (i + 1));
 
         [
             shuffledReels[i],
@@ -340,18 +324,20 @@ document.addEventListener("DOMContentLoaded", () => {
         ];
     }
 
-    track.innerHTML = shuffledReels
-        .map(createReel)
-        .join("");
+    track.innerHTML =
+        shuffledReels
+            .map(createReel)
+            .join("");
 
 
     /* =====================================================
        GET SLIDES
     ===================================================== */
 
-    const slides = Array.from(
-        track.querySelectorAll(".reel-slide")
-    );
+    const slides =
+        Array.from(
+            track.querySelectorAll(".reel-slide")
+        );
 
 
     /* =====================================================
@@ -360,17 +346,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let currentIndex = 0;
 
+    let fullscreenSlide = null;
+    let fullscreenIndex = null;
+    let fullscreenScrollTop = 0;
+
 
     /* =====================================================
        ACTIVE REEL
     ===================================================== */
 
     function setActiveSlide(index) {
+
         slides.forEach((slide, i) => {
+
             slide.classList.toggle(
                 "is-active",
                 i === index
             );
+
         });
     }
 
@@ -380,8 +373,10 @@ document.addEventListener("DOMContentLoaded", () => {
     ===================================================== */
 
     function updateNavButtons() {
+
         if (upButton) {
-            upButton.disabled = currentIndex === 0;
+            upButton.disabled =
+                currentIndex === 0;
         }
 
         if (downButton) {
@@ -396,6 +391,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ===================================================== */
 
     function goToIndex(index) {
+
         if (
             index < 0 ||
             index >= slides.length ||
@@ -410,7 +406,9 @@ document.addEventListener("DOMContentLoaded", () => {
         updateNavButtons();
 
         feed.scrollTo({
-            top: currentIndex * feed.clientHeight,
+            top:
+                currentIndex *
+                feed.clientHeight,
             behavior: "smooth"
         });
 
@@ -419,30 +417,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =====================================================
-       UP BUTTON
+       UP / DOWN BUTTONS
     ===================================================== */
 
     if (upButton) {
-        upButton.addEventListener("click", event => {
-            event.preventDefault();
-            event.stopPropagation();
 
-            goToIndex(currentIndex - 1);
-        });
+        upButton.addEventListener(
+            "click",
+            event => {
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                goToIndex(
+                    currentIndex - 1
+                );
+            }
+        );
     }
 
 
-    /* =====================================================
-       DOWN BUTTON
-    ===================================================== */
-
     if (downButton) {
-        downButton.addEventListener("click", event => {
-            event.preventDefault();
-            event.stopPropagation();
 
-            goToIndex(currentIndex + 1);
-        });
+        downButton.addEventListener(
+            "click",
+            event => {
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                goToIndex(
+                    currentIndex + 1
+                );
+            }
+        );
     }
 
 
@@ -451,33 +459,84 @@ document.addEventListener("DOMContentLoaded", () => {
     ===================================================== */
 
     function playCurrentSlide() {
+
         slides.forEach((slide, index) => {
 
-            const video = slide.querySelector(".reel-video");
+            const video =
+                slide.querySelector(".reel-video");
 
-            if (!video) {
-                return;
-            }
+            if (!video) return;
+
 
             if (index === currentIndex) {
 
                 if (!slide.dataset.userPaused) {
+
                     video.play()
                         .then(() => {
-                            slide.classList.remove("is-paused");
+
+                            slide.classList.remove(
+                                "is-paused"
+                            );
+
                         })
                         .catch(() => {});
+
                 }
 
                 return;
             }
 
+
             video.pause();
             video.currentTime = 0;
 
-            slide.classList.remove("is-paused");
+            slide.classList.remove(
+                "is-paused"
+            );
+
             delete slide.dataset.userPaused;
         });
+    }
+
+
+    /* =====================================================
+       FULLSCREEN STATE HELPER
+    ===================================================== */
+
+    function isRealFullscreenActive() {
+
+        return !!(
+            document.fullscreenElement ||
+            document.webkitFullscreenElement ||
+            document.mozFullScreenElement ||
+            document.msFullscreenElement
+        );
+    }
+
+
+    function isFallbackFullscreenActive(slide) {
+
+        return (
+            slide.classList.contains(
+                "mobile-reel-fullscreen"
+            ) ||
+            slide.classList.contains(
+                "tablet-reel-fullscreen"
+            )
+        );
+    }
+
+
+    function isAnyFullscreenActive() {
+
+        return (
+            isRealFullscreenActive() ||
+            !!document.querySelector(
+                ".reel-slide.mobile-reel-fullscreen, " +
+                ".reel-slide.tablet-reel-fullscreen"
+            )
+        );
     }
 
 
@@ -485,49 +544,76 @@ document.addEventListener("DOMContentLoaded", () => {
        OBSERVE VISIBLE REEL
     ===================================================== */
 
-    const observer = new IntersectionObserver(
-        entries => {
+    const observer =
+        new IntersectionObserver(
+            entries => {
 
-            const visibleSlides = entries
-                .filter(entry => entry.isIntersecting)
-                .sort(
-                    (a, b) =>
-                        b.intersectionRatio -
-                        a.intersectionRatio
-                );
+                /*
+                 * Never let the observer change the
+                 * active reel while fullscreen is active.
+                 */
+                if (isAnyFullscreenActive()) {
+                    return;
+                }
 
-            if (!visibleSlides.length) {
-                return;
+
+                const visibleSlides =
+                    entries
+                        .filter(
+                            entry =>
+                                entry.isIntersecting
+                        )
+                        .sort(
+                            (a, b) =>
+                                b.intersectionRatio -
+                                a.intersectionRatio
+                        );
+
+
+                if (!visibleSlides.length) {
+                    return;
+                }
+
+
+                const visibleSlide =
+                    visibleSlides[0].target;
+
+
+                const index =
+                    slides.indexOf(
+                        visibleSlide
+                    );
+
+
+                if (index === -1) {
+                    return;
+                }
+
+
+                if (index !== currentIndex) {
+
+                    currentIndex = index;
+
+                    setActiveSlide(
+                        currentIndex
+                    );
+
+                    updateNavButtons();
+
+                    playCurrentSlide();
+                }
+            },
+            {
+                root: feed,
+                threshold: [
+                    0.55,
+                    0.7,
+                    0.85,
+                    1
+                ]
             }
+        );
 
-            const visibleSlide =
-                visibleSlides[0].target;
-
-            const index =
-                slides.indexOf(visibleSlide);
-
-            if (index === -1) {
-                return;
-            }
-
-            if (index !== currentIndex) {
-                currentIndex = index;
-
-                setActiveSlide(currentIndex);
-                updateNavButtons();
-                playCurrentSlide();
-            }
-        },
-        {
-            root: feed,
-            threshold: [
-                0.55,
-                0.7,
-                0.85,
-                1
-            ]
-        }
-    );
 
     slides.forEach(slide => {
         observer.observe(slide);
@@ -535,7 +621,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =====================================================
-       VIDEO PROGRESS
+       VIDEO STATE + PROGRESS
     ===================================================== */
 
     slides.forEach(slide => {
@@ -544,24 +630,101 @@ document.addEventListener("DOMContentLoaded", () => {
             slide.querySelector(".reel-video");
 
         const fill =
-            slide.querySelector(".reel-progress-fill");
+            slide.querySelector(
+                ".reel-progress-fill"
+            );
 
-        if (!video || !fill) {
+
+        if (!video) {
             return;
         }
 
+
+        /* ---------------------------------------------
+           PLAY
+        --------------------------------------------- */
+
+        video.addEventListener(
+            "play",
+            () => {
+
+                slide.classList.remove(
+                    "is-paused"
+                );
+            }
+        );
+
+
+        /* ---------------------------------------------
+           PLAYING
+        --------------------------------------------- */
+
+        video.addEventListener(
+            "playing",
+            () => {
+
+                slide.classList.remove(
+                    "is-paused"
+                );
+            }
+        );
+
+
+        /* ---------------------------------------------
+           PAUSE
+        --------------------------------------------- */
+
+        video.addEventListener(
+            "pause",
+            () => {
+
+                /*
+                 * Only show the play indicator when
+                 * the user deliberately paused this reel.
+                 */
+                if (
+                    slide.dataset.userPaused ===
+                    "true"
+                ) {
+
+                    slide.classList.add(
+                        "is-paused"
+                    );
+                }
+            }
+        );
+
+
+        /* ---------------------------------------------
+           PROGRESS
+        --------------------------------------------- */
+
         function updateProgress() {
 
-            if (!video.duration) {
-                fill.style.width = "0%";
+            if (!fill) {
                 return;
             }
 
-            const progress =
-                (video.currentTime / video.duration) * 100;
 
-            fill.style.width = `${progress}%`;
+            if (!video.duration) {
+
+                fill.style.width = "0%";
+
+                return;
+            }
+
+
+            const progress =
+                (
+                    video.currentTime /
+                    video.duration
+                ) * 100;
+
+
+            fill.style.width =
+                `${progress}%`;
         }
+
 
         video.addEventListener(
             "timeupdate",
@@ -584,184 +747,331 @@ document.addEventListener("DOMContentLoaded", () => {
        CLICK EVENTS
     ===================================================== */
 
-    track.addEventListener("click", event => {
+    track.addEventListener(
+        "click",
+        event => {
 
-        const slide =
-            event.target.closest(".reel-slide");
-
-        if (!slide) {
-            return;
-        }
+            const slide =
+                event.target.closest(
+                    ".reel-slide"
+                );
 
 
-        /* ---------------------------------------------
-           MUTE
-        --------------------------------------------- */
+            if (!slide) {
+                return;
+            }
 
-        const muteButton =
-            event.target.closest(".reel-mute-btn");
 
-        if (muteButton) {
+            /* -----------------------------------------
+               MUTE
+            ----------------------------------------- */
 
-            event.stopPropagation();
+            const muteButton =
+                event.target.closest(
+                    ".reel-mute-btn"
+                );
+
+
+            if (muteButton) {
+
+                event.stopPropagation();
+
+                const video =
+                    slide.querySelector(
+                        ".reel-video"
+                    );
+
+
+                if (!video) {
+                    return;
+                }
+
+
+                video.muted =
+                    !video.muted;
+
+
+                muteButton.innerHTML =
+                    video.muted
+                        ? icons.mute
+                        : icons.unmute;
+
+
+                muteButton.setAttribute(
+                    "aria-label",
+                    video.muted
+                        ? "Unmute"
+                        : "Mute"
+                );
+
+
+                return;
+            }
+
+
+            /* -----------------------------------------
+               FULLSCREEN
+            ----------------------------------------- */
+
+            const fullscreenButton =
+                event.target.closest(
+                    ".reel-fullscreen-btn"
+                );
+
+
+            if (fullscreenButton) {
+
+                event.stopPropagation();
+
+                toggleFullscreen(
+                    slide
+                );
+
+                return;
+            }
+
+
+            /* -----------------------------------------
+               LIKE
+            ----------------------------------------- */
+
+            const likeButton =
+                event.target.closest(
+                    ".reel-like-btn"
+                );
+
+
+            if (likeButton) {
+
+                event.stopPropagation();
+
+                likeButton.classList.toggle(
+                    "is-liked"
+                );
+
+                return;
+            }
+
+
+            /* -----------------------------------------
+               SAVE
+            ----------------------------------------- */
+
+            const saveButton =
+                event.target.closest(
+                    ".reel-save-btn"
+                );
+
+
+            if (saveButton) {
+
+                event.stopPropagation();
+
+                saveButton.classList.toggle(
+                    "is-saved"
+                );
+
+                return;
+            }
+
+
+            /* -----------------------------------------
+               SHARE
+            ----------------------------------------- */
+
+            const shareButton =
+                event.target.closest(
+                    ".reel-share-btn"
+                );
+
+
+            if (shareButton) {
+
+                event.stopPropagation();
+
+                shareReel();
+
+                return;
+            }
+
+
+            /* -----------------------------------------
+               REPORT
+            ----------------------------------------- */
+
+            const reportButton =
+                event.target.closest(
+                    ".reel-report-btn"
+                );
+
+
+            if (reportButton) {
+
+                event.stopPropagation();
+
+
+                if (
+                    !reportButton.classList.contains(
+                        "is-reported"
+                    )
+                ) {
+
+                    reportButton.classList.add(
+                        "is-reported"
+                    );
+                }
+
+                return;
+            }
+
+
+            /* -----------------------------------------
+               VIDEO PLAY / PAUSE
+            ----------------------------------------- */
+
+            if (
+                slide !== slides[currentIndex] ||
+                !event.target.closest(".reel-card")
+            ) {
+                return;
+            }
+
 
             const video =
-                slide.querySelector(".reel-video");
+                slide.querySelector(
+                    ".reel-video"
+                );
+
 
             if (!video) {
                 return;
             }
 
-            video.muted = !video.muted;
 
-            muteButton.innerHTML =
-                video.muted
-                    ? icons.mute
-                    : icons.unmute;
+            if (video.paused) {
 
-            muteButton.setAttribute(
-                "aria-label",
-                video.muted
-                    ? "Unmute"
-                    : "Mute"
-            );
+                delete slide.dataset.userPaused;
 
-            return;
-        }
+                video.play()
+                    .then(() => {
 
+                        slide.classList.remove(
+                            "is-paused"
+                        );
 
-        /* ---------------------------------------------
-           FULLSCREEN
-        --------------------------------------------- */
+                    })
+                    .catch(() => {});
 
-        const fullscreenButton =
-            event.target.closest(
-                ".reel-fullscreen-btn"
-            );
+            } else {
 
-        if (fullscreenButton) {
+                video.pause();
 
-            event.stopPropagation();
+                slide.dataset.userPaused =
+                    "true";
 
-            toggleFullscreen(slide);
-
-            return;
-        }
-
-
-        /* ---------------------------------------------
-           LIKE
-        --------------------------------------------- */
-
-        const likeButton =
-            event.target.closest(".reel-like-btn");
-
-        if (likeButton) {
-
-            event.stopPropagation();
-
-            likeButton.classList.toggle("is-liked");
-
-            return;
-        }
-
-
-        /* ---------------------------------------------
-           SAVE
-        --------------------------------------------- */
-
-        const saveButton =
-            event.target.closest(".reel-save-btn");
-
-        if (saveButton) {
-
-            event.stopPropagation();
-
-            saveButton.classList.toggle("is-saved");
-
-            return;
-        }
-
-
-        /* ---------------------------------------------
-           SHARE
-        --------------------------------------------- */
-
-        const shareButton =
-            event.target.closest(".reel-share-btn");
-
-        if (shareButton) {
-
-            event.stopPropagation();
-
-            shareReel();
-
-            return;
-        }
-
-
-        /* ---------------------------------------------
-           REPORT
-        --------------------------------------------- */
-
-        const reportButton =
-            event.target.closest(".reel-report-btn");
-
-        if (reportButton) {
-
-            event.stopPropagation();
-
-            if (
-                !reportButton.classList.contains(
-                    "is-reported"
-                )
-            ) {
-                reportButton.classList.add(
-                    "is-reported"
+                slide.classList.add(
+                    "is-paused"
                 );
             }
-
-            return;
         }
+    );
 
 
-        /* ---------------------------------------------
-           VIDEO PLAY / PAUSE
-        --------------------------------------------- */
+    /* =====================================================
+       FULLSCREEN HELPERS
+    ===================================================== */
 
-        if (
-            slide !== slides[currentIndex] ||
-            !event.target.closest(".reel-card")
+    function supportsElementFullscreen(element) {
+
+        return !!(
+            element.requestFullscreen ||
+            element.webkitRequestFullscreen ||
+            element.mozRequestFullScreen ||
+            element.msRequestFullscreen
+        );
+    }
+
+
+    async function requestElementFullscreen(element) {
+
+        if (element.requestFullscreen) {
+
+            await element.requestFullscreen();
+
+        } else if (
+            element.webkitRequestFullscreen
         ) {
-            return;
+
+            element.webkitRequestFullscreen();
+
+        } else if (
+            element.mozRequestFullScreen
+        ) {
+
+            element.mozRequestFullScreen();
+
+        } else if (
+            element.msRequestFullscreen
+        ) {
+
+            element.msRequestFullscreen();
         }
+    }
 
-        const video =
-            slide.querySelector(".reel-video");
 
-        if (!video) {
-            return;
+    async function exitElementFullscreen() {
+
+        if (document.exitFullscreen) {
+
+            await document.exitFullscreen();
+
+        } else if (
+            document.webkitExitFullscreen
+        ) {
+
+            document.webkitExitFullscreen();
+
+        } else if (
+            document.mozCancelFullScreen
+        ) {
+
+            document.mozCancelFullScreen();
+
+        } else if (
+            document.msExitFullscreen
+        ) {
+
+            document.msExitFullscreen();
         }
+    }
 
-        if (video.paused) {
 
-            delete slide.dataset.userPaused;
+    /* =====================================================
+       EXIT FALLBACK FULLSCREEN
+    ===================================================== */
 
-            video.play()
-                .then(() => {
-                    slide.classList.remove("is-paused");
-                })
-                .catch(() => {});
+    function exitFallbackFullscreen(
+        slide,
+        card
+    ) {
 
-        } else {
+        slide.classList.remove(
+            "mobile-reel-fullscreen",
+            "tablet-reel-fullscreen"
+        );
 
-            video.pause();
 
-            slide.dataset.userPaused = "true";
+        document.body.classList.remove(
+            "mobile-reel-fullscreen-active",
+            "tablet-reel-fullscreen-active"
+        );
 
-            slide.classList.add("is-paused");
-        }
-    });
+
+        updateFullscreenButton(
+            card,
+            false
+        );
+    }
 
 
     /* =====================================================
@@ -771,10 +1081,16 @@ document.addEventListener("DOMContentLoaded", () => {
     async function toggleFullscreen(slide) {
 
         const card =
-            slide.querySelector(".reel-card");
+            slide.querySelector(
+                ".reel-card"
+            );
+
 
         const video =
-            slide.querySelector(".reel-video");
+            slide.querySelector(
+                ".reel-video"
+            );
+
 
         if (!card) {
             return;
@@ -782,90 +1098,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
         /* ---------------------------------------------
-           DEVICE / VIEW DETECTION
-        --------------------------------------------- */
-
-        const isMobile =
-            window.matchMedia(
-                "(max-width: 800px)"
-            ).matches;
-
-        const isTablet =
-            window.matchMedia(
-                "(min-width: 801px) and (max-width: 1150px)"
-            ).matches;
-
-
-        /* ---------------------------------------------
-           EXIT CUSTOM MOBILE FULLSCREEN
+           EXIT FALLBACK FULLSCREEN
         --------------------------------------------- */
 
         if (
-            isMobile &&
-            slide.classList.contains(
-                "mobile-reel-fullscreen"
+            isFallbackFullscreenActive(
+                slide
             )
         ) {
 
-            slide.classList.remove(
-                "mobile-reel-fullscreen"
+            exitFallbackFullscreen(
+                slide,
+                card
             );
 
-            document.body.classList.remove(
-                "mobile-reel-fullscreen-active"
+
+            restoreReelAfterFullscreen(
+                slide
             );
 
-            updateFullscreenButton(card, false);
 
             return;
         }
 
 
         /* ---------------------------------------------
-           EXIT CUSTOM TABLET FULLSCREEN
+           EXIT REAL FULLSCREEN
         --------------------------------------------- */
 
-        if (
-            isTablet &&
-            slide.classList.contains(
-                "tablet-reel-fullscreen"
-            )
-        ) {
-
-            slide.classList.remove(
-                "tablet-reel-fullscreen"
-            );
-
-            document.body.classList.remove(
-                "tablet-reel-fullscreen-active"
-            );
-
-            updateFullscreenButton(card, false);
-
-            return;
-        }
-
-
-        /* ---------------------------------------------
-           EXIT REAL BROWSER FULLSCREEN
-           DESKTOP ONLY
-        --------------------------------------------- */
-
-        if (
-            document.fullscreenElement ||
-            document.webkitFullscreenElement
-        ) {
+        if (isRealFullscreenActive()) {
 
             try {
 
-                if (document.exitFullscreen) {
-                    await document.exitFullscreen();
-
-                } else if (
-                    document.webkitExitFullscreen
-                ) {
-                    document.webkitExitFullscreen();
-                }
+                await exitElementFullscreen();
 
             } catch (error) {
 
@@ -880,8 +1145,100 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
         /* ---------------------------------------------
-           MOBILE CUSTOM FULLSCREEN
+           REMEMBER CURRENT REEL
         --------------------------------------------- */
+
+        fullscreenSlide =
+            slide;
+
+
+        fullscreenIndex =
+            slides.indexOf(
+                slide
+            );
+
+
+        fullscreenScrollTop =
+            feed.scrollTop;
+
+
+        currentIndex =
+            fullscreenIndex;
+
+
+        setActiveSlide(
+            currentIndex
+        );
+
+
+        updateNavButtons();
+
+
+        /* ---------------------------------------------
+           REAL FULLSCREEN
+        --------------------------------------------- */
+
+        if (
+            supportsElementFullscreen(
+                card
+            )
+        ) {
+
+            try {
+
+                await requestElementFullscreen(
+                    card
+                );
+
+
+                updateFullscreenButton(
+                    card,
+                    true
+                );
+
+
+                /*
+                 * Start playback only if the user
+                 * has not deliberately paused it.
+                 */
+                if (
+                    video &&
+                    video.paused &&
+                    !slide.dataset.userPaused
+                ) {
+
+                    video.play()
+                        .catch(() => {});
+                }
+
+            } catch (error) {
+
+                console.log(
+                    "Fullscreen unavailable:",
+                    error
+                );
+            }
+
+
+            return;
+        }
+
+
+        /* ---------------------------------------------
+           FALLBACK FULLSCREEN
+        --------------------------------------------- */
+
+        const isMobile =
+            window.matchMedia(
+                "(max-width: 800px)"
+            ).matches;
+
+
+        const isTablet =
+            window.matchMedia(
+                "(min-width: 801px) and (max-width: 1150px)"
+            ).matches;
+
 
         if (isMobile) {
 
@@ -889,77 +1246,144 @@ document.addEventListener("DOMContentLoaded", () => {
                 "mobile-reel-fullscreen"
             );
 
+
             document.body.classList.add(
                 "mobile-reel-fullscreen-active"
             );
 
-            updateFullscreenButton(card, true);
-
-            if (
-                video &&
-                video.paused &&
-                !slide.dataset.userPaused
-            ) {
-                video.play()
-                    .catch(() => {});
-            }
-
-            return;
-        }
-
-
-        /* ---------------------------------------------
-           TABLET CUSTOM FULLSCREEN
-           TABLET DOES NOT USE requestFullscreen()
-        --------------------------------------------- */
-
-        if (isTablet) {
+        } else if (isTablet) {
 
             slide.classList.add(
                 "tablet-reel-fullscreen"
             );
 
+
             document.body.classList.add(
                 "tablet-reel-fullscreen-active"
             );
 
-            updateFullscreenButton(card, true);
-
-            if (
-                video &&
-                video.paused &&
-                !slide.dataset.userPaused
-            ) {
-                video.play()
-                    .catch(() => {});
-            }
+        } else {
 
             return;
         }
 
 
-        /* ---------------------------------------------
-           DESKTOP REAL FULLSCREEN
-        --------------------------------------------- */
+        updateFullscreenButton(
+            card,
+            true
+        );
 
-        try {
 
-            if (card.requestFullscreen) {
-                await card.requestFullscreen();
+        if (
+            video &&
+            video.paused &&
+            !slide.dataset.userPaused
+        ) {
 
-            } else if (
-                card.webkitRequestFullscreen
-            ) {
-                card.webkitRequestFullscreen();
-            }
-
-        } catch (error) {
-
-            console.log(
-                "Fullscreen unavailable:",
-                error
-            );
+            video.play()
+                .catch(() => {});
         }
+    }
+
+
+    /* =====================================================
+       RESTORE REEL AFTER FULLSCREEN
+    ===================================================== */
+
+    function restoreReelAfterFullscreen(
+        slide
+    ) {
+
+        if (!slide) {
+            return;
+        }
+
+
+        const index =
+            slides.indexOf(
+                slide
+            );
+
+
+        if (index !== -1) {
+
+            currentIndex =
+                index;
+
+        } else if (
+            fullscreenIndex !== null &&
+            fullscreenIndex >= 0 &&
+            fullscreenIndex < slides.length
+        ) {
+
+            currentIndex =
+                fullscreenIndex;
+        }
+
+
+        setActiveSlide(
+            currentIndex
+        );
+
+
+        updateNavButtons();
+
+
+        /*
+         * Mobile browsers can take one or more
+         * frames to restore the normal viewport.
+         *
+         * Wait for the layout to return before
+         * restoring the exact reel position.
+         */
+        requestAnimationFrame(() => {
+
+            requestAnimationFrame(() => {
+
+                const targetSlide =
+                    slides[currentIndex];
+
+
+                if (!targetSlide) {
+                    return;
+                }
+
+
+                feed.scrollTo({
+                    top:
+                        targetSlide.offsetTop,
+                    left: 0,
+                    behavior: "auto"
+                });
+
+
+                /*
+                 * Force a layout recalculation.
+                 * This fixes the situation where the
+                 * information/actions appear only after
+                 * manually scrolling.
+                 */
+                void feed.offsetHeight;
+
+
+                setActiveSlide(
+                    currentIndex
+                );
+
+
+                updateNavButtons();
+
+            });
+
+        });
+
+
+        fullscreenSlide =
+            null;
+
+
+        fullscreenIndex =
+            null;
     }
 
 
@@ -977,14 +1401,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 ".reel-fullscreen-btn"
             );
 
+
         if (!button) {
             return;
         }
+
 
         button.innerHTML =
             fullscreen
                 ? icons.exitFullscreen
                 : icons.fullscreen;
+
 
         button.setAttribute(
             "aria-label",
@@ -1001,18 +1428,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function handleFullscreenChange() {
 
+        const currentlyFullscreen =
+            document.fullscreenElement ||
+            document.webkitFullscreenElement ||
+            document.mozFullScreenElement ||
+            document.msFullscreenElement;
+
+
         slides.forEach(slide => {
 
             const card =
-                slide.querySelector(".reel-card");
+                slide.querySelector(
+                    ".reel-card"
+                );
+
 
             if (!card) {
                 return;
             }
 
+
             const isFullscreen =
-                document.fullscreenElement === card ||
-                document.webkitFullscreenElement === card;
+                currentlyFullscreen ===
+                card;
+
 
             updateFullscreenButton(
                 card,
@@ -1021,23 +1460,52 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
 
-        if (
-            !document.fullscreenElement &&
-            !document.webkitFullscreenElement
-        ) {
+        /* ---------------------------------------------
+           REAL FULLSCREEN HAS ENDED
+        --------------------------------------------- */
+
+        if (!isRealFullscreenActive()) {
+
             document.body.classList.remove(
-                "mobile-reel-fullscreen-active"
+                "mobile-reel-fullscreen-active",
+                "tablet-reel-fullscreen-active"
             );
+
+
+            if (fullscreenSlide) {
+
+                const slideToRestore =
+                    fullscreenSlide;
+
+
+                restoreReelAfterFullscreen(
+                    slideToRestore
+                );
+            }
         }
     }
+
 
     document.addEventListener(
         "fullscreenchange",
         handleFullscreenChange
     );
 
+
     document.addEventListener(
         "webkitfullscreenchange",
+        handleFullscreenChange
+    );
+
+
+    document.addEventListener(
+        "mozfullscreenchange",
+        handleFullscreenChange
+    );
+
+
+    document.addEventListener(
+        "MSFullscreenChange",
         handleFullscreenChange
     );
 
@@ -1055,93 +1523,42 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
 
-            /* ---------------------------------------------
-               CUSTOM MOBILE FULLSCREEN
-            --------------------------------------------- */
-
-            const mobileFullscreenSlide =
+            const fallbackFullscreenSlide =
                 document.querySelector(
-                    ".reel-slide.mobile-reel-fullscreen"
-                );
-
-            if (mobileFullscreenSlide) {
-
-                const card =
-                    mobileFullscreenSlide.querySelector(
-                        ".reel-card"
-                    );
-
-                mobileFullscreenSlide.classList.remove(
-                    "mobile-reel-fullscreen"
-                );
-
-                document.body.classList.remove(
-                    "mobile-reel-fullscreen-active"
-                );
-
-                if (card) {
-                    updateFullscreenButton(
-                        card,
-                        false
-                    );
-                }
-
-                return;
-            }
-
-
-            /* ---------------------------------------------
-               CUSTOM TABLET FULLSCREEN
-            --------------------------------------------- */
-
-            const tabletFullscreenSlide =
-                document.querySelector(
+                    ".reel-slide.mobile-reel-fullscreen, " +
                     ".reel-slide.tablet-reel-fullscreen"
                 );
 
-            if (tabletFullscreenSlide) {
+
+            if (fallbackFullscreenSlide) {
 
                 const card =
-                    tabletFullscreenSlide.querySelector(
+                    fallbackFullscreenSlide.querySelector(
                         ".reel-card"
                     );
 
-                tabletFullscreenSlide.classList.remove(
-                    "tablet-reel-fullscreen"
-                );
-
-                document.body.classList.remove(
-                    "tablet-reel-fullscreen-active"
-                );
 
                 if (card) {
-                    updateFullscreenButton(
-                        card,
-                        false
+
+                    exitFallbackFullscreen(
+                        fallbackFullscreenSlide,
+                        card
+                    );
+
+
+                    restoreReelAfterFullscreen(
+                        fallbackFullscreenSlide
                     );
                 }
+
 
                 return;
             }
 
 
-            /* ---------------------------------------------
-               REAL BROWSER FULLSCREEN
-            --------------------------------------------- */
+            if (isRealFullscreenActive()) {
 
-            if (
-                document.fullscreenElement ||
-                document.webkitFullscreenElement
-            ) {
-
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-
-                } else if (
-                    document.webkitExitFullscreen
-                ) {
-                    document.webkitExitFullscreen();
-                }
+                exitElementFullscreen();
             }
         }
     );
@@ -1159,11 +1576,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 await navigator.share({
                     title: "Twigg",
-                    text:
-                        "Check out this reel on Twigg."
+                    text: "Check out this reel on Twigg."
                 });
 
             } catch {
+
                 /* User closed share menu. */
             }
 
@@ -1180,6 +1597,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
 
             } catch {
+
                 /* Clipboard unavailable. */
             }
         }
@@ -1229,20 +1647,29 @@ document.addEventListener("DOMContentLoaded", () => {
                 event => {
 
                     if (
-                        item.getAttribute("href") !== "#"
+                        item.getAttribute("href") !==
+                        "#"
                     ) {
                         return;
                     }
 
+
                     event.preventDefault();
+
 
                     document
                         .querySelectorAll(".nav-item")
-                        .forEach(nav =>
-                            nav.classList.remove("active")
-                        );
+                        .forEach(nav => {
 
-                    item.classList.add("active");
+                            nav.classList.remove(
+                                "active"
+                            );
+                        });
+
+
+                    item.classList.add(
+                        "active"
+                    );
                 }
             );
         });
@@ -1253,7 +1680,9 @@ document.addEventListener("DOMContentLoaded", () => {
     ===================================================== */
 
     setActiveSlide(0);
+
     updateNavButtons();
+
     playCurrentSlide();
 
 });
