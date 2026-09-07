@@ -196,6 +196,21 @@ body {
 
 
 /* =========================================================
+   MOBILE-ONLY ELEMENTS
+   (mobile-topbar / mobile-filter-button)
+
+   Hidden by default so desktop & tablet are completely
+   unaffected. Only shown inside the mobile media queries
+   further down this file.
+========================================================= */
+
+.mobile-topbar,
+.mobile-filter-button {
+    display: none;
+}
+
+
+/* =========================================================
    CATEGORIES
 ========================================================= */
 
@@ -1569,5 +1584,233 @@ body {
     .sidebar .navigation .nav-item:nth-child(6),
     .sidebar .navigation .nav-item:nth-child(7) {
         display: none !important;
+    }
+}
+
+
+/* =========================================================
+   MOBILE TOP BAR + FLOATING FILTER BUTTON
+   (NEW — mobile only. Desktop & tablet are completely
+   unaffected: these rules only exist inside the
+   max-width: 800px / 500px / 380px breakpoints below,
+   and the old fixed-circle filter behavior inside the
+   sidebar is switched off for mobile just below.)
+========================================================= */
+
+@media (max-width: 800px) {
+
+    /* -----------------------------------------------------
+       The old fixed circular filter button that lived
+       inside the sidebar is replaced on mobile by the new
+       floating filter button inside .main (below the
+       categories row).
+    ----------------------------------------------------- */
+
+    .sidebar .filter-button {
+        display: none !important;
+    }
+
+
+    /* =====================================================
+       MOBILE TOP BAR
+
+       Normal page flow — NOT fixed, NOT sticky. It scrolls
+       away with the rest of the page inside .main, exactly
+       like ordinary content.
+
+       Logo → top-left
+       Create + Notification → top-right
+    ===================================================== */
+
+    .mobile-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        width: 100%;
+
+        margin-bottom: 18px;
+    }
+
+    .mobile-topbar-logo {
+        display: block;
+
+        width: 96px;
+        height: auto;
+
+        flex-shrink: 0;
+    }
+
+    .mobile-topbar-logo svg {
+        display: block;
+
+        width: 100%;
+        height: auto;
+    }
+
+    .mobile-topbar-actions {
+        display: flex;
+        align-items: center;
+
+        gap: 6px;
+
+        flex-shrink: 0;
+    }
+
+    .mobile-topbar-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        width: 40px;
+        height: 40px;
+
+        border-radius: 50%;
+
+        color: #222;
+
+        text-decoration: none;
+
+        -webkit-tap-highlight-color: transparent;
+
+        transition: background 0.2s ease;
+    }
+
+    .mobile-topbar-icon:hover {
+        background: #f1f1f1;
+    }
+
+    .mobile-topbar-icon svg {
+        width: 23px;
+        height: 23px;
+
+        fill: none;
+
+        stroke: currentColor;
+        stroke-width: 1.8;
+    }
+
+
+    /* =====================================================
+       FLOATING FILTER BUTTON
+
+       Sits immediately under the categories, positioned so
+       it overlaps the beginning of the content area (the
+       media grid) rather than the categories or the top
+       bar. The negative bottom margin pulls the grid up
+       underneath it to create that overlap.
+
+       On scroll it moves upward with the page (normal
+       flow) until it reaches the top of the viewport, at
+       which point it sticks there and is allowed to
+       overlap the media content scrolling beneath it.
+    ===================================================== */
+
+    .mobile-filter-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        position: -webkit-sticky;
+        position: sticky;
+        top: 14px;
+
+        width: 46px;
+        height: 46px;
+
+        margin: 14px 0 -32px;
+        padding: 0;
+
+        border: 1px solid #e2e2e2;
+        border-radius: 50%;
+
+        background: #fff;
+        color: #151515;
+
+        box-shadow:
+            0 5px 14px rgba(0, 0, 0, 0.16),
+            0 2px 5px rgba(0, 0, 0, 0.08);
+
+        cursor: pointer;
+
+        -webkit-tap-highlight-color: transparent;
+
+        z-index: 500;
+    }
+
+    .mobile-filter-button svg {
+        width: 22px;
+        height: 22px;
+
+        fill: currentColor;
+
+        stroke: none;
+    }
+}
+
+
+/* =========================================================
+   SMALL MOBILE — TOP BAR + FILTER
+   500px AND BELOW
+========================================================= */
+
+@media (max-width: 500px) {
+
+    .mobile-topbar-logo {
+        width: 84px;
+    }
+
+    .mobile-topbar-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .mobile-topbar-icon svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .mobile-filter-button {
+        top: 12px;
+
+        width: 42px;
+        height: 42px;
+
+        margin: 12px 0 -28px;
+    }
+
+    .mobile-filter-button svg {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+
+/* =========================================================
+   VERY SMALL PHONES — TOP BAR + FILTER
+   380px AND BELOW
+========================================================= */
+
+@media (max-width: 380px) {
+
+    .mobile-topbar-logo {
+        width: 76px;
+    }
+
+    .mobile-topbar-icon {
+        width: 34px;
+        height: 34px;
+    }
+
+    .mobile-topbar-icon svg {
+        width: 21px;
+        height: 21px;
+    }
+
+    .mobile-filter-button {
+        width: 40px;
+        height: 40px;
+
+        margin: 10px 0 -26px;
     }
 }
