@@ -463,10 +463,7 @@ navItems.forEach(item => {
 
     item.addEventListener(
         "click",
-        event => {
-
-            event.preventDefault();
-
+        () => {
 
             /*
                Remove active state from every item.
@@ -491,3 +488,4 @@ navItems.forEach(item => {
     );
 
 });
+

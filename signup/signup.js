@@ -72,3 +72,12 @@ signupForm.addEventListener("submit", (event) => {
     signupButton.querySelector("span").textContent = "Creating account...";
 
 });
+
+// /* =========================================================
+//    Data
+// ========================================================= */
+
+// let username = document.getElementById("username").value;
+// let email = document.getElementById("email").value;
+// let password = document.getElementById("password").value;
+// let confirmPassword = document.getElementById("confirmPassword").value;

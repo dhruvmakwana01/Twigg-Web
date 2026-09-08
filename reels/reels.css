@@ -320,7 +320,7 @@ body {
     height: min(92vh, 800px);
     aspect-ratio: 9 / 16;
     overflow: hidden;
-    border-radius: 22px;
+    border-radius: 0;
     background: #000000;
     cursor: pointer;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22);
@@ -777,11 +777,11 @@ body {
         height: var(--tablet-reel-height);
         width: var(--tablet-reel-width);
         aspect-ratio: 9 / 16;
-        border-radius: 18px;
+        border-radius: 0;
     }
 
 
-    /* =====================================================
+    /* =====================================================    
        TABLET CREATOR INFO
     ===================================================== */
 
@@ -1466,7 +1466,7 @@ body {
         max-height: var(--mobile-available-height);
         margin: 0;
         overflow: hidden;
-        border-radius: 16px;
+        border-radius: 0;
         background: #000000;
         box-shadow:
             0 12px 35px rgba(0, 0, 0, 0.22);
@@ -1864,7 +1864,7 @@ body {
         width: var(--mobile-reel-width);
         height: var(--mobile-reel-height);
         aspect-ratio: 9 / 16;
-        border-radius: 14px;
+        border-radius: 0;
     }
 
     .reel-info-outside {
