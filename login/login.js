@@ -41,23 +41,18 @@ loginForm.addEventListener("submit", (event) => {
 
 
     /* =====================================================
-       LOGIN DATA
-    ===================================================== */
-
-    let data = [
-        {
-            username: "admin@twigg.in",
-            password: "twigg123"
-        }
-    ];
-
-
-    /* =====================================================
        GET USER INPUT
     ===================================================== */
 
-    let x = document.getElementById("email").value;
+    let x = document.getElementById("usernameOrEmail").value;
     let y = document.getElementById("password").value;
+
+
+    /* =====================================================
+       GET REGISTERED USERS FROM LOCAL STORAGE
+    ===================================================== */
+
+    let data = JSON.parse(localStorage.getItem("registerusers")) || [];
 
 
     /* =====================================================
@@ -66,8 +61,11 @@ loginForm.addEventListener("submit", (event) => {
 
     let result = data.find(function validateuser(userdetails) {
 
-        return userdetails.username === x &&
-               userdetails.password === y;
+        return (
+            (userdetails.user_username === x ||
+                userdetails.user_email === x) &&
+            userdetails.user_password === y
+        );
 
     });
 
@@ -78,16 +76,13 @@ loginForm.addEventListener("submit", (event) => {
 
     if (result) {
 
-        // Correct login
         window.location.href =
             "/Users/dhruvmakwana/Dev/Twigg Website/home/home.html";
 
     } else {
 
-        // Incorrect login
-        alert("Incorrect email or password");
+        alert("Incorrect username/email or password");
 
-        // Change button back
         signInButton.querySelector("span").textContent = "Sign In";
 
     }

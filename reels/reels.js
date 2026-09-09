@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
             rating: "4.9",
             reviews: "1,204",
             video: "videos/video1.mp4",
-            poster: "https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=800&h=1422&q=90"
+            poster: "https://i.pinimg.com/736x/99/6e/9b/996e9b4ad4e4b5155a3d5d37de7c7d93.jpg"
         },
         {
             name: "Markwell Studio",
@@ -43,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
             rating: "4.7",
             reviews: "445",
             video: "videos/video3.mp4",
-            poster: "https://images.unsplash.com/photo-1492724441997-5dc865305da7?auto=format&fit=crop&w=800&h=1422&q=90"
+            poster: "https://i.pinimg.com/736x/16/7f/5d/167f5d34160db5c265889c70469db889.jpg"
         },
         {
             name: "Kinetic House",
@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
             rating: "4.8",
             reviews: "990",
             video: "videos/video5.mp4",
-            poster: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&h=1422&q=90"
+            poster: "https://i.pinimg.com/736x/71/7b/6e/717b6e49ed658b5aa2ff8e80b2a809f5.jpg"
         },
         {
             name: "Studio Nova",
@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
             rating: "4.9",
             reviews: "1,875",
             video: "videos/video6.mp4",
-            poster: "https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?auto=format&fit=crop&w=800&h=1422&q=90"
+            poster: "https://i.pinimg.com/1200x/ca/9c/77/ca9c777793c4a9217a277448f0a411af.jpg"
         },
         {
             name: "ColorLab Studio",
@@ -121,6 +121,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 <path d="M15 3v6h6"></path>
                 <path d="M9 21v-6H3"></path>
                 <path d="M15 21v-6h6"></path>
+            </svg>
+        `,
+
+        rotate: `
+            <svg viewBox="0 0 24 24">
+                <path d="M20 12a8 8 0 1 1-2.34-5.66"></path>
+                <path d="M20 4v5h-5"></path>
             </svg>
         `,
 
@@ -246,6 +253,15 @@ document.addEventListener("DOMContentLoaded", () => {
                         </button>
 
 
+                        <button
+                            type="button"
+                            class="reel-rotate-btn"
+                            aria-label="Rotate video"
+                        >
+                            ${icons.rotate}
+                        </button>
+
+
                         <div class="reel-play-indicator">
 
                             <svg viewBox="0 0 24 24">
@@ -323,6 +339,7 @@ document.addEventListener("DOMContentLoaded", () => {
             shuffledReels[i]
         ];
     }
+
 
     track.innerHTML =
         shuffledReels
@@ -541,6 +558,527 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =====================================================
+       ROTATE FEATURE
+
+       Manual two-state toggle only:
+
+       - Mobile: the video rotates in place inside the
+         untouched 9:16 card.
+
+       - Desktop / tablet: the card itself becomes a
+         16:9 landscape box; the video stays upright.
+
+       Rotation state lives on slide.dataset.rotated and
+       is never touched by fullscreen enter/exit, resize,
+       or device orientation - only the Rotate button
+       click changes it.
+    ===================================================== */
+
+    function isMobileRotateView() {
+
+        return window.matchMedia(
+            "(max-width: 800px)"
+        ).matches;
+    }
+
+
+    function resetVideoRotation(video) {
+
+        if (!video) return;
+
+        video.classList.remove(
+            "reel-video-rotated"
+        );
+
+        video.style.width = "";
+        video.style.height = "";
+        video.style.transform = "";
+
+        video.style.removeProperty(
+            "--reel-media-rotate-w"
+        );
+
+        video.style.removeProperty(
+            "--reel-media-rotate-h"
+        );
+    }
+
+
+    function resetCardRotation(card, video) {
+
+    if (!card) return;
+
+    card.classList.remove(
+        "reel-card-rotated"
+    );
+
+    card.style.removeProperty(
+        "--reel-rotate-w"
+    );
+
+    card.style.removeProperty(
+        "--reel-rotate-h"
+    );
+
+    const slide =
+        card.closest(".reel-slide");
+
+    if (slide) {
+
+        slide.classList.remove(
+            "reel-slide-rotated"
+        );
+
+        slide.style.removeProperty(
+            "--reel-rotate-w"
+        );
+
+        slide.style.removeProperty(
+            "--reel-rotate-h"
+        );
+    }
+
+    if (video) {
+
+        video.classList.remove(
+            "reel-video-contain"
+        );
+    }
+}
+
+
+    /* -----------------------------------------------------
+       MOBILE: rotate the video in place
+    ----------------------------------------------------- */
+
+    function rotateVideoInPlace(card, video) {
+
+        const width = card.clientWidth;
+        const height = card.clientHeight;
+
+        if (!width || !height) {
+            return;
+        }
+
+        video.classList.add(
+            "reel-video-rotated"
+        );
+
+        /*
+         * Swap the rendered box so that once rotated
+         * 90deg, its bounding box exactly matches the
+         * card which always stays 9:16 on mobile.
+         */
+
+        video.style.setProperty(
+            "--reel-media-rotate-w",
+            `${height}px`
+        );
+
+        video.style.setProperty(
+            "--reel-media-rotate-h",
+            `${width}px`
+        );
+
+        video.style.width =
+            `${height}px`;
+
+        video.style.height =
+            `${width}px`;
+
+        video.style.transform =
+            "translate(-50%, -50%) rotate(90deg)";
+    }
+
+
+    /* -----------------------------------------------------
+       DESKTOP / TABLET: available width beside the card
+    ----------------------------------------------------- */
+
+    function getAvailableCardWidth(slide) {
+
+        const inFullscreen =
+            isRealFullscreenActive() ||
+            isFallbackFullscreenActive(slide);
+
+        if (inFullscreen) {
+
+            return window.innerWidth * 0.96;
+        }
+
+
+        const row =
+            slide.querySelector(".reel-row");
+
+        if (!row) {
+            return window.innerWidth * 0.6;
+        }
+
+
+        const rowWidth = row.clientWidth;
+
+        /*
+         * Leave room for the info panel and action
+         * buttons that sit beside the card.
+         */
+
+        const reserved = 480;
+
+        return Math.max(
+            rowWidth - reserved,
+            320
+        );
+    }
+
+
+    /* -----------------------------------------------------
+       DESKTOP / TABLET: rotate the card to landscape
+    ----------------------------------------------------- */
+
+    function rotateCardToLandscape(
+    slide,
+    card,
+    video
+) {
+
+    const inFullscreen =
+        isRealFullscreenActive() ||
+        isFallbackFullscreenActive(slide);
+
+    const wasRotated =
+        card.classList.contains(
+            "reel-card-rotated"
+        );
+
+    if (wasRotated) {
+
+        card.classList.remove(
+            "reel-card-rotated"
+        );
+
+        card.style.removeProperty(
+            "--reel-rotate-w"
+        );
+
+        card.style.removeProperty(
+            "--reel-rotate-h"
+        );
+
+        void card.offsetHeight;
+    }
+
+
+    const naturalHeight =
+        inFullscreen
+            ? window.innerHeight
+            : card.clientHeight;
+
+    if (!naturalHeight) {
+        return;
+    }
+
+
+    let targetHeight =
+        naturalHeight;
+
+    let targetWidth =
+        targetHeight *
+        (16 / 9);
+
+
+    const availableWidth =
+        getAvailableCardWidth(slide);
+
+
+    if (targetWidth > availableWidth) {
+
+        targetWidth =
+            availableWidth;
+
+        targetHeight =
+            targetWidth *
+            (9 / 16);
+    }
+
+
+    if (inFullscreen) {
+
+        const maxHeight =
+            window.innerHeight *
+            0.98;
+
+        if (targetHeight > maxHeight) {
+
+            targetHeight =
+                maxHeight;
+
+            targetWidth =
+                targetHeight *
+                (16 / 9);
+        }
+    }
+
+
+    /* ---------------------------------------------
+       CARD ROTATION SIZE
+    --------------------------------------------- */
+
+    card.style.setProperty(
+        "--reel-rotate-w",
+        `${targetWidth}px`
+    );
+
+    card.style.setProperty(
+        "--reel-rotate-h",
+        `${targetHeight}px`
+    );
+
+
+    /* ---------------------------------------------
+       SLIDE ROTATION SIZE
+
+       The slide receives the exact same dimensions
+       so the outside information and action rail can
+       position themselves relative to the landscape
+       card.
+    --------------------------------------------- */
+
+    slide.style.setProperty(
+        "--reel-rotate-w",
+        `${targetWidth}px`
+    );
+
+    slide.style.setProperty(
+        "--reel-rotate-h",
+        `${targetHeight}px`
+    );
+
+    slide.classList.add(
+        "reel-slide-rotated"
+    );
+
+
+    card.classList.add(
+        "reel-card-rotated"
+    );
+
+
+    if (video) {
+
+        video.classList.add(
+            "reel-video-contain"
+        );
+    }
+}
+
+
+    /* -----------------------------------------------------
+       APPLY CURRENT ROTATION STATE
+    ----------------------------------------------------- */
+
+    function applyRotationState(slide) {
+
+        const card =
+            slide.querySelector(
+                ".reel-card"
+            );
+
+        const video =
+            slide.querySelector(
+                ".reel-video"
+            );
+
+        if (!card || !video) {
+            return;
+        }
+
+
+        const rotated =
+            slide.dataset.rotated === "true";
+
+
+        if (isMobileRotateView()) {
+
+            resetCardRotation(
+                card,
+                video
+            );
+
+
+            if (rotated) {
+
+                rotateVideoInPlace(
+                    card,
+                    video
+                );
+
+            } else {
+
+                resetVideoRotation(
+                    video
+                );
+            }
+
+        } else {
+
+            resetVideoRotation(
+                video
+            );
+
+
+            if (rotated) {
+
+                rotateCardToLandscape(
+                    slide,
+                    card,
+                    video
+                );
+
+            } else {
+
+                resetCardRotation(
+                    card,
+                    video
+                );
+            }
+        }
+    }
+
+
+    /* =====================================================
+       ROTATE BUTTON STATE
+    ===================================================== */
+
+    function updateRotateButton(
+        slide,
+        rotated
+    ) {
+
+        const button =
+            slide.querySelector(
+                ".reel-rotate-btn"
+            );
+
+        if (!button) {
+            return;
+        }
+
+
+        button.classList.toggle(
+            "is-rotated",
+            rotated
+        );
+
+
+        button.setAttribute(
+            "aria-label",
+            rotated
+                ? "Reset rotation"
+                : "Rotate video"
+        );
+    }
+
+
+    /* =====================================================
+       TOGGLE ROTATE
+    ===================================================== */
+
+    function toggleRotate(slide) {
+
+        const rotated =
+            slide.dataset.rotated === "true";
+
+        const next =
+            !rotated;
+
+        slide.dataset.rotated =
+            String(next);
+
+        applyRotationState(
+            slide
+        );
+
+        updateRotateButton(
+            slide,
+            next
+        );
+    }
+
+
+    /* =====================================================
+       REAPPLY AFTER A LAYOUT CHANGE
+       (fullscreen enter/exit)
+
+       Never changes the rotation state itself,
+       only re-measures sizing.
+    ===================================================== */
+
+    function reapplyRotationAfterLayoutChange(
+        slide
+    ) {
+
+        if (!slide) {
+            return;
+        }
+
+
+        requestAnimationFrame(() => {
+
+            requestAnimationFrame(() => {
+
+                applyRotationState(
+                    slide
+                );
+
+            });
+
+        });
+    }
+
+
+    /* =====================================================
+       REAPPLY ON WINDOW RESIZE
+
+       Keeps a rotated reel correctly sized if the
+       viewport changes - never toggles the state.
+    ===================================================== */
+
+    let rotateResizeTimeout = null;
+
+
+    window.addEventListener(
+        "resize",
+        () => {
+
+            clearTimeout(
+                rotateResizeTimeout
+            );
+
+
+            rotateResizeTimeout =
+                setTimeout(() => {
+
+                    slides.forEach(
+                        slide => {
+
+                            if (
+                                slide.dataset.rotated ===
+                                "true"
+                            ) {
+
+                                applyRotationState(
+                                    slide
+                                );
+                            }
+                        }
+                    );
+
+                }, 150);
+        }
+    );
+
+
+    /* =====================================================
        OBSERVE VISIBLE REEL
     ===================================================== */
 
@@ -552,7 +1090,10 @@ document.addEventListener("DOMContentLoaded", () => {
                  * Never let the observer change the
                  * active reel while fullscreen is active.
                  */
-                if (isAnyFullscreenActive()) {
+
+                if (
+                    isAnyFullscreenActive()
+                ) {
                     return;
                 }
 
@@ -592,7 +1133,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (index !== currentIndex) {
 
-                    currentIndex = index;
+                    currentIndex =
+                        index;
 
                     setActiveSlide(
                         currentIndex
@@ -615,132 +1157,145 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
 
-    slides.forEach(slide => {
-        observer.observe(slide);
-    });
+    slides.forEach(
+        slide => {
+            observer.observe(slide);
+        }
+    );
 
 
     /* =====================================================
        VIDEO STATE + PROGRESS
     ===================================================== */
 
-    slides.forEach(slide => {
+    slides.forEach(
+        slide => {
 
-        const video =
-            slide.querySelector(".reel-video");
+            const video =
+                slide.querySelector(
+                    ".reel-video"
+                );
 
-        const fill =
-            slide.querySelector(
-                ".reel-progress-fill"
+            const fill =
+                slide.querySelector(
+                    ".reel-progress-fill"
+                );
+
+
+            if (!video) {
+                return;
+            }
+
+
+            /* ---------------------------------------------
+               PLAY
+            --------------------------------------------- */
+
+            video.addEventListener(
+                "play",
+                () => {
+
+                    slide.classList.remove(
+                        "is-paused"
+                    );
+
+                }
             );
 
 
-        if (!video) {
-            return;
-        }
+            /* ---------------------------------------------
+               PLAYING
+            --------------------------------------------- */
 
+            video.addEventListener(
+                "playing",
+                () => {
 
-        /* ---------------------------------------------
-           PLAY
-        --------------------------------------------- */
-
-        video.addEventListener(
-            "play",
-            () => {
-
-                slide.classList.remove(
-                    "is-paused"
-                );
-            }
-        );
-
-
-        /* ---------------------------------------------
-           PLAYING
-        --------------------------------------------- */
-
-        video.addEventListener(
-            "playing",
-            () => {
-
-                slide.classList.remove(
-                    "is-paused"
-                );
-            }
-        );
-
-
-        /* ---------------------------------------------
-           PAUSE
-        --------------------------------------------- */
-
-        video.addEventListener(
-            "pause",
-            () => {
-
-                /*
-                 * Only show the play indicator when
-                 * the user deliberately paused this reel.
-                 */
-                if (
-                    slide.dataset.userPaused ===
-                    "true"
-                ) {
-
-                    slide.classList.add(
+                    slide.classList.remove(
                         "is-paused"
                     );
+
                 }
+            );
+
+
+            /* ---------------------------------------------
+               PAUSE
+            --------------------------------------------- */
+
+            video.addEventListener(
+                "pause",
+                () => {
+
+                    /*
+                     * Only show the play indicator when
+                     * the user deliberately paused this reel.
+                     */
+
+                    if (
+                        slide.dataset.userPaused ===
+                        "true"
+                    ) {
+
+                        slide.classList.add(
+                            "is-paused"
+                        );
+                    }
+                }
+            );
+
+
+            /* ---------------------------------------------
+               PROGRESS
+            --------------------------------------------- */
+
+            function updateProgress() {
+
+                if (!fill) {
+                    return;
+                }
+
+
+                if (!video.duration) {
+
+                    fill.style.width =
+                        "0%";
+
+                    return;
+                }
+
+
+                const progress =
+                    (
+                        video.currentTime /
+                        video.duration
+                    ) * 100;
+
+
+                fill.style.width =
+                    `${progress}%`;
             }
-        );
 
 
-        /* ---------------------------------------------
-           PROGRESS
-        --------------------------------------------- */
-
-        function updateProgress() {
-
-            if (!fill) {
-                return;
-            }
+            video.addEventListener(
+                "timeupdate",
+                updateProgress
+            );
 
 
-            if (!video.duration) {
-
-                fill.style.width = "0%";
-
-                return;
-            }
+            video.addEventListener(
+                "loadedmetadata",
+                updateProgress
+            );
 
 
-            const progress =
-                (
-                    video.currentTime /
-                    video.duration
-                ) * 100;
+            video.addEventListener(
+                "seeked",
+                updateProgress
+            );
 
-
-            fill.style.width =
-                `${progress}%`;
         }
-
-
-        video.addEventListener(
-            "timeupdate",
-            updateProgress
-        );
-
-        video.addEventListener(
-            "loadedmetadata",
-            updateProgress
-        );
-
-        video.addEventListener(
-            "seeked",
-            updateProgress
-        );
-    });
+    );
 
 
     /* =====================================================
@@ -775,6 +1330,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (muteButton) {
 
                 event.stopPropagation();
+
 
                 const video =
                     slide.querySelector(
@@ -824,6 +1380,28 @@ document.addEventListener("DOMContentLoaded", () => {
                 event.stopPropagation();
 
                 toggleFullscreen(
+                    slide
+                );
+
+                return;
+            }
+
+
+            /* -----------------------------------------
+               ROTATE
+            ----------------------------------------- */
+
+            const rotateButton =
+                event.target.closest(
+                    ".reel-rotate-btn"
+                );
+
+
+            if (rotateButton) {
+
+                event.stopPropagation();
+
+                toggleRotate(
                     slide
                 );
 
@@ -921,6 +1499,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     );
                 }
 
+
                 return;
             }
 
@@ -931,7 +1510,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (
                 slide !== slides[currentIndex] ||
-                !event.target.closest(".reel-card")
+                !event.target.closest(
+                    ".reel-card"
+                )
             ) {
                 return;
             }
@@ -952,6 +1533,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 delete slide.dataset.userPaused;
 
+
                 video.play()
                     .then(() => {
 
@@ -961,6 +1543,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     })
                     .catch(() => {});
+
 
             } else {
 
@@ -981,7 +1564,9 @@ document.addEventListener("DOMContentLoaded", () => {
        FULLSCREEN HELPERS
     ===================================================== */
 
-    function supportsElementFullscreen(element) {
+    function supportsElementFullscreen(
+        element
+    ) {
 
         return !!(
             element.requestFullscreen ||
@@ -992,7 +1577,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    async function requestElementFullscreen(element) {
+    async function requestElementFullscreen(
+        element
+    ) {
 
         if (element.requestFullscreen) {
 
@@ -1078,7 +1665,9 @@ document.addEventListener("DOMContentLoaded", () => {
        FULLSCREEN
     ===================================================== */
 
-    async function toggleFullscreen(slide) {
+    async function toggleFullscreen(
+        slide
+    ) {
 
         const card =
             slide.querySelector(
@@ -1118,6 +1707,11 @@ document.addEventListener("DOMContentLoaded", () => {
             );
 
 
+            reapplyRotationAfterLayoutChange(
+                slide
+            );
+
+
             return;
         }
 
@@ -1126,7 +1720,9 @@ document.addEventListener("DOMContentLoaded", () => {
            EXIT REAL FULLSCREEN
         --------------------------------------------- */
 
-        if (isRealFullscreenActive()) {
+        if (
+            isRealFullscreenActive()
+        ) {
 
             try {
 
@@ -1139,6 +1735,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     error
                 );
             }
+
 
             return;
         }
@@ -1197,10 +1794,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
 
 
+                reapplyRotationAfterLayoutChange(
+                    slide
+                );
+
+
                 /*
                  * Start playback only if the user
                  * has not deliberately paused it.
                  */
+
                 if (
                     video &&
                     video.paused &&
@@ -1274,6 +1877,11 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
 
+        reapplyRotationAfterLayoutChange(
+            slide
+        );
+
+
         if (
             video &&
             video.paused &&
@@ -1336,6 +1944,7 @@ document.addEventListener("DOMContentLoaded", () => {
          * Wait for the layout to return before
          * restoring the exact reel position.
          */
+
         requestAnimationFrame(() => {
 
             requestAnimationFrame(() => {
@@ -1363,6 +1972,7 @@ document.addEventListener("DOMContentLoaded", () => {
                  * information/actions appear only after
                  * manually scrolling.
                  */
+
                 void feed.offsetHeight;
 
 
@@ -1372,6 +1982,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
                 updateNavButtons();
+
+
+                reapplyRotationAfterLayoutChange(
+                    targetSlide
+                );
 
             });
 
@@ -1435,36 +2050,40 @@ document.addEventListener("DOMContentLoaded", () => {
             document.msFullscreenElement;
 
 
-        slides.forEach(slide => {
+        slides.forEach(
+            slide => {
 
-            const card =
-                slide.querySelector(
-                    ".reel-card"
+                const card =
+                    slide.querySelector(
+                        ".reel-card"
+                    );
+
+
+                if (!card) {
+                    return;
+                }
+
+
+                const isFullscreen =
+                    currentlyFullscreen ===
+                    card;
+
+
+                updateFullscreenButton(
+                    card,
+                    isFullscreen
                 );
-
-
-            if (!card) {
-                return;
             }
-
-
-            const isFullscreen =
-                currentlyFullscreen ===
-                card;
-
-
-            updateFullscreenButton(
-                card,
-                isFullscreen
-            );
-        });
+        );
 
 
         /* ---------------------------------------------
            REAL FULLSCREEN HAS ENDED
         --------------------------------------------- */
 
-        if (!isRealFullscreenActive()) {
+        if (
+            !isRealFullscreenActive()
+        ) {
 
             document.body.classList.remove(
                 "mobile-reel-fullscreen-active",
@@ -1556,7 +2175,9 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
 
-            if (isRealFullscreenActive()) {
+            if (
+                isRealFullscreenActive()
+            ) {
 
                 exitElementFullscreen();
             }
@@ -1612,7 +2233,10 @@ document.addEventListener("DOMContentLoaded", () => {
         "keydown",
         event => {
 
-            if (event.key === "ArrowDown") {
+            if (
+                event.key ===
+                "ArrowDown"
+            ) {
 
                 event.preventDefault();
 
@@ -1621,7 +2245,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
 
             } else if (
-                event.key === "ArrowUp"
+                event.key ===
+                "ArrowUp"
             ) {
 
                 event.preventDefault();
@@ -1640,39 +2265,45 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document
         .querySelectorAll(".nav-item")
-        .forEach(item => {
+        .forEach(
+            item => {
 
-            item.addEventListener(
-                "click",
-                event => {
+                item.addEventListener(
+                    "click",
+                    event => {
 
-                    if (
-                        item.getAttribute("href") !==
-                        "#"
-                    ) {
-                        return;
-                    }
-
-
-                    event.preventDefault();
+                        if (
+                            item.getAttribute("href") !==
+                            "#"
+                        ) {
+                            return;
+                        }
 
 
-                    document
-                        .querySelectorAll(".nav-item")
-                        .forEach(nav => {
+                        event.preventDefault();
 
-                            nav.classList.remove(
-                                "active"
+
+                        document
+                            .querySelectorAll(
+                                ".nav-item"
+                            )
+                            .forEach(
+                                nav => {
+
+                                    nav.classList.remove(
+                                        "active"
+                                    );
+                                }
                             );
-                        });
 
 
-                    item.classList.add(
-                        "active"
-                    );
-                }
-            );
-        });
+                        item.classList.add(
+                            "active"
+                        );
+                    }
+                );
+            }
+        );
 
 
     /* =====================================================

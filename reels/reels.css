@@ -335,7 +335,8 @@ body {
     display: block;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
+    object-position: center center;
     background: #000000;
 }
 
@@ -384,7 +385,8 @@ body {
 ========================================================= */
 
 .reel-mute-btn,
-.reel-fullscreen-btn {
+.reel-fullscreen-btn,
+.reel-rotate-btn {
     position: absolute;
     right: 14px;
     z-index: 10;
@@ -414,15 +416,26 @@ body {
     top: 60px;
 }
 
+.reel-rotate-btn {
+    top: 106px;
+}
+
 .reel-mute-btn:hover,
-.reel-fullscreen-btn:hover {
+.reel-fullscreen-btn:hover,
+.reel-rotate-btn:hover {
     opacity: 1;
     transform: scale(1.06);
     background: rgba(0, 0, 0, 0.55);
 }
 
+.reel-rotate-btn.is-rotated {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.55);
+}
+
 .reel-mute-btn svg,
-.reel-fullscreen-btn svg {
+.reel-fullscreen-btn svg,
+.reel-rotate-btn svg {
     width: 22px;
     height: 22px;
     fill: none;
@@ -495,6 +508,60 @@ body {
     height: 100%;
     background: #ffffff;
     transition: width 0.1s linear;
+}
+
+
+/* =========================================================
+   ROTATE FEATURE
+
+   Rotation is a manual, two-state toggle only.
+   - Mobile: the video rotates in place, the card
+     (9:16) never changes shape.
+   - Desktop / tablet: the card itself swaps to a
+     16:9 landscape box, the video stays upright.
+
+   --reel-rotate-w / --reel-rotate-h are computed and
+   set in JS (reels.js) right before the rotated class
+   is applied, so the landscape size always matches the
+   real, currently-available space (including inside
+   fullscreen).
+========================================================= */
+
+.reel-card {
+    transition:
+        width 0.3s ease,
+        height 0.3s ease;
+}
+
+.reel-video {
+    transition: transform 0.3s ease;
+}
+
+/* Desktop / tablet: card rotates to landscape. */
+.reel-slide .reel-card.reel-card-rotated {
+    width: var(--reel-rotate-w, auto);
+    height: var(--reel-rotate-h, auto);
+    aspect-ratio: 16 / 9;
+}
+
+/* Desktop / tablet: video stays upright, fits without cropping. */
+.reel-video.reel-video-contain {
+    object-fit: contain;
+}
+
+/* Mobile: video rotates in place inside the untouched 9:16 card. */
+.reel-video.reel-video-rotated {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--reel-media-rotate-w, 100%);
+    height: var(--reel-media-rotate-h, 100%);
+    max-width: none;
+    max-height: none;
+    object-fit: contain;
+    object-position: center center;
+    transform: translate(-50%, -50%) rotate(90deg);
+    transition: none;
 }
 
 
@@ -658,6 +725,14 @@ body {
     object-fit: contain;
 }
 
+.reel-card:fullscreen .reel-video.reel-video-rotated,
+.reel-card:-webkit-full-screen .reel-video.reel-video-rotated {
+    width: var(--reel-media-rotate-w, 100%) !important;
+    height: var(--reel-media-rotate-h, 100%) !important;
+    transform: translate(-50%, -50%) rotate(90deg) !important;
+    object-fit: contain !important;
+}
+
 .reel-card:fullscreen .reel-mute-btn,
 .reel-card:-webkit-full-screen .reel-mute-btn {
     top: 18px;
@@ -670,9 +745,25 @@ body {
     right: 18px;
 }
 
+.reel-card:fullscreen .reel-rotate-btn,
+.reel-card:-webkit-full-screen .reel-rotate-btn {
+    top: 114px;
+    right: 18px;
+}
+
 .reel-card:fullscreen .reel-progress,
 .reel-card:-webkit-full-screen .reel-progress {
     height: 4px;
+}
+
+/* Rotated card while in real fullscreen (desktop / tablet). */
+.reel-slide .reel-card.reel-card-rotated:fullscreen,
+.reel-slide .reel-card.reel-card-rotated:-webkit-full-screen {
+    width: var(--reel-rotate-w, min(100vw, calc(100vh * 16 / 9)));
+    height: var(--reel-rotate-h, min(100vh, calc(100vw * 9 / 16)));
+    aspect-ratio: 16 / 9;
+    max-width: 100vw;
+    max-height: 100vh;
 }
 
 
@@ -1093,6 +1184,22 @@ body {
 
 
     /* =====================================================
+       TABLET FULLSCREEN ROTATED CARD
+       (card is allowed to become landscape here even
+       though the plain fullscreen card rule above is
+       portrait + !important)
+    ===================================================== */
+
+    .reel-slide.tablet-reel-fullscreen .reel-card.reel-card-rotated {
+        width: var(--reel-rotate-w, min(100vw, calc(100dvh * 16 / 9))) !important;
+        height: var(--reel-rotate-h, min(100dvh, calc(100vw * 9 / 16))) !important;
+        aspect-ratio: 16 / 9 !important;
+        max-width: 100vw !important;
+        max-height: 100dvh !important;
+    }
+
+
+    /* =====================================================
        TABLET FULLSCREEN VIDEO
     ===================================================== */
 
@@ -1143,6 +1250,18 @@ body {
     .reel-slide.tablet-reel-fullscreen .reel-fullscreen-btn {
         display: flex !important;
         top: 62px !important;
+        right: 16px !important;
+        z-index: 20 !important;
+    }
+
+
+    /* =====================================================
+       FULLSCREEN ROTATE
+    ===================================================== */
+
+    .reel-slide.tablet-reel-fullscreen .reel-rotate-btn {
+        display: flex !important;
+        top: 108px !important;
         right: 16px !important;
         z-index: 20 !important;
     }
@@ -1476,7 +1595,8 @@ body {
         width: 100%;
         height: 100%;
         display: block;
-        object-fit: cover;
+        object-fit: contain;
+        object-position: center center;
         background: #000000;
     }
 
@@ -1673,6 +1793,8 @@ body {
 
     /* =====================================================
        FULLSCREEN CARD
+       (mobile card always stays 9:16 - even rotated,
+       since only the video rotates on mobile)
     ===================================================== */
 
     .reel-slide.mobile-reel-fullscreen .reel-card {
@@ -1714,6 +1836,14 @@ body {
     }
 
 
+    .reel-slide.mobile-reel-fullscreen .reel-video.reel-video-rotated {
+        width: var(--reel-media-rotate-w, 100%) !important;
+        height: var(--reel-media-rotate-h, 100%) !important;
+        transform: translate(-50%, -50%) rotate(90deg) !important;
+        object-fit: contain !important;
+    }
+
+
     /* =====================================================
        FULLSCREEN MUTE
     ===================================================== */
@@ -1733,6 +1863,18 @@ body {
     .reel-slide.mobile-reel-fullscreen .reel-fullscreen-btn {
         display: flex !important;
         top: 60px !important;
+        right: 14px !important;
+        z-index: 20 !important;
+    }
+
+
+    /* =====================================================
+       FULLSCREEN ROTATE
+    ===================================================== */
+
+    .reel-slide.mobile-reel-fullscreen .reel-rotate-btn {
+        display: flex !important;
+        top: 106px !important;
         right: 14px !important;
         z-index: 20 !important;
     }
@@ -1905,6 +2047,11 @@ body {
         top: 60px !important;
         right: 14px !important;
     }
+
+    .reel-slide.mobile-reel-fullscreen .reel-rotate-btn {
+        top: 106px !important;
+        right: 14px !important;
+    }
 }
 
 
@@ -1959,5 +2106,70 @@ body {
     .reel-slide.mobile-reel-fullscreen .reel-fullscreen-btn {
         top: 56px !important;
         right: 12px !important;
+    }
+
+    .reel-slide.mobile-reel-fullscreen .reel-rotate-btn {
+        top: 100px !important;
+        right: 12px !important;
+    }
+}
+
+/* =========================================================
+   ROTATED LANDSCAPE — OUTSIDE ELEMENT ALIGNMENT
+   Desktop / tablet only
+========================================================= */
+
+@media (min-width: 801px) {
+
+    .reel-slide.reel-slide-rotated .reel-info-outside {
+        margin-bottom: calc(
+            (100vh - var(--reel-rotate-h)) / 2 +
+            min(18vh, 160px)
+        );
+    }
+
+    .reel-slide.reel-slide-rotated .reel-actions {
+        margin-bottom: calc(
+            (100vh - var(--reel-rotate-h)) / 2 +
+            20px
+        );
+    }
+}
+
+
+/* =========================================================
+   TABLET — LANDSCAPE CARD ALIGNMENT
+========================================================= */
+
+@media (min-width: 801px) and (max-width: 1150px) {
+
+    .reel-slide.reel-slide-rotated .reel-info-outside {
+        left: calc(
+            50% -
+            (var(--reel-rotate-w) / 2) +
+            30px
+        ) !important;
+
+        bottom: calc(
+            (100vh - var(--reel-rotate-h)) / 2 +
+            28px
+        ) !important;
+    }
+
+
+    .reel-slide.reel-slide-rotated .reel-actions {
+        left: calc(
+            (
+                100vw +
+                var(--tablet-sidebar-width) +
+                var(--reel-rotate-w)
+            ) / 2 +
+            22px
+        ) !important;
+
+        bottom: calc(
+            (100vh - var(--reel-rotate-h)) / 2 +
+            26px
+        ) !important;
     }
 }
