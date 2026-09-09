@@ -91,10 +91,8 @@ const categories = [
 const popularSearches = [
     "Video Editing",
     "Logo Design",
-    "Photography",
-    "Motion Graphics",
-    "Web Design",
-    "Social Media"
+     "Social Media Design",
+    "Motion Graphics"
 ];
 
 

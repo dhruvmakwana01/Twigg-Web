@@ -73,11 +73,25 @@ signupForm.addEventListener("submit", (event) => {
 
 });
 
-// /* =========================================================
-//    Data
-// ========================================================= */
+/* =========================================================
+   REGISTER DATA AND PUSH TO LOCAL STORAGE
+========================================================= */
 
-// let username = document.getElementById("username").value;
-// let email = document.getElementById("email").value;
-// let password = document.getElementById("password").value;
-// let confirmPassword = document.getElementById("confirmPassword").value;
+function signup() {
+
+    let username = document.getElementById("username").value;
+    let email = document.getElementById("email").value;
+    let password = document.getElementById("password").value;
+
+    const user = {  //row created
+        user_username: username,
+        user_email: email,
+        user_password: password
+    };
+
+    const users = JSON.parse(localStorage.getItem("registerusers")) || []; //fetch strings from local storage and parse it
+    users.push(user); //push row to array
+    localStorage.setItem("registerusers", JSON.stringify(users)); //stringify data and send to local storage
+    alert("Welcome to Twigg! Your account is ready!")
+
+}
