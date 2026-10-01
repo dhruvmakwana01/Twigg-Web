@@ -53,7 +53,13 @@ loginForm.addEventListener("submit", (event) => {
     ===================================================== */
 
     let data = JSON.parse(localStorage.getItem("registerusers")) || [];
-
+    //console.log(data);
+    //console.log(Object.keys(data));
+    //let k = Object.keys(data);
+    //console.log(k);
+    // for (let x = 1; x <= 10; x++) {
+    //     console.log("hello");
+    // }
 
     /* =====================================================
        CHECK LOGIN

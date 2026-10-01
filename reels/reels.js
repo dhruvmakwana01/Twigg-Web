@@ -10,64 +10,56 @@ document.addEventListener("DOMContentLoaded", () => {
             category: "Packaging Design",
             rating: "4.9",
             reviews: "1,204",
-            video: "videos/video1.mp4",
-            poster: "https://i.pinimg.com/736x/99/6e/9b/996e9b4ad4e4b5155a3d5d37de7c7d93.jpg"
+            video: "videos/80444097-841c-4bb7-b7b1-70beedcd4240.mov"
         },
         {
             name: "Markwell Studio",
             category: "Logo Design",
             rating: "4.8",
             reviews: "842",
-            video: "videos/video3.mp4",
-            poster: "https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&w=800&h=1422&q=90"
+            video: "videos/4bf27b85-3357-40aa-93eb-759303f8ee52.mov"
         },
         {
             name: "Pixel & Co",
             category: "Web & Mobile Design",
             rating: "5.0",
             reviews: "2,380",
-            video: "videos/video5.mp4",
-            poster: "https://images.unsplash.com/photo-1547658719-da2b51169166?auto=format&fit=crop&w=800&h=1422&q=90"
+            video: "videos/2d83975e-223c-400b-a8ce-f30ddc591c53.mov"
         },
         {
             name: "Inkwell Press",
             category: "Book Design",
             rating: "4.5",
             reviews: "94",
-            video: "videos/video1.mp4",
-            poster: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&h=1422&q=90"
+            video: "videos/75f99231-503c-4f5e-b455-f58ab5063358.MP4"
         },
         {
             name: "Reel Intro Studio",
             category: "Intro & Outro Videos",
             rating: "4.7",
             reviews: "445",
-            video: "videos/video3.mp4",
-            poster: "https://i.pinimg.com/736x/16/7f/5d/167f5d34160db5c265889c70469db889.jpg"
+            video: "videos/2c8f8923-0e71-4ec0-8159-c665d9ff756e.MP4"
         },
         {
             name: "Kinetic House",
             category: "Motion Graphics",
             rating: "4.8",
             reviews: "990",
-            video: "videos/video5.mp4",
-            poster: "https://i.pinimg.com/736x/71/7b/6e/717b6e49ed658b5aa2ff8e80b2a809f5.jpg"
+            video: "videos/c377903b-d9cd-485a-bb5b-e29ff8e0c4b5.MP4"
         },
         {
             name: "Studio Nova",
             category: "Product Photography",
             rating: "4.9",
             reviews: "1,875",
-            video: "videos/video6.mp4",
-            poster: "https://i.pinimg.com/1200x/ca/9c/77/ca9c777793c4a9217a277448f0a411af.jpg"
+            video: "videos/6e7bd8c9-15be-4677-9a14-18c2cb5b14ca.MP4"
         },
         {
             name: "ColorLab Studio",
             category: "Color Grading",
             rating: "5.0",
             reviews: "3,040",
-            video: "videos/video2.mp4",
-            poster: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=800&h=1422&q=90"
+            video: "videos/27da01c8-e09c-4168-afc5-baa39d098c73.MP4"
         }
     ];
 
@@ -84,6 +76,50 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!feed || !track || !reels.length) {
         return;
     }
+
+
+    /* =====================================================
+       PAGE STATE
+    ===================================================== */
+
+    const HOME_ORDER_KEY = "twigg_home_order";
+    const HOME_SCROLL_KEY = "twigg_home_scroll";
+    const HOME_RATIO_KEY = "twigg_home_ratios";
+    const REELS_ORDER_KEY = "twigg_reels_order";
+    const REELS_STATE_KEY = "twigg_reels_state";
+
+    const navigationEntry =
+        performance.getEntriesByType("navigation")[0];
+
+    const isReelsReload =
+        navigationEntry &&
+        navigationEntry.type === "reload";
+
+    /* A real browser refresh starts everything fresh. */
+    if (isReelsReload) {
+        [
+            HOME_ORDER_KEY,
+            HOME_SCROLL_KEY,
+            HOME_RATIO_KEY,
+            REELS_ORDER_KEY,
+            REELS_STATE_KEY
+        ].forEach(key => sessionStorage.removeItem(key));
+    }
+
+
+    /* =====================================================
+       SHARED MUTE STATE
+       
+       One mute setting is shared across the entire
+       Reels feed.
+
+       true  = muted
+       false = unmuted
+
+       The feed always starts muted.
+    ===================================================== */
+
+    let sharedMuted = true;
 
 
     /* =====================================================
@@ -225,8 +261,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             muted
                             loop
                             playsinline
-                            preload="metadata"
-                            poster="${reel.poster}"
+                            preload="auto"
                         >
                             <source
                                 src="${reel.video}"
@@ -322,28 +357,65 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =====================================================
-       RANDOMIZE REELS
+       RANDOMIZE REELS (ONCE) + RESTORE SAVED ORDER
     ===================================================== */
 
-    const shuffledReels = [...reels];
+    let reelOrder = null;
 
-    for (let i = shuffledReels.length - 1; i > 0; i--) {
+    try {
+        const storedOrder =
+            sessionStorage.getItem(REELS_ORDER_KEY);
 
-        const j = Math.floor(Math.random() * (i + 1));
+        if (storedOrder) {
+            const parsed = JSON.parse(storedOrder);
 
-        [
-            shuffledReels[i],
-            shuffledReels[j]
-        ] = [
-            shuffledReels[j],
-            shuffledReels[i]
-        ];
+            if (
+                Array.isArray(parsed) &&
+                parsed.length === reels.length &&
+                new Set(parsed).size === reels.length &&
+                parsed.every(
+                    i =>
+                        Number.isInteger(i) &&
+                        i >= 0 &&
+                        i < reels.length
+                )
+            ) {
+                reelOrder = parsed;
+            }
+        }
+    } catch {
+        reelOrder = null;
+    }
+
+    if (!reelOrder) {
+
+        reelOrder = reels.map((_, index) => index);
+
+        for (let i = reelOrder.length - 1; i > 0; i--) {
+
+            const j = Math.floor(Math.random() * (i + 1));
+
+            [
+                reelOrder[i],
+                reelOrder[j]
+            ] = [
+                reelOrder[j],
+                reelOrder[i]
+            ];
+        }
+
+        try {
+            sessionStorage.setItem(
+                REELS_ORDER_KEY,
+                JSON.stringify(reelOrder)
+            );
+        } catch {}
     }
 
 
     track.innerHTML =
-        shuffledReels
-            .map(createReel)
+        reelOrder
+            .map(i => createReel(reels[i]))
             .join("");
 
 
@@ -369,6 +441,196 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =====================================================
+       MUTE BUTTON UI
+    ===================================================== */
+
+    function updateMuteButton(
+        slide,
+        muted
+    ) {
+
+        const button =
+            slide.querySelector(
+                ".reel-mute-btn"
+            );
+
+        if (!button) {
+            return;
+        }
+
+
+        button.innerHTML =
+            muted
+                ? icons.mute
+                : icons.unmute;
+
+
+        button.setAttribute(
+            "aria-label",
+            muted
+                ? "Unmute"
+                : "Mute"
+        );
+    }
+
+
+    function updateAllMuteButtons() {
+
+        slides.forEach(
+            slide => {
+
+                updateMuteButton(
+                    slide,
+                    sharedMuted
+                );
+
+            }
+        );
+    }
+
+
+    /* =====================================================
+       APPLY SHARED MUTE STATE
+       
+       Only the active Reel can ever be audible.
+
+       Active Reel:
+           muted = sharedMuted
+
+       All other Reels:
+           muted = true
+    ===================================================== */
+
+    function applyMuteState() {
+
+        slides.forEach(
+            (slide, index) => {
+
+                const video =
+                    slide.querySelector(
+                        ".reel-video"
+                    );
+
+                if (!video) {
+                    return;
+                }
+
+
+                if (index === currentIndex) {
+
+                    video.muted =
+                        sharedMuted;
+
+                } else {
+
+                    video.muted =
+                        true;
+                }
+
+
+                updateMuteButton(
+                    slide,
+                    sharedMuted
+                );
+
+            }
+        );
+    }
+
+
+    /* =====================================================
+       RESTORE + SAVE REELS POSITION
+    ===================================================== */
+
+    let savedReelsState = null;
+
+    try {
+        const storedState =
+            sessionStorage.getItem(REELS_STATE_KEY);
+
+        if (storedState) {
+            const parsed = JSON.parse(storedState);
+
+            if (
+                parsed &&
+                Number.isFinite(parsed.scrollTop) &&
+                parsed.scrollTop >= 0 &&
+                Number.isInteger(parsed.index) &&
+                parsed.index >= 0 &&
+                parsed.index < slides.length
+            ) {
+                savedReelsState = parsed;
+            }
+        }
+    } catch {
+        savedReelsState = null;
+    }
+
+    /* Instant jump, before the first paint. */
+    if (savedReelsState) {
+
+        currentIndex = savedReelsState.index;
+
+        const previousBehavior =
+            feed.style.scrollBehavior;
+
+        feed.style.scrollBehavior = "auto";
+        feed.scrollTop = savedReelsState.scrollTop;
+
+        void feed.offsetHeight;
+
+        feed.style.scrollBehavior = previousBehavior;
+    }
+
+
+    function saveReelsState() {
+
+        if (isAnyFullscreenActive()) {
+            return;
+        }
+
+        try {
+            sessionStorage.setItem(
+                REELS_STATE_KEY,
+                JSON.stringify({
+                    index: currentIndex,
+                    scrollTop: feed.scrollTop
+                })
+            );
+        } catch {}
+    }
+
+    let reelsSaveTimeout = null;
+
+    feed.addEventListener(
+        "scroll",
+        () => {
+
+            clearTimeout(reelsSaveTimeout);
+
+            reelsSaveTimeout =
+                setTimeout(saveReelsState, 50);
+        },
+        { passive: true }
+    );
+
+    window.addEventListener(
+        "pagehide",
+        saveReelsState
+    );
+
+    document
+        .querySelectorAll(".nav-item")
+        .forEach(item => {
+
+            item.addEventListener(
+                "click",
+                saveReelsState
+            );
+        });
+
+
+    /* =====================================================
        ACTIVE REEL
     ===================================================== */
 
@@ -382,6 +644,14 @@ document.addEventListener("DOMContentLoaded", () => {
             );
 
         });
+
+
+        /*
+         * Whenever the active Reel changes, make sure
+         * only that Reel can have sound.
+         */
+
+        applyMuteState();
     }
 
 
@@ -487,6 +757,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (index === currentIndex) {
 
+                /*
+                 * The active Reel inherits the shared
+                 * mute setting.
+                 */
+
+                video.muted =
+                    sharedMuted;
+
+                updateMuteButton(
+                    slide,
+                    sharedMuted
+                );
+
+
                 if (!slide.dataset.userPaused) {
 
                     video.play()
@@ -505,8 +789,20 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
 
+            /*
+             * Every non-active Reel is always muted.
+             * This prevents more than one Reel from
+             * ever producing sound.
+             */
+
             video.pause();
+            video.muted = true;
             video.currentTime = 0;
+
+            updateMuteButton(
+                slide,
+                sharedMuted
+            );
 
             slide.classList.remove(
                 "is-paused"
@@ -606,45 +902,45 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function resetCardRotation(card, video) {
 
-    if (!card) return;
+        if (!card) return;
 
-    card.classList.remove(
-        "reel-card-rotated"
-    );
-
-    card.style.removeProperty(
-        "--reel-rotate-w"
-    );
-
-    card.style.removeProperty(
-        "--reel-rotate-h"
-    );
-
-    const slide =
-        card.closest(".reel-slide");
-
-    if (slide) {
-
-        slide.classList.remove(
-            "reel-slide-rotated"
+        card.classList.remove(
+            "reel-card-rotated"
         );
 
-        slide.style.removeProperty(
+        card.style.removeProperty(
             "--reel-rotate-w"
         );
 
-        slide.style.removeProperty(
+        card.style.removeProperty(
             "--reel-rotate-h"
         );
-    }
 
-    if (video) {
+        const slide =
+            card.closest(".reel-slide");
 
-        video.classList.remove(
-            "reel-video-contain"
-        );
+        if (slide) {
+
+            slide.classList.remove(
+                "reel-slide-rotated"
+            );
+
+            slide.style.removeProperty(
+                "--reel-rotate-w"
+            );
+
+            slide.style.removeProperty(
+                "--reel-rotate-h"
+            );
+        }
+
+        if (video) {
+
+            video.classList.remove(
+                "reel-video-contain"
+            );
+        }
     }
-}
 
 
     /* -----------------------------------------------------
@@ -736,140 +1032,140 @@ document.addEventListener("DOMContentLoaded", () => {
     ----------------------------------------------------- */
 
     function rotateCardToLandscape(
-    slide,
-    card,
-    video
-) {
+        slide,
+        card,
+        video
+    ) {
 
-    const inFullscreen =
-        isRealFullscreenActive() ||
-        isFallbackFullscreenActive(slide);
+        const inFullscreen =
+            isRealFullscreenActive() ||
+            isFallbackFullscreenActive(slide);
 
-    const wasRotated =
-        card.classList.contains(
-            "reel-card-rotated"
-        );
+        const wasRotated =
+            card.classList.contains(
+                "reel-card-rotated"
+            );
 
-    if (wasRotated) {
+        if (wasRotated) {
 
-        card.classList.remove(
-            "reel-card-rotated"
-        );
+            card.classList.remove(
+                "reel-card-rotated"
+            );
 
-        card.style.removeProperty(
-            "--reel-rotate-w"
-        );
+            card.style.removeProperty(
+                "--reel-rotate-w"
+            );
 
-        card.style.removeProperty(
-            "--reel-rotate-h"
-        );
+            card.style.removeProperty(
+                "--reel-rotate-h"
+            );
 
-        void card.offsetHeight;
-    }
-
-
-    const naturalHeight =
-        inFullscreen
-            ? window.innerHeight
-            : card.clientHeight;
-
-    if (!naturalHeight) {
-        return;
-    }
+            void card.offsetHeight;
+        }
 
 
-    let targetHeight =
-        naturalHeight;
+        const naturalHeight =
+            inFullscreen
+                ? window.innerHeight
+                : card.clientHeight;
 
-    let targetWidth =
-        targetHeight *
-        (16 / 9);
-
-
-    const availableWidth =
-        getAvailableCardWidth(slide);
+        if (!naturalHeight) {
+            return;
+        }
 
 
-    if (targetWidth > availableWidth) {
+        let targetHeight =
+            naturalHeight;
 
-        targetWidth =
-            availableWidth;
-
-        targetHeight =
-            targetWidth *
-            (9 / 16);
-    }
+        let targetWidth =
+            targetHeight *
+            (16 / 9);
 
 
-    if (inFullscreen) {
+        const availableWidth =
+            getAvailableCardWidth(slide);
 
-        const maxHeight =
-            window.innerHeight *
-            0.98;
 
-        if (targetHeight > maxHeight) {
-
-            targetHeight =
-                maxHeight;
+        if (targetWidth > availableWidth) {
 
             targetWidth =
-                targetHeight *
-                (16 / 9);
+                availableWidth;
+
+            targetHeight =
+                targetWidth *
+                (9 / 16);
+        }
+
+
+        if (inFullscreen) {
+
+            const maxHeight =
+                window.innerHeight *
+                0.98;
+
+            if (targetHeight > maxHeight) {
+
+                targetHeight =
+                    maxHeight;
+
+                targetWidth =
+                    targetHeight *
+                    (16 / 9);
+            }
+        }
+
+
+        /* ---------------------------------------------
+           CARD ROTATION SIZE
+        --------------------------------------------- */
+
+        card.style.setProperty(
+            "--reel-rotate-w",
+            `${targetWidth}px`
+        );
+
+        card.style.setProperty(
+            "--reel-rotate-h",
+            `${targetHeight}px`
+        );
+
+
+        /* ---------------------------------------------
+           SLIDE ROTATION SIZE
+
+           The slide receives the exact same dimensions
+           so the outside information and action rail can
+           position themselves relative to the landscape
+           card.
+        --------------------------------------------- */
+
+        slide.style.setProperty(
+            "--reel-rotate-w",
+            `${targetWidth}px`
+        );
+
+        slide.style.setProperty(
+            "--reel-rotate-h",
+            `${targetHeight}px`
+        );
+
+        slide.classList.add(
+            "reel-slide-rotated"
+        );
+
+
+        card.classList.add(
+            "reel-card-rotated"
+        );
+
+
+        if (video) {
+
+            video.classList.add(
+                "reel-video-contain"
+            );
         }
     }
-
-
-    /* ---------------------------------------------
-       CARD ROTATION SIZE
-    --------------------------------------------- */
-
-    card.style.setProperty(
-        "--reel-rotate-w",
-        `${targetWidth}px`
-    );
-
-    card.style.setProperty(
-        "--reel-rotate-h",
-        `${targetHeight}px`
-    );
-
-
-    /* ---------------------------------------------
-       SLIDE ROTATION SIZE
-
-       The slide receives the exact same dimensions
-       so the outside information and action rail can
-       position themselves relative to the landscape
-       card.
-    --------------------------------------------- */
-
-    slide.style.setProperty(
-        "--reel-rotate-w",
-        `${targetWidth}px`
-    );
-
-    slide.style.setProperty(
-        "--reel-rotate-h",
-        `${targetHeight}px`
-    );
-
-    slide.classList.add(
-        "reel-slide-rotated"
-    );
-
-
-    card.classList.add(
-        "reel-card-rotated"
-    );
-
-
-    if (video) {
-
-        video.classList.add(
-            "reel-video-contain"
-        );
-    }
-}
 
 
     /* -----------------------------------------------------
@@ -1188,6 +1484,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
             /* ---------------------------------------------
+               FIRST FRAME
+               
+               No poster is used.
+
+               The browser loads the actual video and
+               displays its own first decoded frame.
+            --------------------------------------------- */
+
+            video.addEventListener(
+                "loadeddata",
+                () => {
+
+                    /*
+                     * Keep non-active videos at their
+                     * beginning so their own first frame
+                     * remains available visually.
+                     */
+
+                    if (
+                        slides.indexOf(slide) !==
+                        currentIndex
+                    ) {
+
+                        video.pause();
+                        video.currentTime = 0;
+                        video.muted = true;
+                    }
+
+                },
+                { once: true }
+            );
+
+
+            /* ---------------------------------------------
                PLAY
             --------------------------------------------- */
 
@@ -1343,22 +1673,22 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
 
-                video.muted =
-                    !video.muted;
+                /*
+                 * Mute/unmute is a shared feed-wide
+                 * setting, not an individual Reel setting.
+                 */
+
+                sharedMuted =
+                    !sharedMuted;
 
 
-                muteButton.innerHTML =
-                    video.muted
-                        ? icons.mute
-                        : icons.unmute;
+                /*
+                 * Apply the new shared setting to the
+                 * active Reel while keeping every other
+                 * Reel muted.
+                 */
 
-
-                muteButton.setAttribute(
-                    "aria-label",
-                    video.muted
-                        ? "Unmute"
-                        : "Mute"
-                );
+                applyMuteState();
 
 
                 return;
@@ -1532,6 +1862,15 @@ document.addEventListener("DOMContentLoaded", () => {
             if (video.paused) {
 
                 delete slide.dataset.userPaused;
+
+
+                /*
+                 * Reapply the shared mute state before
+                 * manually playing the active Reel.
+                 */
+
+                video.muted =
+                    sharedMuted;
 
 
                 video.play()
@@ -1810,6 +2149,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     !slide.dataset.userPaused
                 ) {
 
+                    video.muted =
+                        sharedMuted;
+
                     video.play()
                         .catch(() => {});
                 }
@@ -1887,6 +2229,9 @@ document.addEventListener("DOMContentLoaded", () => {
             video.paused &&
             !slide.dataset.userPaused
         ) {
+
+            video.muted =
+                sharedMuted;
 
             video.play()
                 .catch(() => {});
@@ -2310,7 +2655,9 @@ document.addEventListener("DOMContentLoaded", () => {
        INITIALIZE
     ===================================================== */
 
-    setActiveSlide(0);
+    setActiveSlide(currentIndex);
+
+    updateAllMuteButtons();
 
     updateNavButtons();
 
