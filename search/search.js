@@ -6,7 +6,7 @@ const categories = [
 
     {
         name: "Video Editing",
-        image: "https://i.pinimg.com/1200x/ac/25/83/ac2583076b9bb7f97c7d94390d101373.jpg",
+        image: "../home/categoryimg/videoediting.png",
         keywords:
             "video editing editor videos reels youtube short form long form"
     },

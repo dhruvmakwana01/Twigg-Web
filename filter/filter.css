@@ -1,0 +1,821 @@
+/* =========================================================
+   TWIGG FILTER & SORT PANEL
+   Shared by every page that has a Filter & Sort button.
+
+   Desktop / tablet : slides out from under the sidebar and
+                      sits directly to its right (seamless).
+   Mobile           : full panel above the bottom bar (the
+                      bottom bar itself is never covered).
+========================================================= */
+
+:root {
+    --fs-sidebar-width: 225px;
+    --fs-panel-width: 360px;
+    --fs-ease: cubic-bezier(0.22, 0.8, 0.3, 1);
+}
+
+@media (min-width: 801px) and (max-width: 1150px) {
+
+    :root {
+        --fs-sidebar-width: 195px;
+        --fs-panel-width: 330px;
+    }
+}
+
+@media (max-width: 800px) {
+
+    :root {
+        --fs-sidebar-width: 0px;
+    }
+}
+
+
+/* =========================================================
+   BACKDROP (desktop / tablet only, fully transparent —
+   it only exists so a click outside the panel closes it)
+========================================================= */
+
+.fs-backdrop {
+    position: fixed;
+    inset: 0 0 0 var(--fs-sidebar-width);
+    z-index: 890;
+    display: none;
+    background: transparent;
+}
+
+.fs-backdrop.is-open {
+    display: block;
+}
+
+
+/* =========================================================
+   PANEL
+   z-index sits BELOW the sidebar (1000) so on desktop it
+   appears to slide out from behind it.
+========================================================= */
+
+.fs-panel {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: var(--fs-sidebar-width);
+    z-index: 900;
+
+    width: var(--fs-panel-width);
+
+    display: flex;
+    flex-direction: column;
+
+    background: #ffffff;
+    color: #111111;
+
+    box-shadow:
+        1px 0 0 #efefef,
+        22px 0 50px rgba(0, 0, 0, 0.07);
+
+    transform: translateX(-100%);
+    visibility: hidden;
+    pointer-events: none;
+
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+
+    transition:
+        transform 0.35s var(--fs-ease),
+        visibility 0s linear 0.35s;
+}
+
+.fs-panel.is-open {
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+
+    transition:
+        transform 0.35s var(--fs-ease),
+        visibility 0s linear 0s;
+}
+
+.fs-panel:focus {
+    outline: none;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.fs-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 28px 28px 18px;
+}
+
+.fs-title {
+    flex: 1;
+
+    font-size: 20px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+}
+
+.fs-icon-btn {
+    flex-shrink: 0;
+
+    width: 40px;
+    height: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: 1px solid #e4e4e4;
+    border-radius: 50%;
+
+    background: #ffffff;
+    color: #151515;
+
+    cursor: pointer;
+
+    -webkit-tap-highlight-color: transparent;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.fs-icon-btn:hover {
+    background: #f4f4f4;
+    border-color: #d8d8d8;
+}
+
+.fs-icon-btn:focus-visible {
+    outline: 2px solid #111111;
+    outline-offset: 2px;
+}
+
+.fs-icon-btn svg {
+    width: 20px;
+    height: 20px;
+
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Close (X) on desktop / tablet, Back arrow on mobile. */
+.fs-back {
+    display: none;
+}
+
+
+/* =========================================================
+   BODY
+========================================================= */
+
+.fs-body {
+    flex: 1;
+
+    padding: 0 28px 24px;
+
+    overflow-y: auto;
+    overscroll-behavior: contain;
+
+    scrollbar-width: thin;
+    scrollbar-color: #dcdcdc transparent;
+}
+
+.fs-section {
+    padding: 24px 0;
+
+    border-top: 1px solid #f0f0f0;
+}
+
+.fs-section:first-child {
+    border-top: 0;
+    padding-top: 8px;
+}
+
+.fs-section-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    margin-bottom: 16px;
+}
+
+.fs-section-title {
+    font-size: 15px;
+    font-weight: 650;
+}
+
+.fs-count {
+    min-width: 20px;
+    height: 20px;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 6px;
+
+    border-radius: 10px;
+
+    background: #111111;
+    color: #ffffff;
+
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.fs-count.is-visible {
+    display: inline-flex;
+}
+
+
+/* =========================================================
+   CATEGORY CHIPS
+========================================================= */
+
+.fs-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+}
+
+.fs-chip {
+    height: 38px;
+
+    padding: 0 16px;
+
+    border: 1px solid #e4e4e4;
+    border-radius: 999px;
+
+    background: #ffffff;
+    color: #222222;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+
+    cursor: pointer;
+
+    -webkit-tap-highlight-color: transparent;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.fs-chip:hover {
+    border-color: #cfcfcf;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 14px rgba(0, 0, 0, 0.07);
+}
+
+.fs-chip:focus-visible {
+    outline: 2px solid #111111;
+    outline-offset: 2px;
+}
+
+.fs-chip[aria-pressed="true"] {
+    background: #111111;
+    border-color: #111111;
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   PRICE
+========================================================= */
+
+.fs-price-summary {
+    margin-left: auto;
+
+    color: #777777;
+
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.fs-range {
+    --a: 0;
+    --b: 1;
+
+    position: relative;
+
+    height: 28px;
+
+    margin: 4px 0 18px;
+}
+
+.fs-range-track {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+
+    height: 4px;
+
+    transform: translateY(-50%);
+
+    border-radius: 4px;
+
+    background: #ececec;
+}
+
+.fs-range-fill {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+
+    left: calc(11px + (100% - 22px) * var(--a));
+    right: calc(11px + (100% - 22px) * (1 - var(--b)));
+
+    border-radius: 4px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #B90066,
+            #FB0838,
+            #F6801E
+        );
+}
+
+.fs-range-input {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    margin: 0;
+
+    background: none;
+
+    pointer-events: none;
+
+    -webkit-appearance: none;
+    appearance: none;
+
+    outline: none;
+}
+
+.fs-range-input::-webkit-slider-runnable-track {
+    height: 28px;
+
+    background: transparent;
+}
+
+.fs-range-input::-moz-range-track {
+    height: 28px;
+
+    background: transparent;
+}
+
+.fs-range-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+
+    width: 22px;
+    height: 22px;
+
+    margin-top: 3px;
+
+    border: 1px solid #e0e0e0;
+    border-radius: 50%;
+
+    background: #ffffff;
+
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+
+    pointer-events: auto;
+    cursor: grab;
+}
+
+.fs-range-input::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+
+    border: 1px solid #e0e0e0;
+    border-radius: 50%;
+
+    background: #ffffff;
+
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+
+    pointer-events: auto;
+    cursor: grab;
+}
+
+.fs-range-input:active::-webkit-slider-thumb {
+    cursor: grabbing;
+}
+
+.fs-range-input:focus-visible::-webkit-slider-thumb {
+    box-shadow:
+        0 0 0 3px rgba(17, 17, 17, 0.9),
+        0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+.fs-range-input:focus-visible::-moz-range-thumb {
+    box-shadow:
+        0 0 0 3px rgba(17, 17, 17, 0.9),
+        0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+.fs-price-fields {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.fs-field {
+    flex: 1;
+    min-width: 0;
+}
+
+.fs-field-label {
+    display: block;
+
+    margin-bottom: 6px;
+
+    color: #888888;
+
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.fs-field-box {
+    height: 46px;
+
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    padding: 0 14px;
+
+    border: 1px solid #e4e4e4;
+    border-radius: 14px;
+
+    background: #ffffff;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.fs-field-box:focus-within {
+    border-color: #111111;
+    box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.06);
+}
+
+.fs-field-box em {
+    color: #888888;
+
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 500;
+}
+
+.fs-field-box input {
+    flex: 1;
+    min-width: 0;
+
+    border: 0;
+    outline: 0;
+
+    background: transparent;
+    color: #111111;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 550;
+
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.fs-field-box input::-webkit-outer-spin-button,
+.fs-field-box input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.fs-field-dash {
+    padding-bottom: 14px;
+
+    color: #b5b5b5;
+}
+
+
+/* =========================================================
+   DELIVERY TIME
+========================================================= */
+
+.fs-options {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.fs-option {
+    width: 100%;
+    height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    padding: 0 14px;
+
+    border: 0;
+    border-radius: 14px;
+
+    background: transparent;
+    color: #222222;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 450;
+    text-align: left;
+
+    cursor: pointer;
+
+    -webkit-tap-highlight-color: transparent;
+
+    transition:
+        background 0.2s ease;
+}
+
+.fs-option:hover {
+    background: #f6f6f6;
+}
+
+.fs-option:focus-visible {
+    outline: 2px solid #111111;
+    outline-offset: -2px;
+}
+
+.fs-option[aria-checked="true"] {
+    background: #f3f3f3;
+
+    font-weight: 600;
+}
+
+.fs-radio {
+    flex-shrink: 0;
+
+    width: 20px;
+    height: 20px;
+
+    border: 1.6px solid #cfcfcf;
+    border-radius: 50%;
+
+    background: #ffffff;
+
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.fs-option[aria-checked="true"] .fs-radio {
+    border-color: #111111;
+    background: #111111;
+
+    box-shadow: inset 0 0 0 4px #ffffff;
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.fs-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 18px 28px 24px;
+
+    border-top: 1px solid #f0f0f0;
+
+    background: #ffffff;
+}
+
+.fs-clear {
+    flex-shrink: 0;
+
+    height: 48px;
+
+    padding: 0 14px;
+
+    border: 0;
+    border-radius: 14px;
+
+    background: transparent;
+    color: #222222;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 550;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+
+    cursor: pointer;
+
+    transition: background 0.2s ease;
+}
+
+.fs-clear:hover {
+    background: #f4f4f4;
+}
+
+.fs-clear:focus-visible,
+.fs-apply:focus-visible {
+    outline: 2px solid #111111;
+    outline-offset: 2px;
+}
+
+.fs-apply {
+    flex: 1;
+
+    height: 48px;
+
+    border: 0;
+    border-radius: 15px;
+
+    background: #111111;
+    color: #ffffff;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.fs-apply:hover {
+    transform: translateY(-2px);
+
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+}
+
+
+/* =========================================================
+   APPLIED-FILTERS INDICATOR
+   Red count badge on the Filter & Sort buttons (sidebar and
+   mobile floating button), same style as the nav badges.
+   Shows how many filter groups are applied (0–3).
+========================================================= */
+
+.filter-button {
+    position: relative;
+}
+
+.fs-badge {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+
+    border-radius: 9px;
+
+    background: var(--badge-color, #FB0838);
+    color: #ffffff;
+
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 650;
+    line-height: 1;
+
+    box-shadow: 0 0 0 2px #ffffff;
+
+    pointer-events: none;
+}
+
+[data-filtered="true"] > .fs-badge {
+    display: flex;
+}
+
+/* Round floating button on mobile: tuck the badge closer. */
+.mobile-filter-button > .fs-badge {
+    top: -3px;
+    right: -3px;
+}
+
+
+/* =========================================================
+   MOBILE
+   800px AND BELOW
+
+   The panel stops above the bottom bar, so the bottom
+   bar stays visible and in sync with the other pages.
+========================================================= */
+
+@media (max-width: 800px) {
+
+    .fs-backdrop {
+        display: none !important;
+    }
+
+    .fs-panel {
+        left: 0;
+        right: 0;
+        bottom: var(--mobile-bar-height, 62px);
+
+        width: 100%;
+
+        z-index: 4000;
+
+        box-shadow: none;
+
+        opacity: 0;
+        transform: translateY(18px);
+
+        transition:
+            transform 0.3s var(--fs-ease),
+            opacity 0.25s ease,
+            visibility 0s linear 0.3s;
+    }
+
+    .fs-panel.is-open {
+        opacity: 1;
+        transform: translateY(0);
+
+        transition:
+            transform 0.3s var(--fs-ease),
+            opacity 0.25s ease,
+            visibility 0s linear 0s;
+    }
+
+    .fs-header {
+        padding: 18px 16px 14px;
+    }
+
+    .fs-close {
+        display: none;
+    }
+
+    .fs-back {
+        display: flex;
+    }
+
+    .fs-title {
+        font-size: 18px;
+    }
+
+    .fs-body {
+        padding: 0 16px 20px;
+    }
+
+    .fs-footer {
+        padding: 14px 16px 16px;
+    }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .fs-panel,
+    .fs-panel.is-open,
+    .fs-chip,
+    .fs-apply {
+        transition: none !important;
+    }
+}

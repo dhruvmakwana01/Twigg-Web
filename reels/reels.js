@@ -2,6 +2,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     /* =====================================================
        REEL DATA
+
+       Optional per-reel field:
+           profileImage: "profiles/example.jpg"
+
+       If it is missing (or fails to load) the creator's
+       initial is shown inside the circular avatar.
     ===================================================== */
 
     const reels = [
@@ -216,6 +222,41 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =====================================================
+       CREATE CREATOR AVATAR
+
+       Uses reel.profileImage if present, otherwise an
+       initial. If the image fails to load it is removed
+       and the initial shows instead.
+    ===================================================== */
+
+    function createAvatar(reel) {
+
+        const initial =
+            (reel.name || "?")
+                .trim()
+                .charAt(0)
+                .toUpperCase();
+
+        const image =
+            reel.profileImage
+                ? `<img
+                       class="reel-avatar-img"
+                       src="${reel.profileImage}"
+                       alt=""
+                       loading="lazy"
+                   >`
+                : "";
+
+        return `
+            <div class="reel-avatar" aria-hidden="true">
+                <span class="reel-avatar-initial">${initial}</span>
+                ${image}
+            </div>
+        `;
+    }
+
+
+    /* =====================================================
        CREATE REEL
     ===================================================== */
 
@@ -227,8 +268,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     <div class="reel-info-outside">
 
-                        <div class="reel-service-name">
-                            ${reel.name}
+                        <div class="reel-creator">
+
+                            ${createAvatar(reel)}
+
+                            <div class="reel-service-name">
+                                ${reel.name}
+                            </div>
+
                         </div>
 
                         <div class="reel-category">
@@ -417,6 +464,26 @@ document.addEventListener("DOMContentLoaded", () => {
         reelOrder
             .map(i => createReel(reels[i]))
             .join("");
+
+
+    /* =====================================================
+       AVATAR IMAGE FALLBACK
+
+       If a profile image fails to load, remove it so the
+       initial underneath is shown.
+    ===================================================== */
+
+    track
+        .querySelectorAll(".reel-avatar-img")
+        .forEach(img => {
+
+            img.addEventListener(
+                "error",
+                () => img.remove(),
+                { once: true }
+            );
+
+        });
 
 
     /* =====================================================

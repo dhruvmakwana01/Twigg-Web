@@ -1,0 +1,484 @@
+/* =========================================================
+   TWIGG NOTIFICATION PANEL
+   Requires filter.css (uses --fs-* tokens and the .fs-header,
+   .fs-title, .fs-icon-btn, .fs-back / .fs-close, .fs-body
+   classes so it stays visually identical to Filter & Sort).
+
+   Desktop / tablet : slides out from behind the sidebar.
+   Mobile (<=800px) : full panel above the bottom bar.
+========================================================= */
+
+/* ---------- Fallback tokens (identical to filter.css) ----------
+   So the panel still positions correctly if filter.css is not
+   loaded on a page. */
+
+:root {
+    --fs-sidebar-width: 225px;
+    --fs-panel-width: 360px;
+    --fs-ease: cubic-bezier(0.22, 0.8, 0.3, 1);
+}
+
+@media (min-width: 801px) and (max-width: 1150px) {
+    :root {
+        --fs-sidebar-width: 195px;
+        --fs-panel-width: 330px;
+    }
+}
+
+@media (max-width: 800px) {
+    :root {
+        --fs-sidebar-width: 0px;
+    }
+}
+
+/* The header pieces below are copied from filter.css for the same reason. */
+
+.nt-panel .fs-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 28px 28px 18px;
+}
+
+.nt-panel .fs-title {
+    flex: 1;
+    margin: 0;
+    font-size: 20px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+}
+
+.nt-panel .fs-icon-btn {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid #e4e4e4;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #151515;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.nt-panel .fs-icon-btn:hover {
+    background: #f4f4f4;
+    border-color: #d8d8d8;
+}
+
+.nt-panel .fs-icon-btn:focus-visible {
+    outline: 2px solid #111111;
+    outline-offset: 2px;
+}
+
+.nt-panel .fs-icon-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.nt-panel .fs-back {
+    display: none;
+}
+
+
+/* ---------- Backdrop (transparent, click-outside only) ---------- */
+
+.nt-backdrop {
+    position: fixed;
+    inset: 0 0 0 var(--fs-sidebar-width);
+    z-index: 890;
+    display: none;
+    background: transparent;
+}
+
+.nt-backdrop.is-open {
+    display: block;
+}
+
+
+/* ---------- Panel (same shell as .fs-panel) ---------- */
+
+.nt-panel {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: var(--fs-sidebar-width);
+    z-index: 900;
+
+    width: var(--fs-panel-width);
+
+    display: flex;
+    flex-direction: column;
+
+    background: #ffffff;
+    color: #111111;
+
+    box-shadow:
+        1px 0 0 #efefef,
+        22px 0 50px rgba(0, 0, 0, 0.07);
+
+    transform: translateX(-100%);
+    visibility: hidden;
+    pointer-events: none;
+
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+
+    transition:
+        transform 0.35s var(--fs-ease),
+        visibility 0s linear 0.35s;
+}
+
+.nt-panel.is-open {
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+
+    transition:
+        transform 0.35s var(--fs-ease),
+        visibility 0s linear 0s;
+}
+
+.nt-panel:focus {
+    outline: none;
+}
+
+
+/* ---------- List (row language borrowed from the Messages list) ---------- */
+
+.nt-body {
+    flex: 1;
+
+    padding: 0 14px 24px;
+
+    overflow-y: auto;
+    overscroll-behavior: contain;
+
+    scrollbar-width: thin;
+    scrollbar-color: #dcdcdc transparent;
+}
+
+.nt-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nt-row {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+
+    gap: 14px;
+
+    width: 100%;
+
+    margin-bottom: 2px;
+    padding: 12px 14px;
+
+    border: 0;
+    border-radius: 18px;
+
+    background: transparent;
+    color: #444444;
+
+    font-family: inherit;
+    text-align: left;
+
+    cursor: pointer;
+
+    -webkit-tap-highlight-color: transparent;
+
+    transition: background 0.2s ease;
+}
+
+.nt-row:hover {
+    background: #f8f8f8;
+}
+
+.nt-row:focus-visible {
+    outline: 2px solid rgba(29, 107, 240, 0.45);
+    outline-offset: 2px;
+}
+
+/* Same faint blue tint the Messages page uses for unread. */
+.nt-row.is-unread {
+    background: rgba(29, 107, 240, 0.045);
+}
+
+.nt-row.is-unread:hover {
+    background: rgba(29, 107, 240, 0.07);
+}
+
+.nt-avatar {
+    position: relative;
+
+    flex-shrink: 0;
+
+    width: 44px;
+    height: 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    border-radius: 50%;
+
+    background: #e7e7e7;
+    color: #777777;
+
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.nt-avatar img {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+.nt-avatar svg {
+    width: 21px;
+    height: 21px;
+
+    fill: none;
+    stroke: #555555;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.nt-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.nt-text {
+    margin: 0;
+
+    color: #444444;
+
+    font-size: 14px;
+    font-weight: 450;
+    line-height: 1.4;
+}
+
+.nt-text strong {
+    color: #111111;
+    font-weight: 600;
+}
+
+.nt-row.is-unread .nt-text {
+    color: #111111;
+}
+
+.nt-row.is-unread .nt-text strong {
+    font-weight: 650;
+}
+
+.nt-time {
+    display: block;
+
+    margin-top: 3px;
+
+    color: #a6a6a6;
+
+    font-size: 12px;
+}
+
+.nt-row.is-unread .nt-time {
+    color: #444444;
+}
+
+.nt-unread-dot {
+    flex-shrink: 0;
+
+    width: 8px;
+    height: 8px;
+
+    border-radius: 50%;
+
+    background: var(--badge-color, #FB0838);
+
+    opacity: 0;
+    transform: scale(0.4);
+
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.nt-row.is-unread .nt-unread-dot {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.nt-empty {
+    display: none;
+
+    padding: 56px 16px;
+
+    color: #7a7a7a;
+
+    font-size: 14px;
+    text-align: center;
+}
+
+.nt-panel.is-empty .nt-empty {
+    display: block;
+}
+
+
+/* ---------- Navigation indicator ----------
+   Identical to the Messages page .nav-badge (red pill counter,
+   white ring, same size/position). Injected by notification.js
+   into every [data-notif-toggle]. */
+
+.nt-icon-wrap {
+    position: relative;
+
+    font-style: normal;
+
+    display: inline-flex;
+
+    flex-shrink: 0;
+}
+
+.nt-nav-badge {
+    position: absolute;
+
+    font-style: normal;
+
+    top: -7px;
+    right: -9px;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+
+    border-radius: 9px;
+
+    background: var(--badge-color, #FB0838);
+    color: #fff;
+
+    font-size: 11px;
+    font-weight: 650;
+    line-height: 1;
+
+    box-shadow: 0 0 0 2px #fff;
+
+    pointer-events: none;
+}
+
+[data-has-unread="true"] .nt-nav-badge {
+    display: flex;
+}
+
+.nav-item.active .nt-nav-badge {
+    box-shadow: 0 0 0 2px #eee;
+}
+
+
+/* ---------- Mobile (800px and below) ---------- */
+
+@media (max-width: 800px) {
+
+    .nt-backdrop {
+        display: none !important;
+    }
+
+    .nt-panel {
+        left: 0;
+        right: 0;
+        bottom: var(--mobile-bar-height, 62px);
+
+        width: 100%;
+
+        z-index: 4000;
+
+        box-shadow: none;
+
+        opacity: 0;
+        transform: translateY(18px);
+
+        transition:
+            transform 0.3s var(--fs-ease),
+            opacity 0.25s ease,
+            visibility 0s linear 0.3s;
+    }
+
+    .nt-panel.is-open {
+        opacity: 1;
+        transform: translateY(0);
+
+        transition:
+            transform 0.3s var(--fs-ease),
+            opacity 0.25s ease,
+            visibility 0s linear 0s;
+    }
+
+    .nt-panel .fs-header {
+        padding: 18px 16px 14px;
+    }
+
+    .nt-panel .fs-close {
+        display: none;
+    }
+
+    .nt-panel .fs-back {
+        display: flex;
+    }
+
+    .nt-panel .fs-title {
+        font-size: 18px;
+    }
+
+    .nt-body {
+        padding: 0 4px 20px;
+    }
+
+    .nt-row {
+        padding: 12px;
+    }
+
+    .sidebar .nav-item.active .nt-nav-badge {
+        box-shadow: 0 0 0 2px #fff;
+    }
+}
+
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .nt-panel,
+    .nt-panel.is-open,
+    .nt-unread-dot {
+        transition: none !important;
+    }
+}

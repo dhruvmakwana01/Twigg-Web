@@ -1861,3 +1861,130 @@ body {
     opacity: 0;
     transform: scale(0.85);
 }
+
+
+/* =========================================================
+   CARD PROFILE (center-bottom, hover only)
+========================================================= */
+
+.card-profile {
+    position: absolute;
+
+    left: 50%;
+    bottom: 14px;
+
+    /* Leave room for the unmute (left) and share (right) buttons */
+    max-width: calc(100% - 116px);
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    transform: translate(-50%, 6px);
+
+    color: #fff;
+
+    opacity: 0;
+    pointer-events: none;
+
+    z-index: 10;
+
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+}
+
+.media-card:hover .card-profile {
+    opacity: 1;
+
+    transform: translate(-50%, 0);
+}
+
+.card-profile-image {
+    flex-shrink: 0;
+
+    width: 32px;
+    height: 32px;
+
+    border-radius: 50%;
+
+    object-fit: cover;
+
+    border: 2px solid rgba(255, 255, 255, 0.9);
+
+    background: #444;
+}
+
+/* Fallback when no profile image is provided */
+.card-profile-initial {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    width: 32px;
+    height: 32px;
+
+    border-radius: 50%;
+
+    border: 2px solid rgba(255, 255, 255, 0.9);
+
+    background: linear-gradient(135deg, #B90066, #FB0838, #F6801E);
+
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.card-profile-name {
+    min-width: 0;
+
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 800px) {
+
+    .card-profile {
+        bottom: 14px;
+
+        max-width: calc(100% - 108px);
+    }
+
+    .card-profile-image,
+    .card-profile-initial {
+        width: 28px;
+        height: 28px;
+    }
+
+    .card-profile-name {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 500px) {
+
+    .card-profile {
+        bottom: 10px;
+
+        gap: 6px;
+
+        max-width: calc(100% - 92px);
+    }
+
+    .card-profile-image,
+    .card-profile-initial {
+        width: 26px;
+        height: 26px;
+    }
+
+    .card-profile-name {
+        font-size: 11px;
+    }
+}

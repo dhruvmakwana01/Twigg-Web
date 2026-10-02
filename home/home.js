@@ -1606,3 +1606,95 @@ navItems.forEach(item => {
     );
 
 });
+
+
+/* =========================================================
+   CARD PROFILE (image + name, shown on hover via CSS)
+
+   Runs last, after all aspect-ratio and video setup, so the
+   profile avatar <img> can never be mistaken for the card's
+   main media by card.querySelector("img").
+========================================================= */
+
+/*
+   Placeholder names, used only when a card has no
+   data-profile-name attribute. Replace with real data later.
+*/
+
+const PLACEHOLDER_PROFILES = [
+    "Aarav Studio",
+    "Maya Designs",
+    "Pixel Forge",
+    "Nora Creative",
+    "Kabir Motion",
+    "Lumen Works"
+];
+
+
+document
+    .querySelectorAll(".media-card")
+    .forEach((card, index) => {
+
+        if (card.querySelector(".card-profile")) {
+            return;
+        }
+
+        const name =
+            card.dataset.profileName ||
+            PLACEHOLDER_PROFILES[
+                index % PLACEHOLDER_PROFILES.length
+            ];
+
+        const imageSrc =
+            card.dataset.profileImage;
+
+
+        const profile =
+            document.createElement("div");
+
+        profile.className =
+            "card-profile";
+
+
+        let avatar;
+
+        if (imageSrc) {
+
+            avatar =
+                document.createElement("img");
+
+            avatar.className =
+                "card-profile-image";
+
+            avatar.src = imageSrc;
+            avatar.alt = name;
+            avatar.loading = "lazy";
+
+        } else {
+
+            avatar =
+                document.createElement("div");
+
+            avatar.className =
+                "card-profile-initial";
+
+            avatar.textContent =
+                name.charAt(0).toUpperCase();
+        }
+
+
+        const label =
+            document.createElement("span");
+
+        label.className =
+            "card-profile-name";
+
+        label.textContent = name;
+
+
+        profile.appendChild(avatar);
+        profile.appendChild(label);
+
+        card.appendChild(profile);
+
+    });

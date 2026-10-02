@@ -214,9 +214,7 @@ body {
     margin: 0 auto;
     display: grid;
     grid-template-columns:
-        minmax(0, 1fr)
-        auto
-        minmax(0, 1fr);
+        minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
 }
 
@@ -226,15 +224,21 @@ body {
 ========================================================= */
 
 .reel-info-outside {
+    /*
+     * Creator avatar sizing (desktop). The avatar sits above
+     * the name, so the whole block is moved down by the
+     * avatar height + gap, which makes the avatar start
+     * where the name used to start.
+     */
+    --reel-avatar-size: 56px;
+    --reel-avatar-gap: 12px;
+
     grid-column: 1;
     width: 200px;
     justify-self: end;
     align-self: end;
     margin-bottom:
-        calc(
-            (100vh - min(92vh, 800px)) / 2
-            + min(18vh, 160px)
-        );
+        calc((100vh - min(92vh, 800px)) / 2 + min(18vh, 160px) - var(--reel-avatar-size) - var(--reel-avatar-gap));
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -254,8 +258,7 @@ body {
 .reel-slide.is-active .reel-info-outside:hover {
     cursor: pointer;
     transform:
-        translateX(10px)
-        scale(1.04);
+        translateX(10px) scale(1.04);
 }
 
 
@@ -310,6 +313,64 @@ body {
 
 
 /* =========================================================
+   CREATOR AVATAR
+   Desktop / tablet: stacked above the creator name.
+   (Mobile switches this to a horizontal row further down.)
+========================================================= */
+
+.reel-creator {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--reel-avatar-gap, 12px);
+    min-width: 0;
+}
+
+.reel-avatar {
+    position: relative;
+    flex-shrink: 0;
+
+    width: var(--reel-avatar-size, 56px);
+    height: var(--reel-avatar-size, 56px);
+
+    overflow: hidden;
+    border-radius: 50%;
+
+    border: 3px solid #ffffff;
+    background: linear-gradient(135deg, #B90066, #FB0838, #F6801E);
+
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.08),
+        0 8px 20px rgba(0, 0, 0, 0.14);
+}
+
+.reel-avatar-initial,
+.reel-avatar-img {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+}
+
+.reel-avatar-initial {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #ffffff;
+    font-size: calc(var(--reel-avatar-size, 56px) * 0.4);
+    font-weight: 600;
+    line-height: 1;
+}
+
+.reel-avatar-img {
+    display: block;
+    object-fit: cover;
+}
+
+
+/* =========================================================
    REEL CARD
 ========================================================= */
 
@@ -359,24 +420,20 @@ body {
     top: 0;
     height: 24%;
     background:
-        linear-gradient(
-            to bottom,
+        linear-gradient(to bottom,
             rgba(0, 0, 0, 0.34),
             rgba(0, 0, 0, 0.04) 72%,
-            transparent
-        );
+            transparent);
 }
 
 .reel-card::after {
     bottom: 0;
     height: 30%;
     background:
-        linear-gradient(
-            to top,
+        linear-gradient(to top,
             rgba(0, 0, 0, 0.55),
             rgba(0, 0, 0, 0.12) 65%,
-            transparent
-        );
+            transparent);
 }
 
 
@@ -461,8 +518,7 @@ body {
     background: rgba(0, 0, 0, 0.48);
     backdrop-filter: blur(5px);
     transform:
-        translate(-50%, -50%)
-        scale(0.85);
+        translate(-50%, -50%) scale(0.85);
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -477,8 +533,7 @@ body {
     opacity: 1;
     visibility: visible;
     transform:
-        translate(-50%, -50%)
-        scale(1);
+        translate(-50%, -50%) scale(1);
 }
 
 .reel-play-indicator svg {
@@ -574,10 +629,7 @@ body {
     justify-self: start;
     align-self: end;
     margin-bottom:
-        calc(
-            (100vh - min(92vh, 800px)) / 2
-            + 20px
-        );
+        calc((100vh - min(92vh, 800px)) / 2 + 20px);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -778,9 +830,7 @@ body {
         --tablet-sidebar-width: 195px;
         --tablet-reel-height: min(90vh, 720px);
         --tablet-reel-width:
-            calc(
-                var(--tablet-reel-height) * 9 / 16
-            );
+            calc(var(--tablet-reel-height) * 9 / 16);
     }
 
 
@@ -879,21 +929,12 @@ body {
     .reel-info-outside {
         position: absolute !important;
         left:
-            calc(
-                50% -
-                (var(--tablet-reel-width) / 2) +
-                30px
-            );
+            calc(50% - (var(--tablet-reel-width) / 2) + 30px);
         bottom:
-            calc(
-                (100vh - var(--tablet-reel-height)) / 2 +
-                28px
-            );
+            calc((100vh - var(--tablet-reel-height)) / 2 + 28px);
         width: auto;
         max-width:
-            calc(
-                var(--tablet-reel-width) - 60px
-            );
+            calc(var(--tablet-reel-width) - 60px);
         margin: 0 !important;
         z-index: 20;
         grid-column: auto;
@@ -956,26 +997,34 @@ body {
 
 
     /* =====================================================
+       TABLET CREATOR AVATAR
+       (info sits over the video, so the avatar gets a
+       light ring + shadow instead of the desktop one)
+    ===================================================== */
+
+    .reel-info-outside {
+        --reel-avatar-size: 46px;
+        --reel-avatar-gap: 10px;
+    }
+
+    .reel-avatar {
+        border: 2px solid rgba(255, 255, 255, 0.92);
+
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+    }
+
+
+    /* =====================================================
        TABLET ACTIONS
     ===================================================== */
 
     .reel-actions {
         position: fixed !important;
         left:
-            calc(
-                (
-                    100vw +
-                    var(--tablet-sidebar-width) +
-                    var(--tablet-reel-width)
-                ) / 2 +
-                22px
-            ) !important;
+            calc((100vw + var(--tablet-sidebar-width) + var(--tablet-reel-width)) / 2 + 22px) !important;
         right: auto !important;
         bottom:
-            calc(
-                (100vh - var(--tablet-reel-height)) / 2 +
-                26px
-            ) !important;
+            calc((100vh - var(--tablet-reel-height)) / 2 + 26px) !important;
         margin: 0 !important;
         width: 34px;
         z-index: 200 !important;
@@ -1160,15 +1209,11 @@ body {
         position: relative !important;
         flex: 0 0 auto !important;
         width:
-            min(
-                100vw,
-                calc(100dvh * 9 / 16)
-            ) !important;
+            min(100vw,
+                calc(100dvh * 9 / 16)) !important;
         height:
-            min(
-                100dvh,
-                calc(100vw * 16 / 9)
-            ) !important;
+            min(100dvh,
+                calc(100vw * 16 / 9)) !important;
         min-width: 0 !important;
         min-height: 0 !important;
         max-width: 100vw !important;
@@ -1215,8 +1260,7 @@ body {
        HIDE INFO
     ===================================================== */
 
-    body.tablet-reel-fullscreen-active
-    .reel-info-outside {
+    body.tablet-reel-fullscreen-active .reel-info-outside {
         display: none !important;
     }
 
@@ -1225,8 +1269,7 @@ body {
        HIDE ACTIONS
     ===================================================== */
 
-    body.tablet-reel-fullscreen-active
-    .reel-actions {
+    body.tablet-reel-fullscreen-active .reel-actions {
         display: none !important;
     }
 
@@ -1299,38 +1342,20 @@ body {
         --mobile-bar-height: 62px;
 
         --mobile-available-height:
-            calc(
-                100dvh - var(--mobile-bar-height)
-            );
+            calc(100dvh - var(--mobile-bar-height));
 
         --mobile-reel-width:
-            min(
-                100vw,
-                calc(
-                    var(--mobile-available-height) * 9 / 16
-                )
-            );
+            min(100vw,
+                calc(var(--mobile-available-height) * 9 / 16));
 
         --mobile-reel-height:
-            calc(
-                var(--mobile-reel-width) * 16 / 9
-            );
+            calc(var(--mobile-reel-width) * 16 / 9);
 
         --mobile-reel-side-space:
-            calc(
-                (
-                    100vw -
-                    var(--mobile-reel-width)
-                ) / 2
-            );
+            calc((100vw - var(--mobile-reel-width)) / 2);
 
         --mobile-reel-top-space:
-            calc(
-                (
-                    var(--mobile-available-height) -
-                    var(--mobile-reel-height)
-                ) / 2
-            );
+            calc((var(--mobile-available-height) - var(--mobile-reel-height)) / 2);
     }
 
 
@@ -1373,13 +1398,9 @@ body {
     .filter-button {
         position: fixed !important;
         top:
-            calc(
-                var(--mobile-reel-top-space) + 18px
-            ) !important;
+            calc(var(--mobile-reel-top-space) + 18px) !important;
         left:
-            calc(
-                var(--mobile-reel-side-space) + 10px
-            ) !important;
+            calc(var(--mobile-reel-side-space) + 10px) !important;
         right: auto !important;
         bottom: auto !important;
         width: 38px !important;
@@ -1478,10 +1499,7 @@ body {
         color: #111111;
         stroke-width: 2.2;
         filter:
-            drop-shadow(
-                0 2px 4px
-                rgba(0, 0, 0, 0.22)
-            );
+            drop-shadow(0 2px 4px rgba(0, 0, 0, 0.22));
         transform: scale(1.05);
     }
 
@@ -1608,13 +1626,9 @@ body {
     .reel-info-outside {
         position: absolute !important;
         left:
-            calc(
-                var(--mobile-reel-side-space) + 13px
-            );
+            calc(var(--mobile-reel-side-space) + 13px);
         bottom:
-            calc(
-                var(--mobile-reel-top-space) + 17px
-            );
+            calc(var(--mobile-reel-top-space) + 17px);
         width: auto;
         max-width: 58%;
         margin: 0 !important;
@@ -1662,6 +1676,29 @@ body {
 
 
     /* =====================================================
+       MOBILE CREATOR: [avatar] [name]
+       Horizontal row, name vertically centered on the
+       avatar. Category and rating stay below.
+    ===================================================== */
+
+    .reel-info-outside {
+        --reel-avatar-size: 34px;
+    }
+
+    .reel-creator {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .reel-avatar {
+        border: 2px solid rgba(255, 255, 255, 0.92);
+
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+    }
+
+
+    /* =====================================================
        ACTIONS OVER REEL
        MOBILE
     ===================================================== */
@@ -1669,13 +1706,9 @@ body {
     .reel-actions {
         position: absolute !important;
         right:
-            calc(
-                var(--mobile-reel-side-space) + 11px
-            );
+            calc(var(--mobile-reel-side-space) + 11px);
         bottom:
-            calc(
-                var(--mobile-reel-top-space) + 105px
-            ) !important;
+            calc(var(--mobile-reel-top-space) + 105px) !important;
         margin: 0 !important;
         z-index: 8;
         display: flex;
@@ -1701,6 +1734,12 @@ body {
     .reel-action-btn svg {
         width: 29px;
         height: 29px;
+    }
+
+    /* Mobile only: saved icon turns white so it shows on the video */
+    .reel-save-btn.is-saved svg {
+        fill: #ffffff;
+        stroke: #ffffff;
     }
 
 
@@ -1801,15 +1840,11 @@ body {
         position: relative !important;
         flex: 0 0 auto !important;
         width:
-            min(
-                100vw,
-                calc(100dvh * 9 / 16)
-            ) !important;
+            min(100vw,
+                calc(100dvh * 9 / 16)) !important;
         height:
-            min(
-                100dvh,
-                calc(100vw * 16 / 9)
-            ) !important;
+            min(100dvh,
+                calc(100vw * 16 / 9)) !important;
         min-width: 0 !important;
         min-height: 0 !important;
         max-width: 100vw !important;
@@ -1895,8 +1930,7 @@ body {
        FULLSCREEN HIDE INFO
     ===================================================== */
 
-    body.mobile-reel-fullscreen-active
-    .reel-info-outside {
+    body.mobile-reel-fullscreen-active .reel-info-outside {
         display: none !important;
     }
 
@@ -1905,8 +1939,7 @@ body {
        FULLSCREEN HIDE ACTIONS
     ===================================================== */
 
-    body.mobile-reel-fullscreen-active
-    .reel-actions {
+    body.mobile-reel-fullscreen-active .reel-actions {
         display: none !important;
     }
 
@@ -1932,38 +1965,20 @@ body {
         --mobile-bar-height: 58px;
 
         --mobile-available-height:
-            calc(
-                100dvh - var(--mobile-bar-height)
-            );
+            calc(100dvh - var(--mobile-bar-height));
 
         --mobile-reel-width:
-            min(
-                100vw,
-                calc(
-                    var(--mobile-available-height) * 9 / 16
-                )
-            );
+            min(100vw,
+                calc(var(--mobile-available-height) * 9 / 16));
 
         --mobile-reel-height:
-            calc(
-                var(--mobile-reel-width) * 16 / 9
-            );
+            calc(var(--mobile-reel-width) * 16 / 9);
 
         --mobile-reel-side-space:
-            calc(
-                (
-                    100vw -
-                    var(--mobile-reel-width)
-                ) / 2
-            );
+            calc((100vw - var(--mobile-reel-width)) / 2);
 
         --mobile-reel-top-space:
-            calc(
-                (
-                    var(--mobile-available-height) -
-                    var(--mobile-reel-height)
-                ) / 2
-            );
+            calc((var(--mobile-available-height) - var(--mobile-reel-height)) / 2);
     }
 
 
@@ -1985,13 +2000,9 @@ body {
 
     .filter-button {
         top:
-            calc(
-                var(--mobile-reel-top-space) + 16px
-            ) !important;
+            calc(var(--mobile-reel-top-space) + 16px) !important;
         left:
-            calc(
-                var(--mobile-reel-side-space) + 9px
-            ) !important;
+            calc(var(--mobile-reel-side-space) + 9px) !important;
         width: 36px !important;
         height: 36px !important;
     }
@@ -2010,26 +2021,20 @@ body {
     }
 
     .reel-info-outside {
+        --reel-avatar-size: 30px;
+
         left:
-            calc(
-                var(--mobile-reel-side-space) + 12px
-            );
+            calc(var(--mobile-reel-side-space) + 12px);
         bottom:
-            calc(
-                var(--mobile-reel-top-space) + 14px
-            );
+            calc(var(--mobile-reel-top-space) + 14px);
         max-width: 58%;
     }
 
     .reel-actions {
         right:
-            calc(
-                var(--mobile-reel-side-space) + 10px
-            );
+            calc(var(--mobile-reel-side-space) + 10px);
         bottom:
-            calc(
-                var(--mobile-reel-top-space) + 95px
-            ) !important;
+            calc(var(--mobile-reel-top-space) + 95px) !important;
         gap: 25px;
     }
 
@@ -2075,26 +2080,18 @@ body {
 
     .filter-button {
         top:
-            calc(
-                var(--mobile-reel-top-space) + 15px
-            ) !important;
+            calc(var(--mobile-reel-top-space) + 15px) !important;
         left:
-            calc(
-                var(--mobile-reel-side-space) + 8px
-            ) !important;
+            calc(var(--mobile-reel-side-space) + 8px) !important;
         width: 35px !important;
         height: 35px !important;
     }
 
     .reel-actions {
         right:
-            calc(
-                var(--mobile-reel-side-space) + 8px
-            );
+            calc(var(--mobile-reel-side-space) + 8px);
         bottom:
-            calc(
-                var(--mobile-reel-top-space) + 88px
-            ) !important;
+            calc(var(--mobile-reel-top-space) + 88px) !important;
         gap: 22px;
     }
 
@@ -2122,17 +2119,11 @@ body {
 @media (min-width: 801px) {
 
     .reel-slide.reel-slide-rotated .reel-info-outside {
-        margin-bottom: calc(
-            (100vh - var(--reel-rotate-h)) / 2 +
-            min(18vh, 160px)
-        );
+        margin-bottom: calc((100vh - var(--reel-rotate-h)) / 2 + min(18vh, 160px) - var(--reel-avatar-size) - var(--reel-avatar-gap));
     }
 
     .reel-slide.reel-slide-rotated .reel-actions {
-        margin-bottom: calc(
-            (100vh - var(--reel-rotate-h)) / 2 +
-            20px
-        );
+        margin-bottom: calc((100vh - var(--reel-rotate-h)) / 2 + 20px);
     }
 }
 
@@ -2144,32 +2135,15 @@ body {
 @media (min-width: 801px) and (max-width: 1150px) {
 
     .reel-slide.reel-slide-rotated .reel-info-outside {
-        left: calc(
-            50% -
-            (var(--reel-rotate-w) / 2) +
-            30px
-        ) !important;
+        left: calc(50% - (var(--reel-rotate-w) / 2) + 30px) !important;
 
-        bottom: calc(
-            (100vh - var(--reel-rotate-h)) / 2 +
-            28px
-        ) !important;
+        bottom: calc((100vh - var(--reel-rotate-h)) / 2 + 28px) !important;
     }
 
 
     .reel-slide.reel-slide-rotated .reel-actions {
-        left: calc(
-            (
-                100vw +
-                var(--tablet-sidebar-width) +
-                var(--reel-rotate-w)
-            ) / 2 +
-            22px
-        ) !important;
+        left: calc((100vw + var(--tablet-sidebar-width) + var(--reel-rotate-w)) / 2 + 22px) !important;
 
-        bottom: calc(
-            (100vh - var(--reel-rotate-h)) / 2 +
-            26px
-        ) !important;
+        bottom: calc((100vh - var(--reel-rotate-h)) / 2 + 26px) !important;
     }
 }
