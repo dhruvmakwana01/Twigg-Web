@@ -15,6 +15,9 @@ const REELS_STATE_KEY = "twigg_reels_state";
 
 const HOME_RATIO_KEY = "twigg_home_ratios";
 
+/* LOOP PAGE: remembers the user's mute choice for the Loop Page */
+const MUTE_KEY = "twigg_shared_muted";
+
 
 /*
    Shared mute state for all Home videos.
@@ -85,6 +88,11 @@ if (isHomeReload) {
 
     sessionStorage.removeItem(
         HOME_RATIO_KEY
+    );
+
+    /* LOOP PAGE: a fresh feed also resets the mute choice */
+    sessionStorage.removeItem(
+        MUTE_KEY
     );
 }
 
@@ -250,9 +258,9 @@ if (grid) {
                 savedOrder[i],
                 savedOrder[j]
             ] = [
-                savedOrder[j],
-                savedOrder[i]
-            ];
+                    savedOrder[j],
+                    savedOrder[i]
+                ];
         }
 
 
@@ -263,7 +271,7 @@ if (grid) {
                 JSON.stringify(savedOrder)
             );
 
-        } catch {}
+        } catch { }
     }
 
 
@@ -291,7 +299,7 @@ if (grid) {
 
         const ratio =
             homeRatios[
-                card.dataset.homeIndex
+            card.dataset.homeIndex
             ];
 
 
@@ -700,7 +708,7 @@ function saveHomeState() {
             String(getScrollY())
         );
 
-    } catch {}
+    } catch { }
 }
 
 
@@ -825,7 +833,7 @@ function setMediaAspectRatio(
                 JSON.stringify(homeRatios)
             );
 
-        } catch {}
+        } catch { }
     }
 }
 
@@ -1288,7 +1296,7 @@ document
                 */
 
                 video.play()
-                    .catch(() => {});
+                    .catch(() => { });
 
             }
         );
@@ -1376,6 +1384,21 @@ document
 
 
                     /*
+                       LOOP PAGE: remember the choice so the
+                       Loop Page can start with the same state.
+                    */
+
+                    try {
+
+                        sessionStorage.setItem(
+                            MUTE_KEY,
+                            String(sharedVideoMuted)
+                        );
+
+                    } catch { }
+
+
+                    /*
                        Apply the new state to every video.
 
                        Only the currently hovered video can
@@ -1439,7 +1462,7 @@ document
                     if (!sharedVideoMuted) {
 
                         video.play()
-                            .catch(() => {});
+                            .catch(() => { });
 
                     }
 
@@ -1611,7 +1634,7 @@ navItems.forEach(item => {
 /* =========================================================
    CARD PROFILE (image + name, shown on hover via CSS)
 
-   Runs last, after all aspect-ratio and video setup, so the
+   Runs after all aspect-ratio and video setup, so the
    profile avatar <img> can never be mistaken for the card's
    main media by card.querySelector("img").
 ========================================================= */
@@ -1639,10 +1662,21 @@ document
             return;
         }
 
+        /*
+           LOOP PAGE: use the card's ORIGINAL index (not its
+           shuffled position) so the same card shows the same
+           creator on the Home Page and on the Loop Page.
+        */
+
+        const originalIndex =
+            Number.isInteger(Number(card.dataset.homeIndex))
+                ? Number(card.dataset.homeIndex)
+                : index;
+
         const name =
             card.dataset.profileName ||
             PLACEHOLDER_PROFILES[
-                index % PLACEHOLDER_PROFILES.length
+            originalIndex % PLACEHOLDER_PROFILES.length
             ];
 
         const imageSrc =
@@ -1696,5 +1730,111 @@ document
         profile.appendChild(label);
 
         card.appendChild(profile);
+
+    });
+
+
+/* =========================================================
+   OPEN THE LOOP PAGE
+
+   Clicking any media card opens:
+       ../loop/loop.html?card=<original card index>&homeScroll=<position>
+
+   The Home scroll position is passed to Loop so that Loop
+   can open at the exact same vertical position.
+
+   The Home position itself remains stored in sessionStorage
+   and is NOT changed by Loop.
+
+   The Save / Share / Mute buttons already stop their own
+   click events, so they never trigger this. The extra
+   .closest() check is a safety net.
+
+   Ctrl / Cmd + click opens the Loop Page in a new tab.
+========================================================= */
+
+document
+    .querySelectorAll(".media-card")
+    .forEach(card => {
+
+        card.addEventListener(
+            "click",
+            event => {
+
+                if (
+                    event.target.closest(
+                        ".action-button"
+                    )
+                ) {
+                    return;
+                }
+
+
+                /*
+                   Save the exact current Home position
+                   immediately before leaving Home.
+                */
+
+                saveHomeState();
+
+
+                let homeScroll = 0;
+
+                try {
+
+                    const storedScroll =
+                        sessionStorage.getItem(
+                            HOME_SCROLL_KEY
+                        );
+
+                    const parsedScroll =
+                        Number(storedScroll);
+
+                    if (
+                        Number.isFinite(parsedScroll) &&
+                        parsedScroll >= 0
+                    ) {
+
+                        homeScroll =
+                            parsedScroll;
+                    }
+
+                } catch { }
+
+
+                /*
+                   Pass both the selected card and the
+                   Home scroll position to Loop.
+                */
+
+                const url =
+                    "../loop/loop.html?card=" +
+                    encodeURIComponent(
+                        card.dataset.homeIndex
+                    ) +
+                    "&homeScroll=" +
+                    encodeURIComponent(
+                        homeScroll
+                    );
+
+
+                if (
+                    event.metaKey ||
+                    event.ctrlKey
+                ) {
+
+                    window.open(
+                        url,
+                        "_blank"
+                    );
+
+                    return;
+                }
+
+
+                window.location.href = url;
+
+            }
+        );
 
     });

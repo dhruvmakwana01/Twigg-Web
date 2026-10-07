@@ -1,0 +1,901 @@
+/* =========================================================
+   TWIGG LOOP PAGE — STYLES
+
+   This file ONLY adds what the Home Page does not have.
+
+   Everything else (sidebar, grid, cards, mobile bars) comes
+   from ../home/home.css, which loop.html links first.
+
+   Every rule is scoped to body.loop-page or .loop-*
+   so it cannot affect the Home Page or the Reels Page.
+========================================================= */
+
+
+/* =========================================================
+   SIZING VARIABLES
+========================================================= */
+
+body.loop-page {
+
+    /* Tallest the featured media may be (before the page scrolls) */
+    --loop-max-h: 84vh;
+
+    /* Narrowest the featured card may be, so tall portrait
+       media is still clearly larger than a grid card */
+    --loop-min-w: 440px;
+
+}
+
+@media (min-width: 801px) and (max-width: 1150px) {
+
+    body.loop-page {
+
+        --loop-max-h: 76vh;
+        --loop-min-w: 400px;
+
+    }
+
+}
+
+@media (max-width: 800px) {
+
+    body.loop-page {
+
+        --loop-max-h: 80vh;
+
+        /* On mobile the featured card is always full width */
+        --loop-min-w: 100%;
+
+    }
+
+}
+
+
+/* =========================================================
+   FEATURE WRAPPER
+========================================================= */
+
+.loop-feature {
+
+    display: flex;
+    justify-content: center;
+    width: 100%;
+
+}
+
+.loop-feature:empty {
+
+    display: none;
+
+}
+
+
+/* =========================================================
+   FEATURED CARD
+
+   Width comes from the media's real aspect ratio:
+
+       width = max(max-height × ratio, min-width), capped at 100%
+
+   The media box itself always uses aspect-ratio = the real
+   ratio, so nothing is stretched or cropped.
+========================================================= */
+
+.loop-featured {
+
+    --media-ratio: 1;
+
+    width:
+        min(
+            100%,
+            max(
+                calc(var(--loop-max-h) * var(--media-ratio)),
+                var(--loop-min-w)
+            )
+        );
+
+    overflow: hidden;
+
+    border-radius: 20px;
+
+    background: #fff;
+
+    box-shadow:
+        0 14px 40px rgba(0, 0, 0, 0.14);
+
+    animation: loopFeatureIn 0.25s ease;
+
+}
+
+@keyframes loopFeatureIn {
+
+    from {
+
+        opacity: 0;
+
+    }
+
+    to {
+
+        opacity: 1;
+
+    }
+
+}
+
+
+/* =========================================================
+   FEATURED MEDIA
+========================================================= */
+
+.loop-media {
+
+    position: relative;
+
+    width: 100%;
+
+    aspect-ratio: var(--media-ratio);
+
+    overflow: hidden;
+
+    background: #eee;
+
+}
+
+.loop-media.is-video {
+
+    cursor: pointer;
+
+}
+
+.loop-media img,
+.loop-media video {
+
+    display: block;
+
+    width: 100%;
+
+    height: 100%;
+
+    object-fit: contain;
+
+    background: #eee;
+
+}
+
+
+/* =========================================================
+   MEDIA CONTROLS (mute / full-screen)
+
+   Same look as the Reels round controls.
+========================================================= */
+
+.loop-media-controls {
+
+    position: absolute;
+
+    top: 14px;
+
+    right: 14px;
+
+    z-index: 10;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 6px;
+
+}
+
+.loop-ctrl {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    width: 40px;
+
+    height: 40px;
+
+    padding: 0;
+
+    border: 0;
+
+    border-radius: 50%;
+
+    background: rgba(0, 0, 0, 0.34);
+
+    color: #fff;
+
+    backdrop-filter: blur(4px);
+
+    -webkit-backdrop-filter: blur(4px);
+
+    cursor: pointer;
+
+    opacity: 0.6;
+
+    -webkit-tap-highlight-color: transparent;
+
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease,
+        background 0.2s ease;
+
+}
+
+.loop-ctrl:hover {
+
+    opacity: 1;
+
+    transform: scale(1.06);
+
+    background: rgba(0, 0, 0, 0.55);
+
+}
+
+.loop-ctrl:focus,
+.loop-ctrl:focus-visible {
+
+    outline: none;
+
+}
+
+.loop-ctrl svg {
+
+    width: 22px;
+
+    height: 22px;
+
+    fill: none;
+
+    stroke: currentColor;
+
+    stroke-width: 1.8;
+
+}
+
+
+/* =========================================================
+   PLAY INDICATOR (shown when the user pauses)
+========================================================= */
+
+.loop-play-indicator {
+
+    position: absolute;
+
+    top: 50%;
+
+    left: 50%;
+
+    width: 70px;
+
+    height: 70px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: rgba(0, 0, 0, 0.48);
+
+    backdrop-filter: blur(5px);
+
+    -webkit-backdrop-filter: blur(5px);
+
+    transform: translate(-50%, -50%) scale(0.85);
+
+    opacity: 0;
+
+    visibility: hidden;
+
+    pointer-events: none;
+
+    z-index: 12;
+
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease,
+        visibility 0.2s ease;
+
+}
+
+.loop-media.is-paused .loop-play-indicator {
+
+    opacity: 1;
+
+    visibility: visible;
+
+    transform: translate(-50%, -50%) scale(1);
+
+}
+
+.loop-play-indicator svg {
+
+    width: 32px;
+
+    height: 32px;
+
+    fill: #fff;
+
+}
+
+
+/* =========================================================
+   PROGRESS BAR (click / drag to seek)
+========================================================= */
+
+.loop-progress {
+
+    position: absolute;
+
+    left: 0;
+
+    right: 0;
+
+    bottom: 0;
+
+    height: 16px;
+
+    z-index: 15;
+
+    cursor: pointer;
+
+    touch-action: none;
+
+}
+
+.loop-progress-track {
+
+    position: absolute;
+
+    left: 0;
+
+    right: 0;
+
+    bottom: 0;
+
+    height: 3px;
+
+    background: rgba(255, 255, 255, 0.34);
+
+    transition: height 0.15s ease;
+
+}
+
+.loop-progress:hover .loop-progress-track {
+
+    height: 6px;
+
+}
+
+.loop-progress-fill {
+
+    width: 0;
+
+    height: 100%;
+
+    background: #fff;
+
+}
+
+
+/* =========================================================
+   INFO BAR (profile, rating, actions)
+========================================================= */
+
+.loop-info {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 16px;
+
+    padding: 16px 20px 18px;
+
+    background: #fff;
+
+}
+
+.loop-creator {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    min-width: 0;
+
+}
+
+.loop-avatar {
+
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    width: 50px;
+
+    height: 50px;
+
+    border-radius: 50%;
+
+    background: linear-gradient(
+        135deg,
+        #B90066,
+        #FB0838,
+        #F6801E
+    );
+
+    color: #fff;
+
+    font-size: 20px;
+
+    font-weight: 600;
+
+    line-height: 1;
+
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.08),
+        0 6px 16px rgba(0, 0, 0, 0.12);
+
+}
+
+.loop-creator-text {
+
+    min-width: 0;
+
+}
+
+.loop-name {
+
+    overflow: hidden;
+
+    color: #111;
+
+    font-size: 17px;
+
+    font-weight: 600;
+
+    line-height: 1.25;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+
+}
+
+.loop-category {
+
+    margin-top: 2px;
+
+    color: #777;
+
+    font-size: 13px;
+
+    font-weight: 500;
+
+}
+
+.loop-rating {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    align-items: center;
+
+    gap: 6px;
+
+    margin-top: 6px;
+
+}
+
+.loop-stars {
+
+    display: flex;
+
+    gap: 2px;
+
+}
+
+.loop-stars svg {
+
+    width: 15px;
+
+    height: 15px;
+
+    fill: #f5a623;
+
+}
+
+.loop-rating-value {
+
+    color: #111;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+}
+
+.loop-review-count {
+
+    color: #888;
+
+    font-size: 12px;
+
+    font-weight: 500;
+
+}
+
+
+/* =========================================================
+   ACTIONS (like / save / share / report)
+
+   Light, outline-only icons — same style as Reels.
+========================================================= */
+
+.loop-actions {
+
+    display: flex;
+
+    align-items: center;
+
+    flex-shrink: 0;
+
+    gap: 14px;
+
+}
+
+.loop-action-btn {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    width: 34px;
+
+    height: 34px;
+
+    padding: 0;
+
+    border: 0;
+
+    outline: 0;
+
+    background: none;
+
+    color: #222;
+
+    cursor: pointer;
+
+    -webkit-tap-highlight-color: transparent;
+
+}
+
+.loop-action-btn svg {
+
+    width: 28px;
+
+    height: 28px;
+
+    fill: none;
+
+    stroke: currentColor;
+
+    stroke-width: 1.7;
+
+    transition: transform 0.15s ease;
+
+}
+
+.loop-action-btn:hover svg {
+
+    transform: scale(1.08);
+
+}
+
+.loop-like-btn.is-liked svg {
+
+    fill: #ff2d55;
+
+    stroke: #ff2d55;
+
+}
+
+.loop-save-btn.is-saved svg {
+
+    fill: #111;
+
+    stroke: #111;
+
+}
+
+.loop-report-btn.is-reported svg {
+
+    fill: #f5a623;
+
+    stroke: #f5a623;
+
+}
+
+.loop-report-btn.is-reported {
+
+    cursor: default;
+
+}
+
+
+/* =========================================================
+   FULL-SCREEN
+
+   Real fullscreen is requested on .loop-media, so the media
+   plus its controls and progress bar go fullscreen together.
+========================================================= */
+
+.loop-media:fullscreen,
+.loop-media:-webkit-full-screen {
+
+    width: 100vw;
+
+    height: 100vh;
+
+    aspect-ratio: auto;
+
+    background: #000;
+
+}
+
+.loop-media:fullscreen img,
+.loop-media:fullscreen video,
+.loop-media:-webkit-full-screen img,
+.loop-media:-webkit-full-screen video {
+
+    object-fit: contain;
+
+    background: #000;
+
+}
+
+.loop-media:fullscreen .loop-media-controls,
+.loop-media:-webkit-full-screen .loop-media-controls {
+
+    top: 18px;
+
+    right: 18px;
+
+}
+
+.loop-media:fullscreen .loop-progress-track,
+.loop-media:-webkit-full-screen .loop-progress-track {
+
+    height: 4px;
+
+}
+
+
+/* Fallback for browsers without element fullscreen */
+
+.loop-media.loop-fs-fallback {
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 5000;
+
+    width: 100vw;
+
+    height: 100dvh;
+
+    aspect-ratio: auto;
+
+    background: #000;
+
+}
+
+.loop-media.loop-fs-fallback img,
+.loop-media.loop-fs-fallback video {
+
+    object-fit: contain;
+
+    background: #000;
+
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+.loop-toast {
+
+    position: fixed;
+
+    left: 50%;
+
+    bottom: 90px;
+
+    padding: 10px 16px;
+
+    border-radius: 999px;
+
+    background: rgba(0, 0, 0, 0.82);
+
+    color: #fff;
+
+    font-size: 13px;
+
+    font-weight: 500;
+
+    transform: translateX(-50%);
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    z-index: 6000;
+
+    transition: opacity 0.2s ease;
+
+}
+
+.loop-toast.show {
+
+    opacity: 1;
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 800px) {
+
+    .loop-featured {
+
+        border-radius: 16px;
+
+        box-shadow:
+            0 8px 24px rgba(0, 0, 0, 0.12);
+
+    }
+
+    .loop-media-controls {
+
+        top: 10px;
+
+        right: 10px;
+
+    }
+
+    .loop-info {
+
+        gap: 10px;
+
+        padding: 12px 14px 14px;
+
+    }
+
+    .loop-avatar {
+
+        width: 42px;
+
+        height: 42px;
+
+        font-size: 17px;
+
+    }
+
+    .loop-name {
+
+        font-size: 15px;
+
+    }
+
+    .loop-category {
+
+        font-size: 12px;
+
+    }
+
+    .loop-actions {
+
+        gap: 8px;
+
+    }
+
+    .loop-action-btn {
+
+        width: 32px;
+
+        height: 32px;
+
+    }
+
+    .loop-action-btn svg {
+
+        width: 26px;
+
+        height: 26px;
+
+    }
+
+    .loop-toast {
+
+        bottom: 80px;
+
+    }
+
+}
+
+
+@media (max-width: 500px) {
+
+    .loop-ctrl {
+
+        width: 36px;
+
+        height: 36px;
+
+    }
+
+    .loop-ctrl svg {
+
+        width: 20px;
+
+        height: 20px;
+
+    }
+
+    .loop-avatar {
+
+        width: 38px;
+
+        height: 38px;
+
+        font-size: 16px;
+
+    }
+
+    .loop-actions {
+
+        gap: 4px;
+
+    }
+
+    .loop-action-btn {
+
+        width: 30px;
+
+        height: 30px;
+
+    }
+
+    .loop-action-btn svg {
+
+        width: 24px;
+
+        height: 24px;
+
+    }
+
+}
