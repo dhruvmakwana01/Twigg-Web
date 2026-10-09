@@ -2,7 +2,6 @@
    TWIGG LOOP PAGE — STYLES
 
    This file ONLY adds what the Home Page does not have.
-
    Everything else (sidebar, grid, cards, mobile bars) comes
    from ../home/home.css, which loop.html links first.
 
@@ -20,8 +19,7 @@ body.loop-page {
     /* Tallest the featured media may be (before the page scrolls) */
     --loop-max-h: 84vh;
 
-    /* Narrowest the featured card may be, so tall portrait
-       media is still clearly larger than a grid card */
+    /* Narrowest the featured card may be */
     --loop-min-w: 440px;
 
 }
@@ -71,14 +69,40 @@ body.loop-page {
 
 
 /* =========================================================
+   GRID REFRESH
+   Soft fade when the recommendations are reshuffled so the
+   change never feels abrupt.
+========================================================= */
+
+.loop-grid.loop-grid-refresh {
+
+    animation: loopGridIn 0.3s ease;
+
+}
+
+@keyframes loopGridIn {
+
+    from {
+
+        opacity: 0.35;
+
+    }
+
+    to {
+
+        opacity: 1;
+
+    }
+
+}
+
+
+/* =========================================================
    FEATURED CARD
 
-   Width comes from the media's real aspect ratio:
-
-       width = max(max-height × ratio, min-width), capped at 100%
-
-   The media box itself always uses aspect-ratio = the real
-   ratio, so nothing is stretched or cropped.
+   width = max(max-height × ratio, min-width), capped at 100%
+   The media box always uses aspect-ratio = the real ratio,
+   so nothing is stretched or cropped.
 ========================================================= */
 
 .loop-featured {
@@ -166,8 +190,6 @@ body.loop-page {
 
 /* =========================================================
    MEDIA CONTROLS (mute / full-screen)
-
-   Same look as the Reels round controls.
 ========================================================= */
 
 .loop-media-controls {
@@ -329,6 +351,10 @@ body.loop-page {
 
 /* =========================================================
    PROGRESS BAR (click / drag to seek)
+
+   Twigg gradient fill. IDENTICAL treatment to the Reels
+   progress bar (.reel-progress) so both belong to one
+   design system: same gradient, track, hover growth.
 ========================================================= */
 
 .loop-progress {
@@ -369,7 +395,8 @@ body.loop-page {
 
 }
 
-.loop-progress:hover .loop-progress-track {
+.loop-progress:hover .loop-progress-track,
+.loop-progress.is-scrubbing .loop-progress-track {
 
     height: 6px;
 
@@ -381,7 +408,18 @@ body.loop-page {
 
     height: 100%;
 
-    background: #fff;
+    background:
+        linear-gradient(
+            90deg,
+            #B90066 0%,
+            #E6094F 55%,
+            #F6801E 100%
+        );
+
+    border-radius: 0 3px 3px 0;
+
+    box-shadow:
+        0 0 6px rgba(251, 8, 56, 0.35);
 
 }
 
@@ -546,8 +584,6 @@ body.loop-page {
 
 /* =========================================================
    ACTIONS (like / save / share / report)
-
-   Light, outline-only icons — same style as Reels.
 ========================================================= */
 
 .loop-actions {
@@ -645,9 +681,6 @@ body.loop-page {
 
 /* =========================================================
    FULL-SCREEN
-
-   Real fullscreen is requested on .loop-media, so the media
-   plus its controls and progress bar go fullscreen together.
 ========================================================= */
 
 .loop-media:fullscreen,
@@ -895,6 +928,184 @@ body.loop-page {
         width: 24px;
 
         height: 24px;
+
+    }
+
+}
+
+
+/* =========================================================
+   PORTRAIT / VERTICAL FEATURED CARD  (DESKTOP + TABLET ONLY)
+
+   Applied when the media is taller than it is wide (JS adds
+   .is-portrait). The media keeps its real aspect ratio on
+   the left; creator info + actions sit on the right as part
+   of the same card.
+
+   Vertical media now gets MORE room than before: it may be
+   taller (90vh desktop / 82vh tablet instead of 84 / 76),
+   and the side panel is wider, so the whole card fills the
+   content area instead of looking like a small centred strip
+   next to a full-width horizontal card.
+
+   On MOBILE (max-width 800px) none of this applies: vertical
+   cards use the exact same bottom info bar as horizontal
+   cards (name, profile picture, rating, reviews, like, save,
+   share, report).
+========================================================= */
+
+@media (min-width: 801px) {
+
+    .loop-featured.is-portrait {
+
+        --loop-side-w: 360px;
+
+        --loop-side-min: 260px;
+
+        --loop-portrait-max-h: 90vh;
+
+        --loop-portrait-min-w: 340px;
+
+        --loop-media-w:
+            max(
+                calc(var(--loop-portrait-max-h) * var(--media-ratio)),
+                var(--loop-portrait-min-w)
+            );
+
+        display: flex;
+
+        align-items: stretch;
+
+        width:
+            min(
+                100%,
+                calc(var(--loop-media-w) + var(--loop-side-w))
+            );
+
+    }
+
+    .loop-featured.is-portrait .loop-media {
+
+        flex: 0 1 var(--loop-media-w);
+
+        width: auto;
+
+        min-width: 0;
+
+        align-self: flex-start;
+
+    }
+
+    .loop-featured.is-portrait .loop-info {
+
+        flex: 1 1 var(--loop-side-w);
+
+        min-width: var(--loop-side-min);
+
+        flex-direction: column;
+
+        align-items: stretch;
+
+        justify-content: space-between;
+
+        gap: 20px;
+
+        padding: 28px 24px;
+
+    }
+
+    .loop-featured.is-portrait .loop-creator {
+
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        gap: 12px;
+
+    }
+
+    .loop-featured.is-portrait .loop-creator-text {
+
+        width: 100%;
+
+    }
+
+    .loop-featured.is-portrait .loop-avatar {
+
+        width: 60px;
+
+        height: 60px;
+
+        font-size: 24px;
+
+    }
+
+    .loop-featured.is-portrait .loop-name {
+
+        display: -webkit-box;
+
+        -webkit-line-clamp: 2;
+
+        -webkit-box-orient: vertical;
+
+        white-space: normal;
+
+        overflow-wrap: anywhere;
+
+        font-size: 19px;
+
+    }
+
+    .loop-featured.is-portrait .loop-actions {
+
+        justify-content: space-between;
+
+        gap: 4px;
+
+        padding-top: 16px;
+
+        border-top: 1px solid #efefef;
+
+    }
+
+}
+
+
+/* TABLET */
+
+@media (min-width: 801px) and (max-width: 1150px) {
+
+    .loop-featured.is-portrait {
+
+        --loop-side-w: 300px;
+
+        --loop-side-min: 230px;
+
+        --loop-portrait-max-h: 82vh;
+
+        --loop-portrait-min-w: 300px;
+
+    }
+
+    .loop-featured.is-portrait .loop-info {
+
+        padding: 22px 18px;
+
+    }
+
+    .loop-featured.is-portrait .loop-avatar {
+
+        width: 56px;
+
+        height: 56px;
+
+        font-size: 22px;
+
+    }
+
+    .loop-featured.is-portrait .loop-name {
+
+        font-size: 17px;
 
     }
 

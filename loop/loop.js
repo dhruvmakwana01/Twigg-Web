@@ -4,15 +4,19 @@
    How it works:
    1. The Home Page sends the clicked card's id in the URL:
           loop.html?card=7
-   2. This file looks the id up in MEDIA (below), renders
-      that item as the large FEATURED card, and fills
-      the Pinterest grid with every other item.
-   3. Clicking a grid card makes it the new featured card.
-      The previous featured card returns to the top of the
-      grid.
-
-   IMPORTANT: MEDIA must stay in the SAME ORDER as the cards
-   in home.html (card 01 = id 0, card 02 = id 1, ...).
+   2. This file reads the content from the SHARED media data
+      (../shared/media-data.js), renders that item as the large
+      FEATURED card and fills the Pinterest grid with every
+      other Loop item in a freshly shuffled order.
+   3. Clicking a grid card makes it the new featured card, and
+      the recommendations are shuffled again. The card you just
+      left is NOT placed at the top of the recommendations.
+   4. Every Loop page (history entry) remembers its own featured
+      card, grid order and scroll position, so going back to a
+      Loop page returns to the exact spot, with no scroll-up
+      animation.
+   5. The latest Loop position is also saved so Home can send
+      the user back here (Home ↔ Loop behave as one experience).
 ========================================================= */
 
 (() => {
@@ -27,95 +31,64 @@
     const HOME_RATIO_KEY = "twigg_home_ratios";
     const MUTE_KEY = "twigg_shared_muted";
 
+    /* Latest Loop position (read by Home) */
+    const LOOP_STATE_KEY = "twigg_loop_state";
 
-    /* =====================================================
-       MEDIA CATALOG
-       (id = position in this list = card order in home.html)
-    ===================================================== */
-
-    const VIDEO_BASE = "../home/videos/";
-
-    const photo = id =>
-        `https://images.unsplash.com/photo-${id}?auto=format&fit=max&w=900&q=90`;
-
-    const MEDIA = [
-
-        /* 00 */ { type: "video", src: VIDEO_BASE + "b9f4e7d4-ce0a-426a-937e-daebd25f5842.MP4", alt: "Video" },
-        /* 01 */ { type: "image", src: photo("1561070791-2526d30994b5"), alt: "Creative design" },
-        /* 02 */ { type: "image", src: photo("1586717791821-3f44a563fa4c"), alt: "Graphic design" },
-        /* 03 */ { type: "video", src: VIDEO_BASE + "d27829dc-6302-47a3-8c71-5f8a157f47e5.MP4", alt: "Video" },
-        /* 04 */ { type: "image", src: photo("1558655146-9f40138edfeb"), alt: "Creative branding" },
-        /* 05 */ { type: "video", src: VIDEO_BASE + "22512-328261507_medium.mp4", alt: "Video" },
-        /* 06 */ { type: "image", src: photo("1497366811353-6870744d04b2"), alt: "Interior design" },
-        /* 07 */ { type: "video", src: VIDEO_BASE + "22619-328940133_medium.mp4", alt: "Video" },
-        /* 08 */ { type: "image", src: photo("1618005198919-d3d4b5a92ead"), alt: "Abstract design" },
-        /* 09 */ { type: "video", src: VIDEO_BASE + "212404_medium.mp4", alt: "Video" },
-        /* 10 */ { type: "image", src: photo("1559028012-481c04fa702d"), alt: "Website design" },
-        /* 11 */ { type: "video", src: VIDEO_BASE + "338904_medium.mp4", alt: "Video" },
-        /* 12 */ { type: "image", src: photo("1634017839464-5c339ebe3cb4"), alt: "Abstract artwork" },
-        /* 13 */ { type: "image", src: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTsnn_crhJrO4NbGugSy9ofq1PdH5NhJYEPwRsTaV9b6Q&s=10", alt: "Creative business design" },
-        /* 14 */ { type: "video", src: VIDEO_BASE + "364783_medium.mp4", alt: "Video" },
-        /* 15 */ { type: "image", src: photo("1513364776144-60967b0f800f"), alt: "Art and illustration" },
-        /* 16 */ { type: "image", src: photo("1557682250-33bd709cbe85"), alt: "Color design" },
-        /* 17 */ { type: "video", src: VIDEO_BASE + "ad509c81-b69a-4021-be22-37d432bd7531.MP4", alt: "Video" },
-        /* 18 */ { type: "image", src: photo("1542744095-fcf48d80b0fd"), alt: "Business design" },
-        /* 19 */ { type: "image", src: photo("1497366754035-f200968a6e72"), alt: "Interior design" },
-        /* 20 */ { type: "video", src: VIDEO_BASE + "21d1f8ec-5dab-476d-b3a9-16412b7745b0.MP4", alt: "Video" },
-        /* 21 */ { type: "image", src: photo("1561214115-f2f134cc4912"), alt: "Art gallery" },
-        /* 22 */ { type: "image", src: photo("1550745165-9bc0b252726f"), alt: "Creative technology" },
-        /* 23 */ { type: "video", src: VIDEO_BASE + "6ede3033-72bb-46c7-a61c-c8eaf77445b4.MP4", alt: "Video" },
-        /* 24 */ { type: "image", src: photo("1634017839464-5c339ebe3cb4"), alt: "Abstract artwork" },
-        /* 25 */ { type: "image", src: photo("1497215728101-856f4ea42174"), alt: "Workspace design" },
-        /* 26 */ { type: "video", src: VIDEO_BASE + "e75e166b-f8bc-497f-8c07-c557c8d0de77.MP4", alt: "Video" },
-        /* 27 */ { type: "image", src: photo("1513364776144-60967b0f800f"), alt: "Art and illustration" },
-        /* 28 */ { type: "image", src: photo("1542744095-fcf48d80b0fd"), alt: "Business creative" },
-        /* 29 */ { type: "video", src: VIDEO_BASE + "ad3b477e-ccf1-49df-8bfa-ec0b8c80965a.MP4", alt: "Video" }
-    ];
+    /* Position of EACH Loop page (history entry) */
+    const LOOP_ENTRIES_KEY = "twigg_loop_entries";
 
 
     /* =====================================================
-       PROFILE / CATEGORY / RATING DATA (placeholder)
+       MEDIA (from the shared data source)
     ===================================================== */
 
-    const PROFILES = [
-        "Aarav Studio",
-        "Maya Designs",
-        "Pixel Forge",
-        "Nora Creative",
-        "Kabir Motion",
-        "Lumen Works"
-    ];
+    const Media = window.TwiggMedia;
 
-    const CATEGORIES = [
-        "Video Editing",
-        "Social Media Design",
-        "Logo Design",
-        "Web & Mobile Design",
-        "Branding",
-        "Motion Graphics",
-        "Packaging Design",
-        "Logo Animation",
-        "3D Product Animation",
-        "Book Design",
-        "Intro & Outro Videos"
-    ];
+    if (!Media) {
 
-    const RATINGS = ["4.9", "4.8", "5.0", "4.7", "4.6", "4.9", "4.5"];
-    const REVIEWS = ["1,204", "842", "2,380", "94", "445", "990", "1,875"];
+        console.error(
+            "Twigg: ../shared/media-data.js must load before loop.js"
+        );
+
+        return;
+    }
+
+    const FEED = Media.getFeed("loop");
+
+    if (!FEED.length) {
+        return;
+    }
+
+    const FEED_IDS = FEED.map(item => item.id);
+    const FEED_SET = new Set(FEED_IDS);
 
 
     function getItem(id) {
 
+        const media = Media.getById(id);
+
         return {
             id,
-            type: MEDIA[id].type,
-            src: MEDIA[id].src,
-            alt: MEDIA[id].alt,
-            name: PROFILES[id % PROFILES.length],
-            category: CATEGORIES[id % CATEGORIES.length],
-            rating: RATINGS[id % RATINGS.length],
-            reviews: REVIEWS[(id * 3) % REVIEWS.length]
+            type: media.type,
+            src: media.src,
+            thumbnail: media.thumbnail,
+            alt: media.title,
+            name: media.creator.name,
+            profileImage: media.creator.profileImage,
+            category: media.category,
+            rating: media.rating,
+            reviews: media.reviews
         };
+    }
+
+
+    function esc(value) {
+
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
     }
 
 
@@ -234,9 +207,75 @@
 
     let hoveredVideo = null;
 
+    /* Grid cards are created once and re-ordered, not rebuilt */
+    const cardCache = new Map();
+
+    /* Identifies THIS Loop page (history entry) */
+    let currentKey = null;
+
     const savedIds = new Set();
     const likedIds = new Set();
     const reportedIds = new Set();
+
+
+    /* =====================================================
+       NAVIGATION TYPE
+       (reload = fresh feed, back_forward = restore)
+    ===================================================== */
+
+    const navEntry =
+        performance.getEntriesByType("navigation")[0];
+
+    const navType =
+        navEntry
+            ? navEntry.type
+            : "navigate";
+
+    const isLoopReload =
+        navType === "reload";
+
+
+    /* =====================================================
+       PER-PAGE POSITIONS (one per Loop page / history entry)
+    ===================================================== */
+
+    let entries = {};
+
+    if (!isLoopReload) {
+
+        try {
+
+            entries = JSON.parse(
+                sessionStorage.getItem(LOOP_ENTRIES_KEY) || "{}"
+            ) || {};
+
+        } catch {
+
+            entries = {};
+        }
+    }
+
+
+    function persistEntries() {
+
+        try {
+
+            sessionStorage.setItem(
+                LOOP_ENTRIES_KEY,
+                JSON.stringify(entries)
+            );
+
+        } catch {}
+    }
+
+
+    function newKey() {
+
+        return (
+            Date.now().toString(36) +
+            Math.random().toString(36).slice(2, 7)
+        );
+    }
 
 
     /* =====================================================
@@ -269,6 +308,23 @@
             );
 
         } catch {}
+    }
+
+
+    /*
+       Portrait / vertical media (height greater than width)
+       gets the info + actions on the RIGHT of the media on
+       desktop/tablet (CSS keeps mobile on the bottom bar).
+    */
+
+    function updateOrientation(wrap, ratio) {
+
+        wrap.classList.toggle(
+            "is-portrait",
+            Number.isFinite(ratio) &&
+            ratio > 0 &&
+            ratio < 0.999
+        );
     }
 
 
@@ -383,6 +439,51 @@
     }
 
 
+    /*
+       RECOMMENDATIONS
+
+       A fresh random order of every Loop item except the one
+       being featured. The card the user was just looking at
+       is moved into the second half of the list, so it never
+       shows up again immediately under the new card.
+    */
+
+    function buildRecommendationOrder(currentId, previousId) {
+
+        const order =
+            shuffle(
+                FEED_IDS.filter(id => id !== currentId)
+            );
+
+        if (
+            previousId !== null &&
+            previousId !== currentId
+        ) {
+
+            const index = order.indexOf(previousId);
+
+            if (index !== -1) {
+
+                order.splice(index, 1);
+
+                const min =
+                    Math.ceil(order.length / 2);
+
+                const position =
+                    min +
+                    Math.floor(
+                        Math.random() *
+                        (order.length - min + 1)
+                    );
+
+                order.splice(position, 0, previousId);
+            }
+        }
+
+        return order;
+    }
+
+
     function buildUrl(id) {
 
         return `?card=${id}`;
@@ -402,11 +503,28 @@
 
         return (
             Number.isInteger(id) &&
-            id >= 0 &&
-            id < MEDIA.length
+            FEED_SET.has(id)
         )
             ? id
             : null;
+    }
+
+
+    /*
+       Jump instantly to a scroll position, ignoring any
+       CSS smooth scrolling. No animation, no visible travel.
+    */
+
+    function jumpScroll(y) {
+
+        const previous =
+            mainEl.style.scrollBehavior;
+
+        mainEl.style.scrollBehavior = "auto";
+
+        mainEl.scrollTop = y;
+
+        mainEl.style.scrollBehavior = previous;
     }
 
 
@@ -438,6 +556,8 @@
         const url =
             new URL(location.href);
 
+        url.search = "";
+
         url.searchParams.set("card", String(id));
 
         if (navigator.share) {
@@ -467,6 +587,271 @@
 
             toast("Share is not supported in this browser.");
         }
+    }
+
+
+    /* =====================================================
+       LOOP POSITION: SAVE / READ / CLEAR
+
+       Saved: featured card, the exact grid order, and the
+       scroll position.
+
+       - LOOP_STATE_KEY  = latest position (Home reads it)
+       - entries[key]    = position of THIS Loop page, so each
+                           Loop page restores its own scroll
+    ===================================================== */
+
+    let loopRestoring = false;
+    let leavingForHome = false;
+
+
+    function clearLoopState() {
+
+        try {
+
+            sessionStorage.removeItem(LOOP_STATE_KEY);
+
+        } catch {}
+    }
+
+
+    function saveLoopState() {
+
+        if (
+            loopRestoring ||
+            leavingForHome ||
+            featuredId === null
+        ) {
+            return;
+        }
+
+        const state = {
+            featuredId,
+            gridOrder:
+                Array.from(gridEl.children)
+                    .map(card => Number(card.dataset.cardId)),
+            scrollTop: mainEl.scrollTop
+        };
+
+        try {
+
+            sessionStorage.setItem(
+                LOOP_STATE_KEY,
+                JSON.stringify(state)
+            );
+
+        } catch {}
+
+        if (currentKey) {
+
+            entries[currentKey] = state;
+
+            persistEntries();
+        }
+    }
+
+
+    function sanitizeState(state) {
+
+        if (
+            !state ||
+            !Number.isInteger(state.featuredId) ||
+            !FEED_SET.has(state.featuredId)
+        ) {
+            return null;
+        }
+
+        let order = null;
+
+        if (
+            Array.isArray(state.gridOrder) &&
+            state.gridOrder.length === FEED_IDS.length - 1 &&
+            new Set(state.gridOrder).size === state.gridOrder.length &&
+            state.gridOrder.every(
+                id =>
+                    Number.isInteger(id) &&
+                    FEED_SET.has(id) &&
+                    id !== state.featuredId
+            )
+        ) {
+            order = state.gridOrder;
+        }
+
+        const y = Number(state.scrollTop);
+
+        return {
+            featuredId: state.featuredId,
+            gridOrder: order,
+            scrollTop:
+                Number.isFinite(y) && y >= 0
+                    ? y
+                    : 0
+        };
+    }
+
+
+    function readLoopState() {
+
+        try {
+
+            const raw =
+                sessionStorage.getItem(LOOP_STATE_KEY);
+
+            return raw
+                ? sanitizeState(JSON.parse(raw))
+                : null;
+
+        } catch {
+
+            return null;
+        }
+    }
+
+
+    function readEntry(key) {
+
+        return (key && entries[key])
+            ? sanitizeState(entries[key])
+            : null;
+    }
+
+
+    /*
+       Restore a saved scroll position without any visible
+       scrolling. Try instantly; if the page is not tall
+       enough yet, hide it briefly, keep retrying as layout
+       settles, then reveal it exactly at the saved position.
+    */
+
+    function restoreLoopScroll(y) {
+
+        if (!y) {
+
+            jumpScroll(0);
+
+            return;
+        }
+
+        const reached = () =>
+            Math.abs(mainEl.scrollTop - y) <= 2;
+
+        jumpScroll(y);
+
+        if (reached()) {
+
+            saveLoopState();
+
+            return;
+        }
+
+        loopRestoring = true;
+
+        mainEl.style.visibility = "hidden";
+
+        let watcher = null;
+        let revealTimer = null;
+        let finishTimer = null;
+        let finished = false;
+
+        const userEvents = [
+            "wheel",
+            "touchstart",
+            "keydown",
+            "mousedown"
+        ];
+
+        const reveal = () => {
+
+            mainEl.style.visibility = "";
+        };
+
+        const finish = () => {
+
+            if (finished) {
+                return;
+            }
+
+            finished = true;
+
+            loopRestoring = false;
+
+            reveal();
+
+            if (watcher) {
+                watcher.disconnect();
+                watcher = null;
+            }
+
+            clearTimeout(revealTimer);
+            clearTimeout(finishTimer);
+
+            userEvents.forEach(type => {
+
+                window.removeEventListener(type, finish);
+            });
+
+            saveLoopState();
+        };
+
+        const attempt = () => {
+
+            jumpScroll(y);
+
+            if (reached()) {
+                finish();
+            }
+        };
+
+        if ("ResizeObserver" in window) {
+
+            watcher = new ResizeObserver(attempt);
+
+            watcher.observe(gridEl);
+            watcher.observe(featureEl);
+        }
+
+        userEvents.forEach(type => {
+
+            window.addEventListener(
+                type,
+                finish,
+                { passive: true }
+            );
+        });
+
+        const onLoaded = () => {
+
+            attempt();
+
+            reveal();
+        };
+
+        if (document.readyState === "complete") {
+
+            onLoaded();
+
+        } else {
+
+            window.addEventListener(
+                "load",
+                onLoaded,
+                { once: true }
+            );
+        }
+
+        /* Safety nets */
+
+        revealTimer =
+            setTimeout(() => {
+
+                jumpScroll(y);
+
+                reveal();
+
+            }, 1500);
+
+        finishTimer =
+            setTimeout(finish, 3500);
     }
 
 
@@ -773,12 +1158,27 @@
 
         profile.className = "card-profile";
 
-        const avatar = document.createElement("div");
+        let avatar;
 
-        avatar.className = "card-profile-initial";
+        if (item.profileImage) {
 
-        avatar.textContent =
-            item.name.charAt(0).toUpperCase();
+            avatar = document.createElement("img");
+
+            avatar.className = "card-profile-image";
+
+            avatar.src = item.profileImage;
+            avatar.alt = item.name;
+            avatar.loading = "lazy";
+
+        } else {
+
+            avatar = document.createElement("div");
+
+            avatar.className = "card-profile-initial";
+
+            avatar.textContent =
+                item.name.charAt(0).toUpperCase();
+        }
 
         const label = document.createElement("span");
 
@@ -834,6 +1234,10 @@
             media.setAttribute("playsinline", "");
 
             media.preload = lazy ? "metadata" : "auto";
+
+            if (item.thumbnail) {
+                media.poster = item.thumbnail;
+            }
 
             const source = document.createElement("source");
 
@@ -952,45 +1356,58 @@
 
     /* =====================================================
        FINITE GRID
-       Loads every card exactly once except the featured card.
 
-       There is intentionally NO infinite scrolling.
-       This prevents duplicate cards from being appended
-       when the user reaches the bottom.
+       Every Loop card appears exactly once, except the
+       featured card. There is intentionally NO infinite
+       scrolling.
+
+       Cards are created once and cached; reshuffling just
+       re-orders the existing elements (no reloading of
+       media, so the refresh stays smooth).
     ===================================================== */
 
-    function renderGrid() {
-
-        gridEl.innerHTML = "";
+    function renderGrid(order, animate) {
 
         const ids =
-            shuffle(
-                MEDIA
-                    .map((_, index) => index)
-                    .filter(index => index !== featuredId)
-            );
+            order ||
+            buildRecommendationOrder(featuredId, null);
+
+        const wanted = new Set(ids);
+
+        Array.from(gridEl.children).forEach(card => {
+
+            if (!wanted.has(Number(card.dataset.cardId))) {
+                card.remove();
+            }
+        });
 
         const fragment =
             document.createDocumentFragment();
 
         ids.forEach(id => {
 
-            fragment.appendChild(
-                createGridCard(id, false)
-            );
+            let card = cardCache.get(id);
+
+            if (!card) {
+
+                card = createGridCard(id, false);
+
+                cardCache.set(id, card);
+            }
+
+            fragment.appendChild(card);
         });
 
         gridEl.appendChild(fragment);
-    }
 
+        if (animate) {
 
-    function removeFromGrid(id) {
+            gridEl.classList.remove("loop-grid-refresh");
 
-        gridEl
-            .querySelectorAll(
-                `.media-card[data-card-id="${id}"]`
-            )
-            .forEach(card => card.remove());
+            void gridEl.offsetWidth;
+
+            gridEl.classList.add("loop-grid-refresh");
+        }
     }
 
 
@@ -1225,19 +1642,22 @@
                 "--media-ratio",
                 String(ratios[id])
             );
+
+            /* Known ratio: choose the right layout immediately */
+            updateOrientation(wrap, ratios[id]);
         }
 
         const mediaHtml =
             isVideo
                 ? `
-                    <video class="loop-video" muted loop playsinline preload="auto">
-                        <source src="${item.src}" type="video/mp4">
+                    <video class="loop-video" muted loop playsinline preload="auto"${item.thumbnail ? ` poster="${esc(item.thumbnail)}"` : ""}>
+                        <source src="${esc(item.src)}" type="video/mp4">
                     </video>
                   `
                 : `
                     <img class="loop-image"
-                         src="${item.src.replace("w=900", "w=1600")}"
-                         alt="${item.alt}">
+                         src="${esc(item.src.replace("w=900", "w=1600"))}"
+                         alt="${esc(item.alt)}">
                   `;
 
         wrap.innerHTML = `
@@ -1281,14 +1701,14 @@
                 <div class="loop-creator">
 
                     <div class="loop-avatar" aria-hidden="true">
-                        ${item.name.charAt(0).toUpperCase()}
+                        ${esc(item.name.charAt(0).toUpperCase())}
                     </div>
 
                     <div class="loop-creator-text">
 
-                        <div class="loop-name">${item.name}</div>
+                        <div class="loop-name">${esc(item.name)}</div>
 
-                        <div class="loop-category">${item.category}</div>
+                        <div class="loop-category">${esc(item.category)}</div>
 
                         <div class="loop-rating">
 
@@ -1296,9 +1716,9 @@
                                 ${ICONS.star.repeat(5)}
                             </div>
 
-                            <span class="loop-rating-value">${item.rating}</span>
+                            <span class="loop-rating-value">${esc(item.rating)}</span>
 
-                            <span class="loop-review-count">(${item.reviews} reviews)</span>
+                            <span class="loop-review-count">(${esc(item.reviews)} reviews)</span>
 
                         </div>
 
@@ -1381,6 +1801,8 @@
                 "--media-ratio",
                 String(ratio)
             );
+
+            updateOrientation(wrap, ratio);
 
             rememberRatio(id, ratio);
         };
@@ -1525,7 +1947,7 @@
             });
 
 
-            /* Progress bar */
+            /* Progress bar: click / drag to seek */
 
             if (progress) {
 
@@ -1561,6 +1983,8 @@
 
                         dragging = true;
 
+                        progress.classList.add("is-scrubbing");
+
                         try {
                             progress.setPointerCapture(
                                 event.pointerId
@@ -1586,6 +2010,8 @@
                 const stopDrag = () => {
 
                     dragging = false;
+
+                    progress.classList.remove("is-scrubbing");
                 };
 
 
@@ -1766,69 +2192,80 @@
 
 
     /* =====================================================
-       MAKE A CARD THE FEATURED CARD
+       SHOW A LOOP PAGE
+
+       options.order      saved grid order (restoring) —
+                          otherwise a fresh shuffle is made
+       options.scrollTop  saved scroll position (restoring) —
+                          otherwise the page starts at the top
+       options.animate    soft fade of the recommendations
     ===================================================== */
 
-    function setFeatured(id, options = {}) {
-
-        const push = options.push !== false;
-        const scroll = options.scroll !== false;
-
-        if (id === featuredId) {
-
-            if (scroll) {
-
-                mainEl.scrollTo({
-                    top: 0,
-                    behavior: "smooth"
-                });
-            }
-
-            return;
-        }
+    function showFeatured(id, options = {}) {
 
         const previousId = featuredId;
 
         featuredId = id;
 
-
-        /* Remove the newly selected card from the grid. */
-
-        removeFromGrid(id);
-
-
-        /*
-           Return the previous featured card to the grid.
-
-           Before inserting it, make sure it doesn't already
-           exist. This guarantees that every card appears only
-           once in the grid.
-        */
-
-        if (previousId !== null) {
-
-            removeFromGrid(previousId);
-
-            gridEl.insertBefore(
-                createGridCard(previousId, false),
-                gridEl.firstChild
-            );
-        }
-
-
         hoveredVideo = null;
 
         renderFeatured(id);
 
+        renderGrid(
+            options.order ||
+            buildRecommendationOrder(id, previousId),
+            options.animate === true
+        );
+
         refreshMuteUI();
 
+        renderSaveState();
+
+        if (typeof options.scrollTop === "number") {
+
+            restoreLoopScroll(options.scrollTop);
+
+        } else {
+
+            jumpScroll(0);
+        }
+    }
+
+
+    /* =====================================================
+       MAKE A CARD THE FEATURED CARD
+
+       The selected content opens directly (no smooth scroll
+       to the top). The page you are leaving saves its own
+       scroll position first, and a new history entry with
+       its own key is created for the new page.
+    ===================================================== */
+
+    function setFeatured(id, options = {}) {
+
+        const push = options.push !== false;
+
+        if (id === featuredId) {
+
+            jumpScroll(0);
+
+            return;
+        }
+
+        /* Save the page being left (its scroll + grid order) */
+
+        saveLoopState();
+
+        showFeatured(id, { animate: true });
 
         if (push) {
+
+            currentKey = newKey();
 
             try {
 
                 history.pushState(
-                    { card: id },
+                    { card: id, key: currentKey },
                     "",
                     buildUrl(id)
                 );
@@ -1836,55 +2273,239 @@
             } catch {}
         }
 
-
-        if (scroll) {
-
-            mainEl.scrollTo({
-                top: 0,
-                behavior: "smooth"
-            });
-        }
+        saveLoopState();
     }
 
 
     /* =====================================================
        BROWSER BACK / FORWARD
+
+       Each Loop page returns exactly as it was left: same
+       featured card, same recommendation order, same scroll
+       position — restored instantly.
     ===================================================== */
 
-    window.addEventListener("popstate", () => {
+    window.addEventListener("popstate", event => {
 
-        const id = readIdFromUrl();
+        /* Save the page being left */
 
-        if (id !== null) {
+        saveLoopState();
 
-            setFeatured(id, { push: false });
+        const state = event.state || {};
+
+        const id =
+            Number.isInteger(state.card)
+                ? state.card
+                : readIdFromUrl();
+
+        if (id === null || !FEED_SET.has(id)) {
+            return;
         }
+
+        currentKey = state.key || newKey();
+
+        const entry = readEntry(state.key);
+
+        if (
+            entry &&
+            entry.featuredId === id &&
+            entry.gridOrder
+        ) {
+
+            showFeatured(id, {
+                order: entry.gridOrder,
+                scrollTop: entry.scrollTop
+            });
+
+            return;
+        }
+
+        showFeatured(id, { animate: true });
+
+        try {
+
+            history.replaceState(
+                { card: id, key: currentKey },
+                "",
+                buildUrl(id)
+            );
+
+        } catch {}
+
+        saveLoopState();
     });
+
+
+    /* =====================================================
+       SAVE THE LOOP POSITION WHEN LEAVING
+
+       - scrolling (debounced)
+       - page hidden / closed / navigated away
+       - any sidebar link click
+
+       Clicking the Home link FROM the Loop page goes to the
+       real Home page, so it forgets the latest Loop position
+       instead of saving it (otherwise Home would redirect
+       straight back here).
+    ===================================================== */
+
+    let loopScrollTimer = null;
+
+    mainEl.addEventListener(
+        "scroll",
+        () => {
+
+            clearTimeout(loopScrollTimer);
+
+            loopScrollTimer =
+                setTimeout(saveLoopState, 50);
+        },
+        { passive: true }
+    );
+
+
+    window.addEventListener("pagehide", saveLoopState);
+
+    document.addEventListener(
+        "visibilitychange",
+        () => {
+
+            if (document.visibilityState === "hidden") {
+
+                saveLoopState();
+            }
+        }
+    );
+
+
+    document
+        .querySelectorAll(".nav-item")
+        .forEach(item => {
+
+            item.addEventListener(
+                "click",
+                event => {
+
+                    /* Opening in a new tab: this page stays */
+
+                    if (
+                        event.ctrlKey ||
+                        event.metaKey ||
+                        event.shiftKey
+                    ) {
+                        return;
+                    }
+
+                    const href =
+                        item.getAttribute("href") || "";
+
+                    if (/home\/home\.html/.test(href)) {
+
+                        /* Save this page's own position first,
+                           then forget the "latest" marker */
+
+                        saveLoopState();
+
+                        leavingForHome = true;
+
+                        clearLoopState();
+
+                    } else {
+
+                        saveLoopState();
+                    }
+                }
+            );
+        });
 
 
     /* =====================================================
        INITIALIZE
     ===================================================== */
 
-    let startId = readIdFromUrl();
+    /* A real refresh is a fresh feed: forget old positions */
+
+    if (isLoopReload) {
+
+        clearLoopState();
+
+        try {
+
+            sessionStorage.removeItem(LOOP_ENTRIES_KEY);
+
+        } catch {}
+    }
+
+
+    const historyState = history.state || {};
+
+    const urlId = readIdFromUrl();
+
+
+    /*
+       Restore a saved position when:
+       - the user came back with Back/Forward (this Loop page's
+         own saved position), or
+       - Home sent the user here (?restore=1, latest position).
+       Never on a refresh, and never when the user opened a
+       card from Home (that is a fresh start).
+    */
+
+    let restoredState = null;
+
+    if (!isLoopReload) {
+
+        if (navType === "back_forward") {
+
+            restoredState =
+                readEntry(historyState.key) ||
+                readLoopState();
+
+        } else if (
+            new URLSearchParams(location.search).get("restore") === "1"
+        ) {
+
+            restoredState = readLoopState();
+        }
+    }
+
+    if (
+        restoredState &&
+        urlId !== null &&
+        urlId !== restoredState.featuredId
+    ) {
+
+        /* The URL points at a different card: don't restore */
+
+        restoredState = null;
+    }
+
+    let startId =
+        restoredState
+            ? restoredState.featuredId
+            : urlId;
 
     if (startId === null) {
 
         startId =
-            Math.floor(
-                Math.random() * MEDIA.length
-            );
-
-        try {
-
-            history.replaceState(
-                { card: startId },
-                "",
-                buildUrl(startId)
-            );
-
-        } catch {}
+            FEED_IDS[
+                Math.floor(Math.random() * FEED_IDS.length)
+            ];
     }
+
+    currentKey =
+        (restoredState && historyState.key) ||
+        newKey();
+
+    try {
+
+        history.replaceState(
+            { card: startId, key: currentKey },
+            "",
+            buildUrl(startId)
+        );
+
+    } catch {}
 
 
     featuredId = startId;
@@ -1892,11 +2513,28 @@
     renderFeatured(startId);
 
     /*
-       Load the complete grid once.
-
-       There is no infinite scroll and no repeated batches.
-       Each of the other 29 cards is added exactly once.
+       Load the complete grid once. A restored page reuses its
+       saved order; every new Loop page gets a fresh shuffle.
     */
-    renderGrid();
+    renderGrid(
+        restoredState
+            ? restoredState.gridOrder
+            : null,
+        false
+    );
+
+    refreshMuteUI();
+
+    renderSaveState();
+
+
+    if (restoredState && restoredState.gridOrder) {
+
+        restoreLoopScroll(restoredState.scrollTop);
+
+    } else {
+
+        saveLoopState();
+    }
 
 })();

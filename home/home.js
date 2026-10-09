@@ -18,32 +18,31 @@ const HOME_RATIO_KEY = "twigg_home_ratios";
 /* LOOP PAGE: remembers the user's mute choice for the Loop Page */
 const MUTE_KEY = "twigg_shared_muted";
 
+/*
+   LOOP PAGE: the Loop Page saves where the user left off
+   (featured card + grid order + scroll position) under this
+   key. Home reads it so that Home → Loop → another page →
+   Home brings the user back to the Loop position.
+*/
+const LOOP_STATE_KEY = "twigg_loop_state";
+
+/* Per-Loop-page positions (each Loop page remembers its own scroll) */
+const LOOP_ENTRIES_KEY = "twigg_loop_entries";
+
 
 /*
    Shared mute state for all Home videos.
 
    true  = videos start muted
    false = videos start unmuted
-
-   The last user-selected state is kept while moving
-   between different videos.
 */
 
 let sharedVideoMuted = true;
 
 
 /*
-   IMPORTANT:
-
-   Disable the browser's automatic scroll restoration.
-
-   Otherwise the browser can restore its own position
-   after our JavaScript has already restored the saved
-   position, causing a visible jump.
-
-   This is set only by the Home page script, so other
-   pages (Reels, Creators, Search, etc.) keep their
-   normal browser behavior.
+   Disable the browser's automatic scroll restoration so it
+   cannot fight our own restoration (visible jump).
 */
 
 if ("scrollRestoration" in history) {
@@ -62,43 +61,82 @@ const isHomeReload =
 /*
    A real browser refresh creates a completely fresh
    Twigg feed (new order, scroll back to the top).
-
-   Normal navigation does NOT clear the state, so the
-   saved scroll position stays available until the user
-   intentionally refreshes.
 */
 
 if (isHomeReload) {
 
-    sessionStorage.removeItem(
-        HOME_ORDER_KEY
-    );
-
-    sessionStorage.removeItem(
-        HOME_SCROLL_KEY
-    );
-
-    sessionStorage.removeItem(
-        REELS_ORDER_KEY
-    );
-
-    sessionStorage.removeItem(
-        REELS_STATE_KEY
-    );
-
-    sessionStorage.removeItem(
-        HOME_RATIO_KEY
-    );
+    sessionStorage.removeItem(HOME_ORDER_KEY);
+    sessionStorage.removeItem(HOME_SCROLL_KEY);
+    sessionStorage.removeItem(REELS_ORDER_KEY);
+    sessionStorage.removeItem(REELS_STATE_KEY);
+    sessionStorage.removeItem(HOME_RATIO_KEY);
 
     /* LOOP PAGE: a fresh feed also resets the mute choice */
-    sessionStorage.removeItem(
-        MUTE_KEY
-    );
+    sessionStorage.removeItem(MUTE_KEY);
+
+    /* LOOP PAGE: a fresh feed also forgets the Loop positions */
+    sessionStorage.removeItem(LOOP_STATE_KEY);
+    sessionStorage.removeItem(LOOP_ENTRIES_KEY);
+}
+
+
+/* =========================================================
+   HOME ↔ LOOP SYNC
+
+   If the user has a saved Loop position, Home sends them
+   straight back to it (Home → Loop → other page → Home).
+========================================================= */
+
+let redirectingToLoop = false;
+
+if (!isHomeReload) {
+
+    let hasLoopState = false;
+
+    try {
+
+        hasLoopState =
+            sessionStorage.getItem(
+                LOOP_STATE_KEY
+            ) !== null;
+
+    } catch {
+
+        hasLoopState = false;
+    }
+
+
+    const isBackForward =
+        navigationEntry &&
+        navigationEntry.type === "back_forward";
+
+
+    if (hasLoopState && !isBackForward) {
+
+        redirectingToLoop = true;
+
+        document.documentElement.style.visibility =
+            "hidden";
+
+        window.location.replace(
+            "../loop/loop.html?restore=1"
+        );
+
+    } else if (hasLoopState) {
+
+        try {
+
+            sessionStorage.removeItem(
+                LOOP_STATE_KEY
+            );
+
+        } catch { }
+    }
 }
 
 
 /*
-   Cached media aspect ratios.
+   Cached media aspect ratios (keyed by media id).
 
    Card heights depend on these ratios. Applying them
    immediately lets the page be tall enough to restore
@@ -150,8 +188,100 @@ const ICONS = {
         <svg viewBox="0 0 24 24">
             <path d="M6 4h12v16l-6-4-6 4z"></path>
         </svg>
+    `,
+
+    share: `
+        <svg viewBox="0 0 24 24">
+            <path d="M12 16V4"></path>
+            <path d="M7 9l5-5 5 5"></path>
+            <path d="M5 13v6h14v-6"></path>
+        </svg>
     `
 };
+
+
+/* =========================================================
+   RENDER HOME CARDS FROM THE SHARED MEDIA DATA
+
+   Home only decides WHICH shared items it shows ("home"
+   feed) and how they are drawn. The content itself lives in
+   ../shared/media-data.js.
+========================================================= */
+
+const homeGrid =
+    document.querySelector(
+        ".pinterest-grid"
+    );
+
+const homeFeed =
+    window.TwiggMedia
+        ? window.TwiggMedia.getFeed("home")
+        : [];
+
+
+function escapeHtml(value) {
+
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+
+function buildHomeCard(item) {
+
+    const isVideo =
+        item.type === "video";
+
+    const media =
+        isVideo
+            ? `
+                <video muted loop playsinline preload="auto"${item.thumbnail ? ` poster="${escapeHtml(item.thumbnail)}"` : ""}>
+                    <source src="${escapeHtml(item.src)}" type="video/mp4">
+                </video>
+            `
+            : `
+                <img src="${escapeHtml(item.src)}"
+                    alt="${escapeHtml(item.title)}" loading="lazy">
+            `;
+
+    return `
+        <article class="media-card"
+            data-media-id="${item.id}"
+            data-profile-name="${escapeHtml(item.creator.name)}"
+            ${item.creator.profileImage ? `data-profile-image="${escapeHtml(item.creator.profileImage)}"` : ""}>
+
+            ${media}
+
+            <div class="media-actions">
+
+                ${isVideo ? `
+                    <button class="action-button unmute-button" type="button" aria-label="Unmute video">
+                        ${ICONS.muted}
+                    </button>
+                ` : ""}
+
+                <button class="action-button save-button" type="button" aria-label="Save">
+                    ${ICONS.unsaved}
+                </button>
+
+                <button class="action-button share-button" type="button" aria-label="Share">
+                    ${ICONS.share}
+                </button>
+
+            </div>
+
+        </article>
+    `;
+}
+
+
+if (homeGrid) {
+
+    homeGrid.innerHTML =
+        homeFeed.map(buildHomeCard).join("");
+}
 
 
 /* =========================================================
@@ -159,10 +289,7 @@ const ICONS = {
    SHUFFLE + RESTORE
 ========================================================= */
 
-const grid =
-    document.querySelector(
-        ".pinterest-grid"
-    );
+const grid = homeGrid;
 
 
 if (grid) {
@@ -176,8 +303,8 @@ if (grid) {
 
 
     /*
-       Remember each card's original index so its
-       aspect ratio can be cached and restored.
+       Remember each card's original index (position in the
+       Home feed) so the saved shuffle order can be restored.
     */
 
     cards.forEach((card, index) => {
@@ -275,9 +402,7 @@ if (grid) {
     }
 
 
-    /*
-       Apply the saved order immediately.
-    */
+    /* Apply the saved order immediately. */
 
     savedOrder.forEach(
         index => {
@@ -299,7 +424,7 @@ if (grid) {
 
         const ratio =
             homeRatios[
-            card.dataset.homeIndex
+            card.dataset.mediaId
             ];
 
 
@@ -319,16 +444,10 @@ if (grid) {
    RESTORE HOME SCROLL
 ========================================================= */
 
-/*
-   Read the saved position only when this is NOT a
-   browser refresh. (On refresh the keys were already
-   cleared above, so the page simply starts at the top.)
-*/
-
 let savedHomeScroll = null;
 
 
-if (!isHomeReload) {
+if (!isHomeReload && !redirectingToLoop) {
 
     let storedScroll = null;
 
@@ -364,16 +483,9 @@ if (!isHomeReload) {
 
 
 /*
-   Jump instantly (ignoring any CSS smooth scrolling).
-*/
-
-/*
    Find the element that actually scrolls the Home page.
-
    Most pages scroll the window, but some layouts scroll
-   an inner container instead (fixed-height wrapper with
-   overflow-y: auto). In that case window.scrollY is
-   always 0, so we must read/write that container.
+   an inner container (as .main does here).
 */
 
 function findHomeScroller() {
@@ -396,18 +508,10 @@ function findHomeScroller() {
     };
 
 
-    /*
-       If the document itself can scroll, use it.
-    */
-
     if (doc.scrollHeight > doc.clientHeight + 1) {
         return doc;
     }
 
-
-    /*
-       Otherwise look for a scrolling ancestor of the grid.
-    */
 
     let el =
         grid ? grid.parentElement : null;
@@ -424,10 +528,6 @@ function findHomeScroller() {
                 document.documentElement
             ).overflowY === "visible"
         ) {
-            /*
-               Body overflow propagates to the viewport,
-               so the window is the scroller.
-            */
             break;
         }
 
@@ -489,21 +589,14 @@ function jumpToScroll(y) {
 
 /*
    While true, the saved position is protected: scroll
-   events caused by the restoration itself (or by the
-   page being temporarily too short) must NOT overwrite
-   the good saved value.
+   events caused by the restoration itself must NOT
+   overwrite the good saved value.
 */
 
 let homeRestoring = false;
 
 
 if (savedHomeScroll !== null) {
-
-    /*
-       First attempt: cached card ratios usually make the
-       page tall enough right now, so this often succeeds
-       immediately with no flicker at all.
-    */
 
     jumpToScroll(savedHomeScroll);
 
@@ -515,13 +608,6 @@ if (savedHomeScroll !== null) {
 
 
     if (!reached()) {
-
-        /*
-           The page is not tall enough yet (content is
-           still loading). Hide the page, keep retrying as
-           the layout grows, and reveal it once the exact
-           position is reached.
-        */
 
         homeRestoring = true;
 
@@ -547,12 +633,6 @@ if (savedHomeScroll !== null) {
         ];
 
 
-        /*
-           Fully finish restoring: stop observing, make
-           sure the page is visible, and allow normal
-           saving of the scroll position again.
-        */
-
         const stopRestoring = () => {
 
             homeRestoring = false;
@@ -577,13 +657,6 @@ if (savedHomeScroll !== null) {
             });
         };
 
-
-        /*
-           Show the page. If the exact position still has
-           not been reached, we keep correcting in the
-           background for a short while (late layout shifts)
-           until the user interacts or the position is hit.
-        */
 
         const reveal = () => {
 
@@ -633,11 +706,6 @@ if (savedHomeScroll !== null) {
         }
 
 
-        /*
-           If the user starts scrolling/interacting, stop
-           fighting them immediately.
-        */
-
         userEvents.forEach(type => {
 
             window.addEventListener(
@@ -648,11 +716,6 @@ if (savedHomeScroll !== null) {
 
         });
 
-
-        /*
-           When everything has loaded, do a final attempt
-           and reveal the page.
-        */
 
         const onLoaded = () => {
 
@@ -676,12 +739,6 @@ if (savedHomeScroll !== null) {
         }
 
 
-        /*
-           Safety nets:
-           - never keep the page hidden for too long
-           - never keep correcting forever
-        */
-
         revealTimer =
             setTimeout(reveal, 1500);
 
@@ -697,7 +754,7 @@ if (savedHomeScroll !== null) {
 
 function saveHomeState() {
 
-    if (homeRestoring) {
+    if (homeRestoring || redirectingToLoop) {
         return;
     }
 
@@ -717,11 +774,6 @@ window.addEventListener(
     saveHomeState
 );
 
-
-/*
-   Mobile browsers don't always fire pagehide reliably,
-   so also save when the page becomes hidden.
-*/
 
 document.addEventListener(
     "visibilitychange",
@@ -814,15 +866,12 @@ function setMediaAspectRatio(
     );
 
 
-    /*
-       Cache the ratio so it can be applied instantly
-       when Home is revisited.
-    */
+    /* Cache by media id so it is applied instantly on revisit. */
 
-    if (card.dataset.homeIndex !== undefined) {
+    if (card.dataset.mediaId !== undefined) {
 
         homeRatios[
-            card.dataset.homeIndex
+            card.dataset.mediaId
         ] = ratio;
 
 
@@ -897,13 +946,9 @@ function setupVideoAspectRatio(
 ) {
 
     /*
-       The video itself is used to generate the thumbnail.
-
        The first available video frame is captured and
-       stored as the video's poster.
-
-       This means the card has a thumbnail even when the
-       video is not currently playing.
+       stored as the video's poster (unless the shared data
+       already provides a thumbnail).
     */
 
     const generateVideoThumbnail = () => {
@@ -916,22 +961,12 @@ function setupVideoAspectRatio(
         }
 
 
-        /*
-           Always use the video's exact native dimensions
-           for the card aspect ratio.
-        */
-
         setMediaAspectRatio(
             card,
             video.videoWidth,
             video.videoHeight
         );
 
-
-        /*
-           If a poster already exists, there is nothing
-           else to generate.
-        */
 
         if (video.poster) {
             return;
@@ -960,11 +995,6 @@ function setupVideoAspectRatio(
             }
 
 
-            /*
-               Make sure we capture the beginning of the
-               video rather than a random frame.
-            */
-
             const captureFrame = () => {
 
                 try {
@@ -985,18 +1015,10 @@ function setupVideoAspectRatio(
                         );
 
                 } catch {
-                    /*
-                       Canvas extraction may be blocked
-                       by the browser for some sources.
-                    */
+                    /* Canvas extraction may be blocked. */
                 }
             };
 
-
-            /*
-               If the video is already at the beginning,
-               capture immediately.
-            */
 
             if (
                 Math.abs(video.currentTime) < 0.01
@@ -1007,11 +1029,6 @@ function setupVideoAspectRatio(
                 return;
             }
 
-
-            /*
-               Otherwise move to the first frame and wait
-               until seeking has completed.
-            */
 
             const handleSeeked = () => {
 
@@ -1030,17 +1047,10 @@ function setupVideoAspectRatio(
             video.currentTime = 0;
 
         } catch {
-            /*
-               Thumbnail generation is optional.
-               Video playback continues normally if it fails.
-            */
+            /* Thumbnail generation is optional. */
         }
     };
 
-
-    /* -----------------------------------------------------
-       VIDEO METADATA
-    ----------------------------------------------------- */
 
     const updateRatio = () => {
 
@@ -1059,21 +1069,12 @@ function setupVideoAspectRatio(
     );
 
 
-    /* -----------------------------------------------------
-       FIRST FRAME / THUMBNAIL
-    ----------------------------------------------------- */
-
     video.addEventListener(
         "loadeddata",
         generateVideoThumbnail,
         { once: true }
     );
 
-
-    /*
-       If metadata is already available, update the ratio
-       immediately.
-    */
 
     if (video.readyState >= 1) {
 
@@ -1082,23 +1083,12 @@ function setupVideoAspectRatio(
     }
 
 
-    /*
-       If the first frame is already available, generate
-       the thumbnail immediately.
-    */
-
     if (video.readyState >= 2) {
 
         generateVideoThumbnail();
 
     }
 
-
-    /*
-       Ask the browser to load the first frame.
-
-       This works together with preload="auto" in HTML.
-    */
 
     video.load();
 }
@@ -1165,22 +1155,13 @@ document
         }
 
 
-        /* -------------------------------------------------
-           VIDEO INDICATOR
-        ------------------------------------------------- */
+        /* ----- VIDEO INDICATOR ----- */
 
         let videoIndicator =
             card.querySelector(
                 ".video-indicator"
             );
 
-
-        /*
-           Create the indicator only for video cards.
-
-           It stays in the top-left corner of the card
-           while the video is not being hovered.
-        */
 
         if (!videoIndicator) {
 
@@ -1207,10 +1188,6 @@ document
         }
 
 
-        /*
-           Set the initial state from the shared state.
-        */
-
         video.muted =
             sharedVideoMuted;
 
@@ -1225,18 +1202,11 @@ document
         }
 
 
-        /* -------------------------------------------------
-           HOVER AUTOPLAY
-        ------------------------------------------------- */
+        /* ----- HOVER AUTOPLAY ----- */
 
         card.addEventListener(
             "mouseenter",
             () => {
-
-                /*
-                   Hide the video indicator when the user
-                   starts engaging with the video.
-                */
 
                 if (videoIndicator) {
 
@@ -1247,19 +1217,11 @@ document
                 }
 
 
-                /*
-                   Apply the last global mute/unmute choice
-                   to the newly hovered video.
-                */
-
                 video.muted =
                     sharedVideoMuted;
 
 
-                /*
-                   The hovered video becomes the only
-                   video that can have audio.
-                */
+                /* Only the hovered video may have audio. */
 
                 document
                     .querySelectorAll(
@@ -1277,10 +1239,6 @@ document
                     });
 
 
-                /*
-                   Update this video's button.
-                */
-
                 if (muteButton) {
 
                     muteButton.innerHTML =
@@ -1291,10 +1249,6 @@ document
                 }
 
 
-                /*
-                   Start the video.
-                */
-
                 video.play()
                     .catch(() => { });
 
@@ -1302,18 +1256,11 @@ document
         );
 
 
-        /* -------------------------------------------------
-           HOVER END
-        ------------------------------------------------- */
+        /* ----- HOVER END ----- */
 
         card.addEventListener(
             "mouseleave",
             () => {
-
-                /*
-                   Bring the video indicator back when
-                   the cursor leaves the card.
-                */
 
                 if (videoIndicator) {
 
@@ -1324,27 +1271,9 @@ document
                 }
 
 
-                /*
-                   Stop the video.
-                */
-
                 video.pause();
 
-
-                /*
-                   Return to the beginning so that the
-                   poster/first frame is shown again.
-                */
-
                 video.currentTime = 0;
-
-
-                /*
-                   Keep the actual video muted when it is
-                   not being hovered.
-
-                   sharedVideoMuted itself is NOT changed.
-                */
 
                 video.muted = true;
 
@@ -1362,9 +1291,7 @@ document
         );
 
 
-        /* -------------------------------------------------
-           MUTE / UNMUTE
-        ------------------------------------------------- */
+        /* ----- MUTE / UNMUTE ----- */
 
         if (muteButton) {
 
@@ -1375,18 +1302,11 @@ document
                     event.stopPropagation();
 
 
-                    /*
-                       Toggle the GLOBAL audio state.
-                    */
-
                     sharedVideoMuted =
                         !sharedVideoMuted;
 
 
-                    /*
-                       LOOP PAGE: remember the choice so the
-                       Loop Page can start with the same state.
-                    */
+                    /* LOOP PAGE: remember the choice. */
 
                     try {
 
@@ -1397,13 +1317,6 @@ document
 
                     } catch { }
 
-
-                    /*
-                       Apply the new state to every video.
-
-                       Only the currently hovered video can
-                       remain audible.
-                    */
 
                     document
                         .querySelectorAll(
@@ -1417,10 +1330,6 @@ document
 
                         });
 
-
-                    /*
-                       Update every mute button.
-                    */
 
                     document
                         .querySelectorAll(
@@ -1454,11 +1363,6 @@ document
                         });
 
 
-                    /*
-                       If the user just unmuted the current
-                       video, keep it playing.
-                    */
-
                     if (!sharedVideoMuted) {
 
                         video.play()
@@ -1482,21 +1386,11 @@ document
     .querySelectorAll(".save-button")
     .forEach(button => {
 
-        /*
-           Make sure every save button has a clean initial
-           icon and rendering state when the page loads.
-        */
-
         button.classList.remove("saved");
 
         button.innerHTML =
             ICONS.unsaved;
 
-
-        /*
-           Prevent the button from inheriting any temporary
-           rendering state from the card/video underneath it.
-        */
 
         button.style.display = "flex";
         button.style.alignItems = "center";
@@ -1552,9 +1446,7 @@ document
                         });
 
                     } catch {
-                        /*
-                           User cancelled sharing.
-                        */
+                        /* User cancelled sharing. */
                     }
 
                     return;
@@ -1602,11 +1494,6 @@ navItems.forEach(item => {
         "click",
         () => {
 
-            /*
-               Save one final time immediately before
-               navigation.
-            */
-
             saveHomeState();
 
 
@@ -1634,50 +1521,21 @@ navItems.forEach(item => {
 /* =========================================================
    CARD PROFILE (image + name, shown on hover via CSS)
 
-   Runs after all aspect-ratio and video setup, so the
-   profile avatar <img> can never be mistaken for the card's
-   main media by card.querySelector("img").
+   Creator data comes from the shared media data (written to
+   the card's data-profile-* attributes by buildHomeCard).
 ========================================================= */
-
-/*
-   Placeholder names, used only when a card has no
-   data-profile-name attribute. Replace with real data later.
-*/
-
-const PLACEHOLDER_PROFILES = [
-    "Aarav Studio",
-    "Maya Designs",
-    "Pixel Forge",
-    "Nora Creative",
-    "Kabir Motion",
-    "Lumen Works"
-];
-
 
 document
     .querySelectorAll(".media-card")
-    .forEach((card, index) => {
+    .forEach(card => {
 
         if (card.querySelector(".card-profile")) {
             return;
         }
 
-        /*
-           LOOP PAGE: use the card's ORIGINAL index (not its
-           shuffled position) so the same card shows the same
-           creator on the Home Page and on the Loop Page.
-        */
-
-        const originalIndex =
-            Number.isInteger(Number(card.dataset.homeIndex))
-                ? Number(card.dataset.homeIndex)
-                : index;
-
         const name =
             card.dataset.profileName ||
-            PLACEHOLDER_PROFILES[
-            originalIndex % PLACEHOLDER_PROFILES.length
-            ];
+            "Twigg Creator";
 
         const imageSrc =
             card.dataset.profileImage;
@@ -1738,17 +1596,7 @@ document
    OPEN THE LOOP PAGE
 
    Clicking any media card opens:
-       ../loop/loop.html?card=<original card index>&homeScroll=<position>
-
-   The Home scroll position is passed to Loop so that Loop
-   can open at the exact same vertical position.
-
-   The Home position itself remains stored in sessionStorage
-   and is NOT changed by Loop.
-
-   The Save / Share / Mute buttons already stop their own
-   click events, so they never trigger this. The extra
-   .closest() check is a safety net.
+       ../loop/loop.html?card=<media id>&homeScroll=<position>
 
    Ctrl / Cmd + click opens the Loop Page in a new tab.
 ========================================================= */
@@ -1769,11 +1617,6 @@ document
                     return;
                 }
 
-
-                /*
-                   Save the exact current Home position
-                   immediately before leaving Home.
-                */
 
                 saveHomeState();
 
@@ -1802,15 +1645,10 @@ document
                 } catch { }
 
 
-                /*
-                   Pass both the selected card and the
-                   Home scroll position to Loop.
-                */
-
                 const url =
                     "../loop/loop.html?card=" +
                     encodeURIComponent(
-                        card.dataset.homeIndex
+                        card.dataset.mediaId
                     ) +
                     "&homeScroll=" +
                     encodeURIComponent(

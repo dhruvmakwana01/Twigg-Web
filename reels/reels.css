@@ -544,7 +544,12 @@ body {
 
 
 /* =========================================================
-   PROGRESS
+   PROGRESS (click / tap / drag to seek)
+
+   IDENTICAL treatment to the Loop progress bar
+   (.loop-progress): a 16px invisible hit area, a 3px track
+   that grows to 6px on hover / scrubbing, and the same Twigg
+   gradient fill. Playback position is updated by reels.js.
 ========================================================= */
 
 .reel-progress {
@@ -552,17 +557,43 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    height: 3px;
-    background: rgba(255, 255, 255, 0.28);
+    height: 16px;
     z-index: 15;
-    pointer-events: none;
+    cursor: pointer;
+    touch-action: none;
+}
+
+.reel-progress-track {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.34);
+    transition: height 0.15s ease;
+}
+
+.reel-progress:hover .reel-progress-track,
+.reel-progress.is-scrubbing .reel-progress-track {
+    height: 6px;
 }
 
 .reel-progress-fill {
     width: 0;
     height: 100%;
-    background: #ffffff;
+    background:
+        linear-gradient(90deg,
+            #B90066 0%,
+            #E6094F 55%,
+            #F6801E 100%);
+    border-radius: 0 3px 3px 0;
+    box-shadow: 0 0 6px rgba(251, 8, 56, 0.35);
     transition: width 0.1s linear;
+}
+
+/* While dragging, follow the pointer with no easing */
+.reel-progress.is-scrubbing .reel-progress-fill {
+    transition: none;
 }
 
 
@@ -803,8 +834,8 @@ body {
     right: 18px;
 }
 
-.reel-card:fullscreen .reel-progress,
-.reel-card:-webkit-full-screen .reel-progress {
+.reel-card:fullscreen .reel-progress-track,
+.reel-card:-webkit-full-screen .reel-progress-track {
     height: 4px;
 }
 
@@ -1316,8 +1347,11 @@ body {
 
     .reel-slide.tablet-reel-fullscreen .reel-progress {
         display: block !important;
-        height: 4px !important;
         z-index: 20 !important;
+    }
+
+    .reel-slide.tablet-reel-fullscreen .reel-progress-track {
+        height: 4px !important;
     }
 
 
@@ -1921,8 +1955,11 @@ body {
 
     .reel-slide.mobile-reel-fullscreen .reel-progress {
         display: block !important;
-        height: 3px !important;
         z-index: 20 !important;
+    }
+
+    .reel-slide.mobile-reel-fullscreen .reel-progress-track {
+        height: 3px !important;
     }
 
 

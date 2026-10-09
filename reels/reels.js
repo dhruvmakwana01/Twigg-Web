@@ -3,71 +3,34 @@ document.addEventListener("DOMContentLoaded", () => {
     /* =====================================================
        REEL DATA
 
-       Optional per-reel field:
-           profileImage: "profiles/example.jpg"
+       Comes from the SHARED media data
+       (../shared/media-data.js). Reels only picks the items
+       flagged for the "reels" feed and maps them to the shape
+       this page renders. Ordering, playback and interactions
+       stay in this file.
+
+       Optional per-item field in the shared data:
+           creator.profileImage
 
        If it is missing (or fails to load) the creator's
        initial is shown inside the circular avatar.
     ===================================================== */
 
-    const reels = [
-        {
-            name: "Studio Craft",
-            category: "Packaging Design",
-            rating: "4.9",
-            reviews: "1,204",
-            video: "videos/80444097-841c-4bb7-b7b1-70beedcd4240.mov"
-        },
-        {
-            name: "Markwell Studio",
-            category: "Logo Design",
-            rating: "4.8",
-            reviews: "842",
-            video: "videos/4bf27b85-3357-40aa-93eb-759303f8ee52.mov"
-        },
-        {
-            name: "Pixel & Co",
-            category: "Web & Mobile Design",
-            rating: "5.0",
-            reviews: "2,380",
-            video: "videos/2d83975e-223c-400b-a8ce-f30ddc591c53.mov"
-        },
-        {
-            name: "Inkwell Press",
-            category: "Book Design",
-            rating: "4.5",
-            reviews: "94",
-            video: "videos/75f99231-503c-4f5e-b455-f58ab5063358.MP4"
-        },
-        {
-            name: "Reel Intro Studio",
-            category: "Intro & Outro Videos",
-            rating: "4.7",
-            reviews: "445",
-            video: "videos/2c8f8923-0e71-4ec0-8159-c665d9ff756e.MP4"
-        },
-        {
-            name: "Kinetic House",
-            category: "Motion Graphics",
-            rating: "4.8",
-            reviews: "990",
-            video: "videos/c377903b-d9cd-485a-bb5b-e29ff8e0c4b5.MP4"
-        },
-        {
-            name: "Studio Nova",
-            category: "Product Photography",
-            rating: "4.9",
-            reviews: "1,875",
-            video: "videos/6e7bd8c9-15be-4677-9a14-18c2cb5b14ca.MP4"
-        },
-        {
-            name: "ColorLab Studio",
-            category: "Color Grading",
-            rating: "5.0",
-            reviews: "3,040",
-            video: "videos/27da01c8-e09c-4168-afc5-baa39d098c73.MP4"
-        }
-    ];
+    const sharedMedia = window.TwiggMedia;
+
+    const reels =
+        sharedMedia
+            ? sharedMedia.getFeed("reels").map(item => ({
+                id: item.id,
+                name: item.creator.name,
+                category: item.category,
+                rating: item.rating,
+                reviews: item.reviews,
+                video: item.src,
+                thumbnail: item.thumbnail,
+                profileImage: item.creator.profileImage
+            }))
+            : [];
 
 
     /* =====================================================
@@ -115,14 +78,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     /* =====================================================
        SHARED MUTE STATE
-       
+
        One mute setting is shared across the entire
-       Reels feed.
-
-       true  = muted
-       false = unmuted
-
-       The feed always starts muted.
+       Reels feed. The feed always starts muted.
     ===================================================== */
 
     let sharedMuted = true;
@@ -309,6 +267,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             loop
                             playsinline
                             preload="auto"
+                            ${reel.thumbnail ? `poster="${reel.thumbnail}"` : ""}
                         >
                             <source
                                 src="${reel.video}"
@@ -353,8 +312,10 @@ document.addEventListener("DOMContentLoaded", () => {
                         </div>
 
 
-                        <div class="reel-progress">
-                            <div class="reel-progress-fill"></div>
+                        <div class="reel-progress" aria-label="Video progress">
+                            <div class="reel-progress-track">
+                                <div class="reel-progress-fill"></div>
+                            </div>
                         </div>
 
                     </div>
@@ -468,9 +429,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     /* =====================================================
        AVATAR IMAGE FALLBACK
-
-       If a profile image fails to load, remove it so the
-       initial underneath is shown.
     ===================================================== */
 
     track
@@ -558,14 +516,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     /* =====================================================
        APPLY SHARED MUTE STATE
-       
+
        Only the active Reel can ever be audible.
-
-       Active Reel:
-           muted = sharedMuted
-
-       All other Reels:
-           muted = true
     ===================================================== */
 
     function applyMuteState() {
@@ -858,8 +810,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             /*
              * Every non-active Reel is always muted.
-             * This prevents more than one Reel from
-             * ever producing sound.
              */
 
             video.pause();
@@ -1182,9 +1132,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
-        /* ---------------------------------------------
-           CARD ROTATION SIZE
-        --------------------------------------------- */
+        /* CARD ROTATION SIZE */
 
         card.style.setProperty(
             "--reel-rotate-w",
@@ -1197,14 +1145,14 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
 
-        /* ---------------------------------------------
+        /*
            SLIDE ROTATION SIZE
 
            The slide receives the exact same dimensions
            so the outside information and action rail can
            position themselves relative to the landscape
            card.
-        --------------------------------------------- */
+        */
 
         slide.style.setProperty(
             "--reel-rotate-w",
@@ -1401,9 +1349,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     /* =====================================================
        REAPPLY ON WINDOW RESIZE
-
-       Keeps a rotated reel correctly sized if the
-       viewport changes - never toggles the state.
     ===================================================== */
 
     let rotateResizeTimeout = null;
@@ -1528,7 +1473,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =====================================================
-       VIDEO STATE + PROGRESS
+       VIDEO STATE + PROGRESS (click / tap / drag to seek)
     ===================================================== */
 
     slides.forEach(
@@ -1544,6 +1489,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     ".reel-progress-fill"
                 );
 
+            const progress =
+                slide.querySelector(
+                    ".reel-progress"
+                );
+
 
             if (!video) {
                 return;
@@ -1552,8 +1502,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             /* ---------------------------------------------
                FIRST FRAME
-               
-               No poster is used.
 
                The browser loads the actual video and
                displays its own first decoded frame.
@@ -1662,7 +1610,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
 
-                const progress =
+                const progressValue =
                     (
                         video.currentTime /
                         video.duration
@@ -1670,7 +1618,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
                 fill.style.width =
-                    `${progress}%`;
+                    `${progressValue}%`;
             }
 
 
@@ -1691,6 +1639,108 @@ document.addEventListener("DOMContentLoaded", () => {
                 updateProgress
             );
 
+
+            /* ---------------------------------------------
+               SEEK: click / tap / drag the progress bar
+
+               Works exactly like the Loop progress bar:
+               pointer down seeks, dragging scrubs, and the
+               fill follows the pointer immediately.
+            --------------------------------------------- */
+
+            if (progress) {
+
+                let dragging = false;
+
+                const seek = event => {
+
+                    const rect =
+                        progress.getBoundingClientRect();
+
+                    if (!rect.width || !video.duration) {
+                        return;
+                    }
+
+                    const fraction =
+                        Math.min(
+                            1,
+                            Math.max(
+                                0,
+                                (event.clientX - rect.left) /
+                                rect.width
+                            )
+                        );
+
+                    video.currentTime =
+                        Math.min(
+                            fraction * video.duration,
+                            Math.max(video.duration - 0.05, 0)
+                        );
+
+                    if (fill) {
+
+                        fill.style.width =
+                            `${fraction * 100}%`;
+                    }
+                };
+
+
+                progress.addEventListener(
+                    "pointerdown",
+                    event => {
+
+                        /* Never start a page swipe / play-pause */
+                        event.stopPropagation();
+
+                        dragging = true;
+
+                        progress.classList.add(
+                            "is-scrubbing"
+                        );
+
+                        try {
+                            progress.setPointerCapture(
+                                event.pointerId
+                            );
+                        } catch {}
+
+                        seek(event);
+                    }
+                );
+
+
+                progress.addEventListener(
+                    "pointermove",
+                    event => {
+
+                        if (dragging) {
+                            seek(event);
+                        }
+                    }
+                );
+
+
+                const stopDrag = () => {
+
+                    dragging = false;
+
+                    progress.classList.remove(
+                        "is-scrubbing"
+                    );
+                };
+
+
+                progress.addEventListener(
+                    "pointerup",
+                    stopDrag
+                );
+
+                progress.addEventListener(
+                    "pointercancel",
+                    stopDrag
+                );
+            }
+
         }
     );
 
@@ -1710,6 +1760,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
             if (!slide) {
+                return;
+            }
+
+
+            /* -----------------------------------------
+               PROGRESS BAR
+
+               Seeking is handled by the pointer events
+               above. A click on the bar must never also
+               play / pause the video.
+            ----------------------------------------- */
+
+            if (
+                event.target.closest(
+                    ".reel-progress"
+                )
+            ) {
+
+                event.stopPropagation();
+
                 return;
             }
 
