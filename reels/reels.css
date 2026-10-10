@@ -17,17 +17,9 @@ body {
 body {
     background: #ffffff;
     color: #111111;
-    font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        Helvetica,
-        Arial,
-        sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     overflow: hidden;
 }
-
 
 /* =========================================================
    SIDEBAR
@@ -48,7 +40,6 @@ body {
     display: none;
 }
 
-
 /* =========================================================
    LOGO
 ========================================================= */
@@ -63,7 +54,6 @@ body {
     width: 100%;
     height: auto;
 }
-
 
 /* =========================================================
    FILTER BUTTON
@@ -85,10 +75,7 @@ body {
     font-weight: 500;
     cursor: pointer;
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
-    transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease,
-        border-color 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .filter-button:hover {
@@ -102,7 +89,6 @@ body {
     height: 22px;
     flex-shrink: 0;
 }
-
 
 /* =========================================================
    NAVIGATION
@@ -126,10 +112,7 @@ body {
     text-decoration: none;
     font-size: 14px;
     font-weight: 450;
-    transition:
-        background 0.2s ease,
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .nav-item:hover {
@@ -148,11 +131,8 @@ body {
     color: #181818;
     stroke-width: 1.8;
     flex-shrink: 0;
-    transition:
-        transform 0.2s ease,
-        filter 0.2s ease;
+    transition: transform 0.2s ease, filter 0.2s ease;
 }
-
 
 /* =========================================================
    MAIN
@@ -163,7 +143,6 @@ body {
     inset: 0 0 0 225px;
     overflow: hidden;
 }
-
 
 /* =========================================================
    REELS FEED
@@ -183,7 +162,6 @@ body {
     display: none;
 }
 
-
 /* =========================================================
    REEL SLIDE
 ========================================================= */
@@ -200,7 +178,6 @@ body {
     overflow: hidden;
 }
 
-
 /* =========================================================
    REEL ROW
 ========================================================= */
@@ -213,40 +190,32 @@ body {
     padding: 0 40px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns:
-        minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
 }
-
 
 /* =========================================================
    REEL INFORMATION
 ========================================================= */
 
 .reel-info-outside {
-    /*
-     * Creator avatar sizing (desktop). The avatar sits above
-     * the name, so the whole block is moved down by the
-     * avatar height + gap, which makes the avatar start
-     * where the name used to start.
-     */
+    /* Creator avatar sizing (desktop). The avatar sits above
+       the name, so the whole block is moved down by the
+       avatar height + gap. */
     --reel-avatar-size: 56px;
     --reel-avatar-gap: 12px;
-
     grid-column: 1;
     width: 200px;
+    /* Keep the creator details clearly separated from the reel card. */
+    margin-right: 28px;
     justify-self: end;
     align-self: end;
-    margin-bottom:
-        calc((100vh - min(92vh, 800px)) / 2 + min(18vh, 160px) - var(--reel-avatar-size) - var(--reel-avatar-gap));
+    margin-bottom: calc((100vh - min(92vh, 800px)) / 2 + min(18vh, 160px) - var(--reel-avatar-size) - var(--reel-avatar-gap));
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transform: translateX(10px);
-    transition:
-        opacity 0.2s ease,
-        transform 0.2s ease,
-        visibility 0.2s ease;
+    transform: translateX(0);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
 }
 
 .reel-slide.is-active .reel-info-outside {
@@ -257,10 +226,8 @@ body {
 
 .reel-slide.is-active .reel-info-outside:hover {
     cursor: pointer;
-    transform:
-        translateX(10px) scale(1.04);
+    transform: translateX(-3px) scale(1.02);
 }
-
 
 /* =========================================================
    REEL INFORMATION TEXT
@@ -311,7 +278,6 @@ body {
     font-weight: 500;
 }
 
-
 /* =========================================================
    CREATOR AVATAR
    Desktop / tablet: stacked above the creator name.
@@ -329,26 +295,19 @@ body {
 .reel-avatar {
     position: relative;
     flex-shrink: 0;
-
     width: var(--reel-avatar-size, 56px);
     height: var(--reel-avatar-size, 56px);
-
     overflow: hidden;
     border-radius: 50%;
-
     border: 3px solid #ffffff;
     background: linear-gradient(135deg, #B90066, #FB0838, #F6801E);
-
-    box-shadow:
-        0 0 0 1px rgba(0, 0, 0, 0.08),
-        0 8px 20px rgba(0, 0, 0, 0.14);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 8px 20px rgba(0, 0, 0, 0.14);
 }
 
 .reel-avatar-initial,
 .reel-avatar-img {
     position: absolute;
     inset: 0;
-
     width: 100%;
     height: 100%;
 }
@@ -357,7 +316,6 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-
     color: #ffffff;
     font-size: calc(var(--reel-avatar-size, 56px) * 0.4);
     font-weight: 600;
@@ -368,7 +326,6 @@ body {
     display: block;
     object-fit: cover;
 }
-
 
 /* =========================================================
    REEL CARD
@@ -387,7 +344,6 @@ body {
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22);
 }
 
-
 /* =========================================================
    REEL VIDEO
 ========================================================= */
@@ -400,7 +356,6 @@ body {
     object-position: center center;
     background: #000000;
 }
-
 
 /* =========================================================
    CARD GRADIENTS
@@ -419,23 +374,14 @@ body {
 .reel-card::before {
     top: 0;
     height: 24%;
-    background:
-        linear-gradient(to bottom,
-            rgba(0, 0, 0, 0.34),
-            rgba(0, 0, 0, 0.04) 72%,
-            transparent);
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.34), rgba(0, 0, 0, 0.04) 72%, transparent);
 }
 
 .reel-card::after {
     bottom: 0;
     height: 30%;
-    background:
-        linear-gradient(to top,
-            rgba(0, 0, 0, 0.55),
-            rgba(0, 0, 0, 0.12) 65%,
-            transparent);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.12) 65%, transparent);
 }
-
 
 /* =========================================================
    VIDEO CONTROLS
@@ -459,10 +405,7 @@ body {
     backdrop-filter: blur(4px);
     cursor: pointer;
     opacity: 0.6;
-    transition:
-        opacity 0.2s ease,
-        transform 0.2s ease,
-        background 0.2s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
 }
 
 .reel-mute-btn {
@@ -500,7 +443,6 @@ body {
     stroke-width: 1.8;
 }
 
-
 /* =========================================================
    PLAY INDICATOR
 ========================================================= */
@@ -517,23 +459,18 @@ body {
     border-radius: 50%;
     background: rgba(0, 0, 0, 0.48);
     backdrop-filter: blur(5px);
-    transform:
-        translate(-50%, -50%) scale(0.85);
+    transform: translate(-50%, -50%) scale(0.85);
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
     z-index: 12;
-    transition:
-        opacity 0.2s ease,
-        transform 0.2s ease,
-        visibility 0.2s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
 }
 
 .reel-slide.is-paused .reel-play-indicator {
     opacity: 1;
     visibility: visible;
-    transform:
-        translate(-50%, -50%) scale(1);
+    transform: translate(-50%, -50%) scale(1);
 }
 
 .reel-play-indicator svg {
@@ -542,10 +479,8 @@ body {
     fill: #ffffff;
 }
 
-
 /* =========================================================
    PROGRESS (click / tap / drag to seek)
-
    IDENTICAL treatment to the Loop progress bar
    (.loop-progress): a 16px invisible hit area, a 3px track
    that grows to 6px on hover / scrubbing, and the same Twigg
@@ -581,11 +516,7 @@ body {
 .reel-progress-fill {
     width: 0;
     height: 100%;
-    background:
-        linear-gradient(90deg,
-            #B90066 0%,
-            #E6094F 55%,
-            #F6801E 100%);
+    background: linear-gradient(90deg, #B90066 0%, #E6094F 55%, #F6801E 100%);
     border-radius: 0 3px 3px 0;
     box-shadow: 0 0 6px rgba(251, 8, 56, 0.35);
     transition: width 0.1s linear;
@@ -595,7 +526,6 @@ body {
 .reel-progress.is-scrubbing .reel-progress-fill {
     transition: none;
 }
-
 
 /* =========================================================
    ROTATE FEATURE
@@ -608,15 +538,11 @@ body {
 
    --reel-rotate-w / --reel-rotate-h are computed and
    set in JS (reels.js) right before the rotated class
-   is applied, so the landscape size always matches the
-   real, currently-available space (including inside
-   fullscreen).
+   is applied.
 ========================================================= */
 
 .reel-card {
-    transition:
-        width 0.3s ease,
-        height 0.3s ease;
+    transition: width 0.3s ease, height 0.3s ease;
 }
 
 .reel-video {
@@ -650,7 +576,6 @@ body {
     transition: none;
 }
 
-
 /* =========================================================
    REEL ACTIONS
 ========================================================= */
@@ -659,8 +584,7 @@ body {
     grid-column: 3;
     justify-self: start;
     align-self: end;
-    margin-bottom:
-        calc((100vh - min(92vh, 800px)) / 2 + 20px);
+    margin-bottom: calc((100vh - min(92vh, 800px)) / 2 + 20px);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -669,9 +593,7 @@ body {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transition:
-        opacity 0.2s ease,
-        visibility 0.2s ease;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
 .reel-slide.is-active .reel-actions {
@@ -726,7 +648,6 @@ body {
     cursor: default;
 }
 
-
 /* =========================================================
    REEL NAVIGATION
 ========================================================= */
@@ -754,10 +675,7 @@ body {
     color: #151515;
     cursor: pointer;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-    transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease,
-        opacity 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
 }
 
 .reel-nav-btn:hover:not(:disabled) {
@@ -775,7 +693,6 @@ body {
     cursor: default;
     box-shadow: none;
 }
-
 
 /* =========================================================
    REAL FULLSCREEN
@@ -849,7 +766,6 @@ body {
     max-height: 100vh;
 }
 
-
 /* =========================================================
    TABLET
    801px - 1150px
@@ -860,14 +776,10 @@ body {
     :root {
         --tablet-sidebar-width: 195px;
         --tablet-reel-height: min(90vh, 720px);
-        --tablet-reel-width:
-            calc(var(--tablet-reel-height) * 9 / 16);
+        --tablet-reel-width: calc(var(--tablet-reel-height) * 9 / 16);
     }
 
-
-    /* =====================================================
-       SIDEBAR
-    ===================================================== */
+    /* SIDEBAR */
 
     .sidebar {
         width: var(--tablet-sidebar-width);
@@ -931,19 +843,13 @@ body {
         right: 0;
     }
 
-
-    /* =====================================================
-       REEL ROW
-    ===================================================== */
+    /* REEL ROW */
 
     .reel-row {
         padding: 0 30px;
     }
 
-
-    /* =====================================================
-       TABLET REEL CARD
-    ===================================================== */
+    /* TABLET REEL CARD */
 
     .reel-card {
         height: var(--tablet-reel-height);
@@ -952,20 +858,14 @@ body {
         border-radius: 0;
     }
 
-
-    /* =====================================================    
-       TABLET CREATOR INFO
-    ===================================================== */
+    /* TABLET CREATOR INFO */
 
     .reel-info-outside {
         position: absolute !important;
-        left:
-            calc(50% - (var(--tablet-reel-width) / 2) + 30px);
-        bottom:
-            calc((100vh - var(--tablet-reel-height)) / 2 + 28px);
+        left: calc(50% - (var(--tablet-reel-width) / 2) + 30px);
+        bottom: calc((100vh - var(--tablet-reel-height)) / 2 + 28px);
         width: auto;
-        max-width:
-            calc(var(--tablet-reel-width) - 60px);
+        max-width: calc(var(--tablet-reel-width) - 60px);
         margin: 0 !important;
         z-index: 20;
         grid-column: auto;
@@ -976,8 +876,7 @@ body {
         visibility: hidden;
         pointer-events: none;
         transform: none;
-        text-shadow:
-            0 2px 8px rgba(0, 0, 0, 0.45);
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
     }
 
     .reel-slide.is-active .reel-info-outside {
@@ -990,10 +889,7 @@ body {
         transform: scale(1.03);
     }
 
-
-    /* =====================================================
-       TABLET INFO TEXT
-    ===================================================== */
+    /* TABLET INFO TEXT */
 
     .reel-service-name {
         color: #ffffff;
@@ -1026,12 +922,7 @@ body {
         font-size: 12px;
     }
 
-
-    /* =====================================================
-       TABLET CREATOR AVATAR
-       (info sits over the video, so the avatar gets a
-       light ring + shadow instead of the desktop one)
-    ===================================================== */
+    /* TABLET CREATOR AVATAR (info sits over the video) */
 
     .reel-info-outside {
         --reel-avatar-size: 46px;
@@ -1040,22 +931,16 @@ body {
 
     .reel-avatar {
         border: 2px solid rgba(255, 255, 255, 0.92);
-
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
     }
 
-
-    /* =====================================================
-       TABLET ACTIONS
-    ===================================================== */
+    /* TABLET ACTIONS */
 
     .reel-actions {
         position: fixed !important;
-        left:
-            calc((100vw + var(--tablet-sidebar-width) + var(--tablet-reel-width)) / 2 + 22px) !important;
+        left: calc((100vw + var(--tablet-sidebar-width) + var(--tablet-reel-width)) / 2 + 22px) !important;
         right: auto !important;
-        bottom:
-            calc((100vh - var(--tablet-reel-height)) / 2 + 26px) !important;
+        bottom: calc((100vh - var(--tablet-reel-height)) / 2 + 26px) !important;
         margin: 0 !important;
         width: 34px;
         z-index: 200 !important;
@@ -1075,10 +960,7 @@ body {
         pointer-events: auto !important;
     }
 
-
-    /* =====================================================
-       TABLET ACTION BUTTONS
-    ===================================================== */
+    /* TABLET ACTION BUTTONS */
 
     .reel-action-btn {
         position: relative;
@@ -1104,8 +986,7 @@ body {
         fill: none;
         stroke: currentColor;
         stroke-width: 1.7;
-        transition:
-            transform 0.15s ease;
+        transition: transform 0.15s ease;
     }
 
     .reel-action-btn:hover svg {
@@ -1127,48 +1008,29 @@ body {
         stroke: #f5a623;
     }
 
-
-    /* =====================================================
-       TABLET NAVIGATION
-    ===================================================== */
+    /* TABLET NAVIGATION */
 
     .reel-nav-controls {
         right: 18px;
     }
 
-
-    /* =====================================================
-       TABLET FILTER
-    ===================================================== */
+    /* TABLET FILTER */
 
     .filter-button {
         position: relative;
         z-index: 100;
     }
 
-
-    /* =====================================================
-       TABLET FALLBACK FULLSCREEN
-    ===================================================== */
+    /* TABLET FALLBACK FULLSCREEN */
 
     body.tablet-reel-fullscreen-active {
         background: #000000 !important;
         overflow: hidden !important;
     }
 
-
-    /* =====================================================
-       HIDE LOGO DURING TABLET FULLSCREEN
-    ===================================================== */
-
     body.tablet-reel-fullscreen-active .logo {
         display: none !important;
     }
-
-
-    /* =====================================================
-       HIDE SIDEBAR CONTENT DURING TABLET FULLSCREEN
-    ===================================================== */
 
     body.tablet-reel-fullscreen-active .sidebar {
         width: 0 !important;
@@ -1182,19 +1044,9 @@ body {
         display: none !important;
     }
 
-
-    /* =====================================================
-       HIDE FILTER
-    ===================================================== */
-
     body.tablet-reel-fullscreen-active .filter-button {
         display: none !important;
     }
-
-
-    /* =====================================================
-       TABLET FULLSCREEN SLIDE
-    ===================================================== */
 
     .reel-slide.tablet-reel-fullscreen {
         position: fixed !important;
@@ -1214,11 +1066,6 @@ body {
         scroll-snap-stop: normal !important;
     }
 
-
-    /* =====================================================
-       TABLET FULLSCREEN ROW
-    ===================================================== */
-
     .reel-slide.tablet-reel-fullscreen .reel-row {
         position: relative !important;
         width: 100vw !important;
@@ -1231,20 +1078,11 @@ body {
         justify-content: center !important;
     }
 
-
-    /* =====================================================
-       TABLET FULLSCREEN CARD
-    ===================================================== */
-
     .reel-slide.tablet-reel-fullscreen .reel-card {
         position: relative !important;
         flex: 0 0 auto !important;
-        width:
-            min(100vw,
-                calc(100dvh * 9 / 16)) !important;
-        height:
-            min(100dvh,
-                calc(100vw * 16 / 9)) !important;
+        width: min(100vw, calc(100dvh * 9 / 16)) !important;
+        height: min(100dvh, calc(100vw * 16 / 9)) !important;
         min-width: 0 !important;
         min-height: 0 !important;
         max-width: 100vw !important;
@@ -1258,14 +1096,7 @@ body {
         transform: none !important;
     }
 
-
-    /* =====================================================
-       TABLET FULLSCREEN ROTATED CARD
-       (card is allowed to become landscape here even
-       though the plain fullscreen card rule above is
-       portrait + !important)
-    ===================================================== */
-
+    /* Rotated card is allowed to become landscape in fullscreen */
     .reel-slide.tablet-reel-fullscreen .reel-card.reel-card-rotated {
         width: var(--reel-rotate-w, min(100vw, calc(100dvh * 16 / 9))) !important;
         height: var(--reel-rotate-h, min(100dvh, calc(100vw * 9 / 16))) !important;
@@ -1274,11 +1105,6 @@ body {
         max-height: 100dvh !important;
     }
 
-
-    /* =====================================================
-       TABLET FULLSCREEN VIDEO
-    ===================================================== */
-
     .reel-slide.tablet-reel-fullscreen .reel-video {
         width: 100% !important;
         height: 100% !important;
@@ -1286,28 +1112,13 @@ body {
         background: #000000 !important;
     }
 
-
-    /* =====================================================
-       HIDE INFO
-    ===================================================== */
-
     body.tablet-reel-fullscreen-active .reel-info-outside {
         display: none !important;
     }
 
-
-    /* =====================================================
-       HIDE ACTIONS
-    ===================================================== */
-
     body.tablet-reel-fullscreen-active .reel-actions {
         display: none !important;
     }
-
-
-    /* =====================================================
-       FULLSCREEN MUTE
-    ===================================================== */
 
     .reel-slide.tablet-reel-fullscreen .reel-mute-btn {
         display: flex !important;
@@ -1316,11 +1127,6 @@ body {
         z-index: 20 !important;
     }
 
-
-    /* =====================================================
-       FULLSCREEN EXIT
-    ===================================================== */
-
     .reel-slide.tablet-reel-fullscreen .reel-fullscreen-btn {
         display: flex !important;
         top: 62px !important;
@@ -1328,22 +1134,12 @@ body {
         z-index: 20 !important;
     }
 
-
-    /* =====================================================
-       FULLSCREEN ROTATE
-    ===================================================== */
-
     .reel-slide.tablet-reel-fullscreen .reel-rotate-btn {
         display: flex !important;
         top: 108px !important;
         right: 16px !important;
         z-index: 20 !important;
     }
-
-
-    /* =====================================================
-       FULLSCREEN PROGRESS
-    ===================================================== */
 
     .reel-slide.tablet-reel-fullscreen .reel-progress {
         display: block !important;
@@ -1354,16 +1150,10 @@ body {
         height: 4px !important;
     }
 
-
-    /* =====================================================
-       STOP FEED SCROLL
-    ===================================================== */
-
     body.tablet-reel-fullscreen-active .reels-feed {
         overflow: hidden !important;
     }
 }
-
 
 /* =========================================================
    MOBILE
@@ -1374,28 +1164,14 @@ body {
 
     :root {
         --mobile-bar-height: 62px;
-
-        --mobile-available-height:
-            calc(100dvh - var(--mobile-bar-height));
-
-        --mobile-reel-width:
-            min(100vw,
-                calc(var(--mobile-available-height) * 9 / 16));
-
-        --mobile-reel-height:
-            calc(var(--mobile-reel-width) * 16 / 9);
-
-        --mobile-reel-side-space:
-            calc((100vw - var(--mobile-reel-width)) / 2);
-
-        --mobile-reel-top-space:
-            calc((var(--mobile-available-height) - var(--mobile-reel-height)) / 2);
+        --mobile-available-height: calc(100dvh - var(--mobile-bar-height));
+        --mobile-reel-width: min(100vw, calc(var(--mobile-available-height) * 9 / 16));
+        --mobile-reel-height: calc(var(--mobile-reel-width) * 16 / 9);
+        --mobile-reel-side-space: calc((100vw - var(--mobile-reel-width)) / 2);
+        --mobile-reel-top-space: calc((var(--mobile-available-height) - var(--mobile-reel-height)) / 2);
     }
 
-
-    /* =====================================================
-       BOTTOM BAR
-    ===================================================== */
+    /* BOTTOM BAR */
 
     .sidebar {
         position: fixed;
@@ -1415,26 +1191,16 @@ body {
         overflow: visible;
     }
 
-
-    /* =====================================================
-       HIDE LOGO
-    ===================================================== */
-
     .logo {
         display: none !important;
     }
 
-
-    /* =====================================================
-       MOBILE FILTER
-    ===================================================== */
+    /* MOBILE FILTER */
 
     .filter-button {
         position: fixed !important;
-        top:
-            calc(var(--mobile-reel-top-space) + 18px) !important;
-        left:
-            calc(var(--mobile-reel-side-space) + 10px) !important;
+        top: calc(var(--mobile-reel-top-space) + 18px) !important;
+        left: calc(var(--mobile-reel-side-space) + 10px) !important;
         right: auto !important;
         bottom: auto !important;
         width: 38px !important;
@@ -1450,8 +1216,7 @@ body {
         border-radius: 50%;
         background: rgba(255, 255, 255, 0.92);
         color: #151515;
-        box-shadow:
-            0 4px 14px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
     }
@@ -1469,10 +1234,7 @@ body {
         height: 19px !important;
     }
 
-
-    /* =====================================================
-       MOBILE NAVIGATION
-    ===================================================== */
+    /* MOBILE NAVIGATION */
 
     .navigation {
         width: var(--mobile-reel-width);
@@ -1510,15 +1272,11 @@ body {
         transform: none;
     }
 
-
-    /* =====================================================
-       MOBILE ACTIVE PAGE SHADOW
-    ===================================================== */
+    /* MOBILE ACTIVE PAGE SHADOW */
 
     .nav-item.active {
         background: transparent !important;
-        box-shadow:
-            0 0 12px rgba(0, 0, 0, 0.16);
+        box-shadow: 0 0 12px rgba(0, 0, 0, 0.16);
         border-radius: 14px;
     }
 
@@ -1532,25 +1290,18 @@ body {
     .nav-item.active .nav-icon {
         color: #111111;
         stroke-width: 2.2;
-        filter:
-            drop-shadow(0 2px 4px rgba(0, 0, 0, 0.22));
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.22));
         transform: scale(1.05);
     }
 
-
-    /* =====================================================
-       HIDE NOTIFICATION + CREATE
-    ===================================================== */
+    /* HIDE NOTIFICATION + CREATE */
 
     .navigation .nav-item:nth-child(6),
     .navigation .nav-item:nth-child(7) {
         display: none !important;
     }
 
-
-    /* =====================================================
-       MAIN
-    ===================================================== */
+    /* MAIN */
 
     .main {
         position: fixed;
@@ -1565,10 +1316,7 @@ body {
         overflow: hidden;
     }
 
-
-    /* =====================================================
-       REELS FEED
-    ===================================================== */
+    /* REELS FEED */
 
     .reels-feed {
         width: 100%;
@@ -1584,10 +1332,7 @@ body {
         display: none;
     }
 
-
-    /* =====================================================
-       REEL SLIDE
-    ===================================================== */
+    /* REEL SLIDE */
 
     .reel-slide {
         width: 100%;
@@ -1603,10 +1348,7 @@ body {
         overflow: hidden;
     }
 
-
-    /* =====================================================
-       REEL ROW
-    ===================================================== */
+    /* REEL ROW */
 
     .reel-row {
         position: relative;
@@ -1620,10 +1362,7 @@ body {
         justify-content: center;
     }
 
-
-    /* =====================================================
-       REEL CARD
-    ===================================================== */
+    /* REEL CARD */
 
     .reel-card {
         position: relative;
@@ -1639,8 +1378,7 @@ body {
         overflow: hidden;
         border-radius: 0;
         background: #000000;
-        box-shadow:
-            0 12px 35px rgba(0, 0, 0, 0.22);
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.22);
     }
 
     .reel-video {
@@ -1652,17 +1390,12 @@ body {
         background: #000000;
     }
 
-
-    /* =====================================================
-       INFO OVER REEL
-    ===================================================== */
+    /* INFO OVER REEL */
 
     .reel-info-outside {
         position: absolute !important;
-        left:
-            calc(var(--mobile-reel-side-space) + 13px);
-        bottom:
-            calc(var(--mobile-reel-top-space) + 17px);
+        left: calc(var(--mobile-reel-side-space) + 13px);
+        bottom: calc(var(--mobile-reel-top-space) + 17px);
         width: auto;
         max-width: 58%;
         margin: 0 !important;
@@ -1675,10 +1408,7 @@ body {
         visibility: hidden;
         pointer-events: none;
         transform: none;
-        transition:
-            opacity 0.2s ease,
-            transform 0.2s ease,
-            visibility 0.2s ease;
+        transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
     }
 
     .reel-slide.is-active .reel-info-outside {
@@ -1708,12 +1438,8 @@ body {
         color: rgba(255, 255, 255, 0.72);
     }
 
-
-    /* =====================================================
-       MOBILE CREATOR: [avatar] [name]
-       Horizontal row, name vertically centered on the
-       avatar. Category and rating stay below.
-    ===================================================== */
+    /* MOBILE CREATOR: [avatar] [name] — horizontal row,
+       name vertically centered on the avatar. */
 
     .reel-info-outside {
         --reel-avatar-size: 34px;
@@ -1727,22 +1453,15 @@ body {
 
     .reel-avatar {
         border: 2px solid rgba(255, 255, 255, 0.92);
-
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
     }
 
-
-    /* =====================================================
-       ACTIONS OVER REEL
-       MOBILE
-    ===================================================== */
+    /* ACTIONS OVER REEL (MOBILE) */
 
     .reel-actions {
         position: absolute !important;
-        right:
-            calc(var(--mobile-reel-side-space) + 11px);
-        bottom:
-            calc(var(--mobile-reel-top-space) + 105px) !important;
+        right: calc(var(--mobile-reel-side-space) + 11px);
+        bottom: calc(var(--mobile-reel-top-space) + 105px) !important;
         margin: 0 !important;
         z-index: 8;
         display: flex;
@@ -1776,29 +1495,18 @@ body {
         stroke: #ffffff;
     }
 
-
-    /* =====================================================
-       HIDE UP / DOWN
-    ===================================================== */
+    /* HIDE UP / DOWN */
 
     .reel-nav-controls {
         display: none !important;
     }
 
-
-    /* =====================================================
-       MOBILE FALLBACK FULLSCREEN
-    ===================================================== */
+    /* MOBILE FALLBACK FULLSCREEN */
 
     body.mobile-reel-fullscreen-active {
         background: #000000 !important;
         overflow: hidden !important;
     }
-
-
-    /* =====================================================
-       HIDE BOTTOM NAVIGATION
-    ===================================================== */
 
     body.mobile-reel-fullscreen-active .sidebar {
         height: 0 !important;
@@ -1814,19 +1522,9 @@ body {
         display: none !important;
     }
 
-
-    /* =====================================================
-       HIDE FILTER
-    ===================================================== */
-
     body.mobile-reel-fullscreen-active .filter-button {
         display: none !important;
     }
-
-
-    /* =====================================================
-       FULLSCREEN SLIDE
-    ===================================================== */
 
     .reel-slide.mobile-reel-fullscreen {
         position: fixed !important;
@@ -1846,11 +1544,6 @@ body {
         scroll-snap-stop: normal !important;
     }
 
-
-    /* =====================================================
-       FULLSCREEN ROW
-    ===================================================== */
-
     .reel-slide.mobile-reel-fullscreen .reel-row {
         position: relative !important;
         width: 100vw !important;
@@ -1863,22 +1556,14 @@ body {
         justify-content: center !important;
     }
 
-
-    /* =====================================================
-       FULLSCREEN CARD
-       (mobile card always stays 9:16 - even rotated,
-       since only the video rotates on mobile)
-    ===================================================== */
+    /* Mobile card always stays 9:16 - even rotated,
+       since only the video rotates on mobile */
 
     .reel-slide.mobile-reel-fullscreen .reel-card {
         position: relative !important;
         flex: 0 0 auto !important;
-        width:
-            min(100vw,
-                calc(100dvh * 9 / 16)) !important;
-        height:
-            min(100dvh,
-                calc(100vw * 16 / 9)) !important;
+        width: min(100vw, calc(100dvh * 9 / 16)) !important;
+        height: min(100dvh, calc(100vw * 16 / 9)) !important;
         min-width: 0 !important;
         min-height: 0 !important;
         max-width: 100vw !important;
@@ -1892,18 +1577,12 @@ body {
         transform: none !important;
     }
 
-
-    /* =====================================================
-       FULLSCREEN VIDEO
-    ===================================================== */
-
     .reel-slide.mobile-reel-fullscreen .reel-video {
         width: 100% !important;
         height: 100% !important;
         object-fit: contain !important;
         background: #000000 !important;
     }
-
 
     .reel-slide.mobile-reel-fullscreen .reel-video.reel-video-rotated {
         width: var(--reel-media-rotate-w, 100%) !important;
@@ -1912,22 +1591,12 @@ body {
         object-fit: contain !important;
     }
 
-
-    /* =====================================================
-       FULLSCREEN MUTE
-    ===================================================== */
-
     .reel-slide.mobile-reel-fullscreen .reel-mute-btn {
         display: flex !important;
         top: 14px !important;
         right: 14px !important;
         z-index: 20 !important;
     }
-
-
-    /* =====================================================
-       FULLSCREEN EXIT
-    ===================================================== */
 
     .reel-slide.mobile-reel-fullscreen .reel-fullscreen-btn {
         display: flex !important;
@@ -1936,22 +1605,12 @@ body {
         z-index: 20 !important;
     }
 
-
-    /* =====================================================
-       FULLSCREEN ROTATE
-    ===================================================== */
-
     .reel-slide.mobile-reel-fullscreen .reel-rotate-btn {
         display: flex !important;
         top: 106px !important;
         right: 14px !important;
         z-index: 20 !important;
     }
-
-
-    /* =====================================================
-       FULLSCREEN PROGRESS
-    ===================================================== */
 
     .reel-slide.mobile-reel-fullscreen .reel-progress {
         display: block !important;
@@ -1962,34 +1621,18 @@ body {
         height: 3px !important;
     }
 
-
-    /* =====================================================
-       FULLSCREEN HIDE INFO
-    ===================================================== */
-
     body.mobile-reel-fullscreen-active .reel-info-outside {
         display: none !important;
     }
-
-
-    /* =====================================================
-       FULLSCREEN HIDE ACTIONS
-    ===================================================== */
 
     body.mobile-reel-fullscreen-active .reel-actions {
         display: none !important;
     }
 
-
-    /* =====================================================
-       STOP FEED SCROLL
-    ===================================================== */
-
     body.mobile-reel-fullscreen-active .reels-feed {
         overflow: hidden !important;
     }
 }
-
 
 /* =========================================================
    SMALL PHONES
@@ -2000,24 +1643,12 @@ body {
 
     :root {
         --mobile-bar-height: 58px;
-
-        --mobile-available-height:
-            calc(100dvh - var(--mobile-bar-height));
-
-        --mobile-reel-width:
-            min(100vw,
-                calc(var(--mobile-available-height) * 9 / 16));
-
-        --mobile-reel-height:
-            calc(var(--mobile-reel-width) * 16 / 9);
-
-        --mobile-reel-side-space:
-            calc((100vw - var(--mobile-reel-width)) / 2);
-
-        --mobile-reel-top-space:
-            calc((var(--mobile-available-height) - var(--mobile-reel-height)) / 2);
+        --mobile-available-height: calc(100dvh - var(--mobile-bar-height));
+        --mobile-reel-width: min(100vw, calc(var(--mobile-available-height) * 9 / 16));
+        --mobile-reel-height: calc(var(--mobile-reel-width) * 16 / 9);
+        --mobile-reel-side-space: calc((100vw - var(--mobile-reel-width)) / 2);
+        --mobile-reel-top-space: calc((var(--mobile-available-height) - var(--mobile-reel-height)) / 2);
     }
-
 
     .sidebar {
         height: var(--mobile-bar-height);
@@ -2034,12 +1665,9 @@ body {
         min-height: 22px;
     }
 
-
     .filter-button {
-        top:
-            calc(var(--mobile-reel-top-space) + 16px) !important;
-        left:
-            calc(var(--mobile-reel-side-space) + 9px) !important;
+        top: calc(var(--mobile-reel-top-space) + 16px) !important;
+        left: calc(var(--mobile-reel-side-space) + 9px) !important;
         width: 36px !important;
         height: 36px !important;
     }
@@ -2048,7 +1676,6 @@ body {
         width: 18px !important;
         height: 18px !important;
     }
-
 
     .reel-card {
         width: var(--mobile-reel-width);
@@ -2059,19 +1686,14 @@ body {
 
     .reel-info-outside {
         --reel-avatar-size: 30px;
-
-        left:
-            calc(var(--mobile-reel-side-space) + 12px);
-        bottom:
-            calc(var(--mobile-reel-top-space) + 14px);
+        left: calc(var(--mobile-reel-side-space) + 12px);
+        bottom: calc(var(--mobile-reel-top-space) + 14px);
         max-width: 58%;
     }
 
     .reel-actions {
-        right:
-            calc(var(--mobile-reel-side-space) + 10px);
-        bottom:
-            calc(var(--mobile-reel-top-space) + 95px) !important;
+        right: calc(var(--mobile-reel-side-space) + 10px);
+        bottom: calc(var(--mobile-reel-top-space) + 95px) !important;
         gap: 25px;
     }
 
@@ -2096,7 +1718,6 @@ body {
     }
 }
 
-
 /* =========================================================
    VERY SMALL PHONES
    380px AND BELOW
@@ -2116,19 +1737,15 @@ body {
     }
 
     .filter-button {
-        top:
-            calc(var(--mobile-reel-top-space) + 15px) !important;
-        left:
-            calc(var(--mobile-reel-side-space) + 8px) !important;
+        top: calc(var(--mobile-reel-top-space) + 15px) !important;
+        left: calc(var(--mobile-reel-side-space) + 8px) !important;
         width: 35px !important;
         height: 35px !important;
     }
 
     .reel-actions {
-        right:
-            calc(var(--mobile-reel-side-space) + 8px);
-        bottom:
-            calc(var(--mobile-reel-top-space) + 88px) !important;
+        right: calc(var(--mobile-reel-side-space) + 8px);
+        bottom: calc(var(--mobile-reel-top-space) + 88px) !important;
         gap: 22px;
     }
 
@@ -2164,7 +1781,6 @@ body {
     }
 }
 
-
 /* =========================================================
    TABLET — LANDSCAPE CARD ALIGNMENT
 ========================================================= */
@@ -2173,14 +1789,200 @@ body {
 
     .reel-slide.reel-slide-rotated .reel-info-outside {
         left: calc(50% - (var(--reel-rotate-w) / 2) + 30px) !important;
-
         bottom: calc((100vh - var(--reel-rotate-h)) / 2 + 28px) !important;
     }
 
-
     .reel-slide.reel-slide-rotated .reel-actions {
         left: calc((100vw + var(--tablet-sidebar-width) + var(--reel-rotate-w)) / 2 + 22px) !important;
-
         bottom: calc((100vh - var(--reel-rotate-h)) / 2 + 26px) !important;
+    }
+}
+
+/* =========================================================
+   CAPTION
+   Desktop: full caption under the rating. No toggle.
+========================================================= */
+
+.reel-caption-wrap {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin-top: 12px;
+}
+
+.reel-caption {
+    color: #444444;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.45;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 8;
+    overflow: hidden;
+}
+
+.reel-caption-toggle {
+    display: none;
+}
+
+.reel-caption-toggle[hidden] {
+    display: none !important;
+}
+
+/* TABLET base look (the Show more / Show less behaviour is
+   defined in the "COMPACT CAPTION" block at the end of file) */
+
+@media (min-width: 801px) and (max-width: 1150px) {
+
+    .reel-caption-wrap {
+        margin-top: 8px;
+    }
+
+    .reel-caption {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 13px;
+        -webkit-line-clamp: 3;
+    }
+}
+
+/* MOBILE: caption hidden until "Show more" is tapped;
+   expanded shows everything and the block grows upward */
+
+@media (max-width: 800px) {
+
+    .reel-info-outside {
+        transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease, max-width 0.2s ease;
+    }
+
+    .reel-caption-wrap {
+        margin-top: 8px;
+    }
+
+    .reel-caption {
+        /* Captions stay hidden on mobile until Show more is tapped. */
+        display: none;
+        width: 100%;
+        max-width: 100%;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 13px;
+        line-height: 1.4;
+        -webkit-line-clamp: unset;
+        overflow-wrap: anywhere;
+        text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+    }
+
+    .reel-caption-toggle {
+        display: inline-block;
+        margin-top: 4px;
+        padding: 2px 0;
+        border: 0;
+        background: none;
+        color: #ffffff;
+        font-size: 12.5px;
+        font-weight: 600;
+        cursor: pointer;
+        text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .reel-info-outside {
+        max-width: calc(var(--mobile-reel-width) - 24px);
+    }
+
+    .reel-info-outside.is-caption-expanded {
+        max-width: calc(var(--mobile-reel-width) - 24px);
+    }
+
+    .reel-info-outside.is-caption-expanded::before {
+        content: "";
+        position: absolute;
+        inset: -36px -18px -14px -13px;
+        z-index: -1;
+        pointer-events: none;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.35) 70%, transparent);
+    }
+
+    .reel-info-outside.is-caption-expanded .reel-caption {
+        display: block;
+        max-height: 36vh;
+        overflow-y: auto;
+        overflow-wrap: anywhere;
+        scrollbar-width: none;
+    }
+
+    .reel-info-outside.is-caption-expanded .reel-caption::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+/* =========================================================
+   COMPACT CAPTION — TABLET (801px – 1150px)
+
+   Now behaves exactly like mobile: when the name / reviews
+   sit inside the reel card, the caption is hidden and a
+   "Show more" button reveals it; "Show less" hides it again.
+   Must stay AFTER the tablet caption rules above.
+========================================================= */
+
+@media (min-width: 801px) and (max-width: 1150px) {
+
+    .reel-info-outside {
+        transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease, max-width 0.2s ease;
+    }
+
+    .reel-caption-wrap {
+        margin-top: 8px;
+    }
+
+    .reel-caption {
+        /* Hidden until Show more is tapped. */
+        display: none;
+        width: 100%;
+        max-width: 100%;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 13px;
+        line-height: 1.4;
+        -webkit-line-clamp: unset;
+        overflow-wrap: anywhere;
+        text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+    }
+
+    .reel-caption-toggle {
+        display: inline-block;
+        margin-top: 4px;
+        padding: 2px 0;
+        border: 0;
+        background: none;
+        color: #ffffff;
+        font-size: 12.5px;
+        font-weight: 600;
+        cursor: pointer;
+        text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Expanded: dark gradient behind the text, block grows upward */
+
+    .reel-info-outside.is-caption-expanded::before {
+        content: "";
+        position: absolute;
+        inset: -36px -30px -28px -30px;
+        z-index: -1;
+        pointer-events: none;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.35) 70%, transparent);
+    }
+
+    .reel-info-outside.is-caption-expanded .reel-caption {
+        display: block;
+        max-height: 36vh;
+        overflow-y: auto;
+        overflow-wrap: anywhere;
+        scrollbar-width: none;
+    }
+
+    .reel-info-outside.is-caption-expanded .reel-caption::-webkit-scrollbar {
+        display: none;
     }
 }

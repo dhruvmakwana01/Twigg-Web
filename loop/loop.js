@@ -7,16 +7,16 @@
    2. This file reads the content from the SHARED media data
       (../shared/media-data.js), renders that item as the large
       FEATURED card and fills the Pinterest grid with every
-      other Loop item in a freshly shuffled order.
+      other Loop item in a FAIR order (least-seen items get
+      the best positions; see TwiggMedia.fairOrder).
    3. Clicking a grid card makes it the new featured card, and
-      the recommendations are shuffled again. The card you just
-      left is NOT placed at the top of the recommendations.
+      the recommendations are re-ordered fairly again. The card
+      you just left is pushed down the list.
    4. Every Loop page (history entry) remembers its own featured
       card, grid order and scroll position, so going back to a
-      Loop page returns to the exact spot, with no scroll-up
-      animation.
+      Loop page returns to the exact spot.
    5. The latest Loop position is also saved so Home can send
-      the user back here (Home ↔ Loop behave as one experience).
+      the user back here.
 ========================================================= */
 
 (() => {
@@ -36,6 +36,9 @@
 
     /* Position of EACH Loop page (history entry) */
     const LOOP_ENTRIES_KEY = "twigg_loop_entries";
+
+    /* Exposure credit for the big featured slot */
+    const FEATURED_WEIGHT = 3;
 
 
     /* =====================================================
@@ -77,7 +80,8 @@
             profileImage: media.creator.profileImage,
             category: media.category,
             rating: media.rating,
-            reviews: media.reviews
+            reviews: media.reviews,
+            caption: media.caption || media.description || ""
         };
     }
 
@@ -220,7 +224,6 @@
 
     /* =====================================================
        NAVIGATION TYPE
-       (reload = fresh feed, back_forward = restore)
     ===================================================== */
 
     const navEntry =
@@ -265,7 +268,7 @@
                 JSON.stringify(entries)
             );
 
-        } catch {}
+        } catch { }
     }
 
 
@@ -307,7 +310,7 @@
                 JSON.stringify(ratios)
             );
 
-        } catch {}
+        } catch { }
     }
 
 
@@ -351,12 +354,9 @@
 
         try {
 
-            sessionStorage.setItem(
-                MUTE_KEY,
-                String(value)
-            );
+            sessionStorage.setItem(MUTE_KEY, String(value));
 
-        } catch {}
+        } catch { }
     }
 
 
@@ -376,7 +376,7 @@
 
                     refreshMuteUI();
 
-                    video.play().catch(() => {});
+                    video.play().catch(() => { });
                 }
             });
         }
@@ -393,7 +393,6 @@
         gridEl
             .querySelectorAll(".unmute-button")
             .forEach(button => {
-
                 button.innerHTML = icon;
             });
 
@@ -424,63 +423,28 @@
        SMALL HELPERS
     ===================================================== */
 
-    function shuffle(list) {
-
-        const copy = list.slice();
-
-        for (let i = copy.length - 1; i > 0; i--) {
-
-            const j = Math.floor(Math.random() * (i + 1));
-
-            [copy[i], copy[j]] = [copy[j], copy[i]];
-        }
-
-        return copy;
-    }
-
-
     /*
-       RECOMMENDATIONS
+       RECOMMENDATIONS (FAIR ORDER)
 
-       A fresh random order of every Loop item except the one
-       being featured. The card the user was just looking at
-       is moved into the second half of the list, so it never
-       shows up again immediately under the new card.
+       Every Loop item except the featured one, ordered so the
+       items with the least visibility so far get the best
+       positions. The card the user just left is pushed down so
+       it does not reappear straight under the new card.
+       Showing this order also counts as exposure for each item.
     */
 
     function buildRecommendationOrder(currentId, previousId) {
 
-        const order =
-            shuffle(
-                FEED_IDS.filter(id => id !== currentId)
-            );
-
-        if (
-            previousId !== null &&
-            previousId !== currentId
-        ) {
-
-            const index = order.indexOf(previousId);
-
-            if (index !== -1) {
-
-                order.splice(index, 1);
-
-                const min =
-                    Math.ceil(order.length / 2);
-
-                const position =
-                    min +
-                    Math.floor(
-                        Math.random() *
-                        (order.length - min + 1)
-                    );
-
-                order.splice(position, 0, previousId);
+        return Media.fairOrder(
+            FEED_IDS.filter(id => id !== currentId),
+            {
+                columns: Media.columns(),
+                avoid:
+                    previousId !== null && previousId !== currentId
+                        ? [previousId]
+                        : []
             }
-        }
-
-        return order;
+        );
     }
 
 
@@ -510,15 +474,11 @@
     }
 
 
-    /*
-       Jump instantly to a scroll position, ignoring any
-       CSS smooth scrolling. No animation, no visible travel.
-    */
+    /* Jump instantly to a scroll position (no animation). */
 
     function jumpScroll(y) {
 
-        const previous =
-            mainEl.style.scrollBehavior;
+        const previous = mainEl.style.scrollBehavior;
 
         mainEl.style.scrollBehavior = "auto";
 
@@ -544,17 +504,14 @@
 
         toastTimer =
             setTimeout(() => {
-
                 toastEl.classList.remove("show");
-
             }, 1800);
     }
 
 
     async function shareItem(id) {
 
-        const url =
-            new URL(location.href);
+        const url = new URL(location.href);
 
         url.search = "";
 
@@ -597,8 +554,7 @@
        scroll position.
 
        - LOOP_STATE_KEY  = latest position (Home reads it)
-       - entries[key]    = position of THIS Loop page, so each
-                           Loop page restores its own scroll
+       - entries[key]    = position of THIS Loop page
     ===================================================== */
 
     let loopRestoring = false;
@@ -611,7 +567,7 @@
 
             sessionStorage.removeItem(LOOP_STATE_KEY);
 
-        } catch {}
+        } catch { }
     }
 
 
@@ -640,7 +596,7 @@
                 JSON.stringify(state)
             );
 
-        } catch {}
+        } catch { }
 
         if (currentKey) {
 
@@ -694,8 +650,7 @@
 
         try {
 
-            const raw =
-                sessionStorage.getItem(LOOP_STATE_KEY);
+            const raw = sessionStorage.getItem(LOOP_STATE_KEY);
 
             return raw
                 ? sanitizeState(JSON.parse(raw))
@@ -761,7 +716,6 @@
         ];
 
         const reveal = () => {
-
             mainEl.style.visibility = "";
         };
 
@@ -786,7 +740,6 @@
             clearTimeout(finishTimer);
 
             userEvents.forEach(type => {
-
                 window.removeEventListener(type, finish);
             });
 
@@ -811,7 +764,6 @@
         }
 
         userEvents.forEach(type => {
-
             window.addEventListener(
                 type,
                 finish,
@@ -820,9 +772,7 @@
         });
 
         const onLoaded = () => {
-
             attempt();
-
             reveal();
         };
 
@@ -832,26 +782,18 @@
 
         } else {
 
-            window.addEventListener(
-                "load",
-                onLoaded,
-                { once: true }
-            );
+            window.addEventListener("load", onLoaded, { once: true });
         }
 
         /* Safety nets */
 
         revealTimer =
             setTimeout(() => {
-
                 jumpScroll(y);
-
                 reveal();
-
             }, 1500);
 
-        finishTimer =
-            setTimeout(finish, 3500);
+        finishTimer = setTimeout(finish, 3500);
     }
 
 
@@ -865,15 +807,13 @@
             .querySelectorAll(".media-card")
             .forEach(card => {
 
-                const button =
-                    card.querySelector(".save-button");
+                const button = card.querySelector(".save-button");
 
                 if (!button) {
                     return;
                 }
 
-                const on =
-                    savedIds.has(Number(card.dataset.cardId));
+                const on = savedIds.has(Number(card.dataset.cardId));
 
                 button.classList.toggle("saved", on);
 
@@ -909,10 +849,7 @@
             return;
         }
 
-        card.style.setProperty(
-            "--media-ratio",
-            String(ratio)
-        );
+        card.style.setProperty("--media-ratio", String(ratio));
 
         rememberRatio(id, ratio);
     }
@@ -921,7 +858,6 @@
     function bindImageRatio(card, id, image) {
 
         const update = () => {
-
             setCardRatio(
                 card,
                 id,
@@ -936,17 +872,12 @@
 
         } else {
 
-            image.addEventListener(
-                "load",
-                update,
-                { once: true }
-            );
+            image.addEventListener("load", update, { once: true });
         }
 
         image.addEventListener(
             "error",
             () => {
-
                 card.style.removeProperty("--media-ratio");
             },
             { once: true }
@@ -1004,11 +935,7 @@
                 return;
             }
 
-            video.addEventListener(
-                "seeked",
-                capture,
-                { once: true }
-            );
+            video.addEventListener("seeked", capture, { once: true });
 
             video.currentTime = 0;
 
@@ -1021,7 +948,6 @@
     function bindVideoRatio(card, id, video) {
 
         const update = () => {
-
             setCardRatio(
                 card,
                 id,
@@ -1035,9 +961,7 @@
         video.addEventListener(
             "loadeddata",
             () => {
-
                 update();
-
                 makePoster(video);
             },
             { once: true }
@@ -1062,17 +986,28 @@
 
     function bindGridVideo(card, video, muteButton) {
 
+        /* Duration badge (replaces the old video icon) */
+
         const indicator = document.createElement("div");
 
         indicator.className = "video-indicator";
 
-        indicator.innerHTML = `
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M8 5.5v13l10-6.5-10-6.5z"></path>
-            </svg>
-        `;
-
         card.appendChild(indicator);
+
+        const showDuration = () => {
+
+            const text = Media.formatDuration(video.duration);
+
+            if (text) {
+                indicator.textContent = text;
+                indicator.classList.add("has-duration");
+            }
+        };
+
+        video.addEventListener("loadedmetadata", showDuration);
+        video.addEventListener("durationchange", showDuration);
+
+        showDuration();
 
         video.muted = true;
 
@@ -1098,7 +1033,6 @@
             gridEl
                 .querySelectorAll("video")
                 .forEach(other => {
-
                     if (other !== video) {
                         other.muted = true;
                     }
@@ -1176,8 +1110,7 @@
 
             avatar.className = "card-profile-initial";
 
-            avatar.textContent =
-                item.name.charAt(0).toUpperCase();
+            avatar.textContent = item.name.charAt(0).toUpperCase();
         }
 
         const label = document.createElement("span");
@@ -1241,8 +1174,7 @@
 
             const source = document.createElement("source");
 
-            source.src =
-                item.src + (lazy ? "#t=0.001" : "");
+            source.src = item.src + (lazy ? "#t=0.001" : "");
 
             source.type = "video/mp4";
 
@@ -1285,19 +1217,11 @@
         card.appendChild(actions);
 
 
-        const saveButton =
-            actions.querySelector(".save-button");
+        const saveButton = actions.querySelector(".save-button");
+        const shareButton = actions.querySelector(".share-button");
+        const muteButton = actions.querySelector(".unmute-button");
 
-        const shareButton =
-            actions.querySelector(".share-button");
-
-        const muteButton =
-            actions.querySelector(".unmute-button");
-
-        saveButton.classList.toggle(
-            "saved",
-            savedIds.has(id)
-        );
+        saveButton.classList.toggle("saved", savedIds.has(id));
 
 
         /* ---------- ratio + video logic ---------- */
@@ -1361,9 +1285,8 @@
        featured card. There is intentionally NO infinite
        scrolling.
 
-       Cards are created once and cached; reshuffling just
-       re-orders the existing elements (no reloading of
-       media, so the refresh stays smooth).
+       Cards are created once and cached; re-ordering just
+       moves the existing elements (no reloading of media).
     ===================================================== */
 
     function renderGrid(order, animate) {
@@ -1381,8 +1304,7 @@
             }
         });
 
-        const fragment =
-            document.createDocumentFragment();
+        const fragment = document.createDocumentFragment();
 
         ids.forEach(id => {
 
@@ -1433,9 +1355,7 @@
 
         return (
             realFullscreenElement() === featuredEls.media ||
-            featuredEls.media.classList.contains(
-                "loop-fs-fallback"
-            )
+            featuredEls.media.classList.contains("loop-fs-fallback")
         );
     }
 
@@ -1466,9 +1386,7 @@
             return;
         }
 
-        featuredEls.media.classList.remove(
-            "loop-fs-fallback"
-        );
+        featuredEls.media.classList.remove("loop-fs-fallback");
 
         setFullscreenIcon(false);
     }
@@ -1503,7 +1421,7 @@
                     document.webkitExitFullscreen();
                 }
 
-            } catch {}
+            } catch { }
 
             return;
         }
@@ -1538,7 +1456,7 @@
 
                 return;
 
-            } catch {}
+            } catch { }
         }
 
         media.classList.add("loop-fs-fallback");
@@ -1559,33 +1477,22 @@
     }
 
 
-    document.addEventListener(
-        "fullscreenchange",
-        onFullscreenChange
-    );
+    document.addEventListener("fullscreenchange", onFullscreenChange);
 
-    document.addEventListener(
-        "webkitfullscreenchange",
-        onFullscreenChange
-    );
+    document.addEventListener("webkitfullscreenchange", onFullscreenChange);
 
 
-    document.addEventListener(
-        "keydown",
-        event => {
+    document.addEventListener("keydown", event => {
 
-            if (
-                event.key === "Escape" &&
-                featuredEls &&
-                featuredEls.media.classList.contains(
-                    "loop-fs-fallback"
-                )
-            ) {
+        if (
+            event.key === "Escape" &&
+            featuredEls &&
+            featuredEls.media.classList.contains("loop-fs-fallback")
+        ) {
 
-                exitFallbackFullscreen();
-            }
+            exitFallbackFullscreen();
         }
-    );
+    });
 
 
     /* =====================================================
@@ -1608,7 +1515,7 @@
                     document.webkitExitFullscreen();
                 }
 
-            } catch {}
+            } catch { }
         }
 
         if (featuredEls.observer) {
@@ -1754,6 +1661,10 @@
 
                 </div>
 
+                ${item.caption
+                    ? `<p class="loop-caption">${esc(item.caption)}</p>`
+                    : ""}
+
             </div>
         `;
 
@@ -1797,10 +1708,7 @@
                 return;
             }
 
-            wrap.style.setProperty(
-                "--media-ratio",
-                String(ratio)
-            );
+            wrap.style.setProperty("--media-ratio", String(ratio));
 
             updateOrientation(wrap, ratio);
 
@@ -1811,7 +1719,6 @@
         if (image) {
 
             const update = () => {
-
                 applyRatio(
                     image.naturalWidth,
                     image.naturalHeight
@@ -1824,11 +1731,7 @@
 
             } else {
 
-                image.addEventListener(
-                    "load",
-                    update,
-                    { once: true }
-                );
+                image.addEventListener("load", update, { once: true });
             }
 
             image.addEventListener(
@@ -1848,11 +1751,9 @@
 
         if (video) {
 
-            const fill =
-                wrap.querySelector(".loop-progress-fill");
+            const fill = wrap.querySelector(".loop-progress-fill");
 
-            const progress =
-                wrap.querySelector(".loop-progress");
+            const progress = wrap.querySelector(".loop-progress");
 
             video.muted = sharedMuted;
 
@@ -1890,19 +1791,12 @@
             }
 
 
-            video.addEventListener(
-                "timeupdate",
-                updateProgress
-            );
+            video.addEventListener("timeupdate", updateProgress);
 
-            video.addEventListener(
-                "seeked",
-                updateProgress
-            );
+            video.addEventListener("seeked", updateProgress);
 
 
             video.addEventListener("play", () => {
-
                 media.classList.remove("is-paused");
             });
 
@@ -1910,7 +1804,6 @@
             video.addEventListener("pause", () => {
 
                 if (wrap.dataset.userPaused === "true") {
-
                     media.classList.add("is-paused");
                 }
             });
@@ -1955,8 +1848,7 @@
 
                 const seek = event => {
 
-                    const rect =
-                        progress.getBoundingClientRect();
+                    const rect = progress.getBoundingClientRect();
 
                     const fraction =
                         Math.min(
@@ -1969,42 +1861,33 @@
 
                     if (video.duration) {
 
-                        video.currentTime =
-                            fraction * video.duration;
+                        video.currentTime = fraction * video.duration;
                     }
                 };
 
 
-                progress.addEventListener(
-                    "pointerdown",
-                    event => {
+                progress.addEventListener("pointerdown", event => {
 
-                        event.stopPropagation();
+                    event.stopPropagation();
 
-                        dragging = true;
+                    dragging = true;
 
-                        progress.classList.add("is-scrubbing");
+                    progress.classList.add("is-scrubbing");
 
-                        try {
-                            progress.setPointerCapture(
-                                event.pointerId
-                            );
-                        } catch {}
+                    try {
+                        progress.setPointerCapture(event.pointerId);
+                    } catch { }
 
+                    seek(event);
+                });
+
+
+                progress.addEventListener("pointermove", event => {
+
+                    if (dragging) {
                         seek(event);
                     }
-                );
-
-
-                progress.addEventListener(
-                    "pointermove",
-                    event => {
-
-                        if (dragging) {
-                            seek(event);
-                        }
-                    }
-                );
+                });
 
 
                 const stopDrag = () => {
@@ -2015,24 +1898,14 @@
                 };
 
 
-                progress.addEventListener(
-                    "pointerup",
-                    stopDrag
-                );
+                progress.addEventListener("pointerup", stopDrag);
 
-                progress.addEventListener(
-                    "pointercancel",
-                    stopDrag
-                );
+                progress.addEventListener("pointercancel", stopDrag);
 
 
-                progress.addEventListener(
-                    "click",
-                    event => {
-
-                        event.stopPropagation();
-                    }
-                );
+                progress.addEventListener("click", event => {
+                    event.stopPropagation();
+                });
             }
 
 
@@ -2040,23 +1913,20 @@
 
             if (muteBtn) {
 
-                muteBtn.addEventListener(
-                    "click",
-                    event => {
+                muteBtn.addEventListener("click", event => {
 
-                        event.stopPropagation();
+                    event.stopPropagation();
 
-                        setSharedMuted(!sharedMuted);
+                    setSharedMuted(!sharedMuted);
 
-                        video.muted = sharedMuted;
+                    video.muted = sharedMuted;
 
-                        refreshMuteUI();
+                    refreshMuteUI();
 
-                        if (!sharedMuted) {
-                            safePlay(video);
-                        }
+                    if (!sharedMuted) {
+                        safePlay(video);
                     }
-                );
+                });
             }
 
 
@@ -2066,9 +1936,9 @@
 
                 const observer =
                     new IntersectionObserver(
-                        entries => {
+                        observed => {
 
-                            const entry = entries[0];
+                            const entry = observed[0];
 
                             if (
                                 !entry ||
@@ -2119,15 +1989,12 @@
 
         if (fsBtn) {
 
-            fsBtn.addEventListener(
-                "click",
-                event => {
+            fsBtn.addEventListener("click", event => {
 
-                    event.stopPropagation();
+                event.stopPropagation();
 
-                    toggleFullscreen();
-                }
-            );
+                toggleFullscreen();
+            });
         }
 
 
@@ -2141,10 +2008,7 @@
                 likedIds.add(id);
             }
 
-            likeBtn.classList.toggle(
-                "is-liked",
-                likedIds.has(id)
-            );
+            likeBtn.classList.toggle("is-liked", likedIds.has(id));
         });
 
 
@@ -2160,34 +2024,24 @@
         });
 
 
-        shareBtn.addEventListener(
-            "click",
-            () => {
+        shareBtn.addEventListener("click", () => {
 
-                shareItem(id);
+            shareItem(id);
+        });
+
+
+        reportBtn.addEventListener("click", () => {
+
+            if (reportedIds.has(id)) {
+                return;
             }
-        );
 
+            reportedIds.add(id);
 
-        reportBtn.addEventListener(
-            "click",
-            () => {
+            reportBtn.classList.add("is-reported");
 
-                if (reportedIds.has(id)) {
-                    return;
-                }
-
-                reportedIds.add(id);
-
-                reportBtn.classList.add(
-                    "is-reported"
-                );
-
-                toast(
-                    "Reported. Thanks for letting us know."
-                );
-            }
-        );
+            toast("Reported. Thanks for letting us know.");
+        });
     }
 
 
@@ -2195,7 +2049,7 @@
        SHOW A LOOP PAGE
 
        options.order      saved grid order (restoring) —
-                          otherwise a fresh shuffle is made
+                          otherwise a fair order is built
        options.scrollTop  saved scroll position (restoring) —
                           otherwise the page starts at the top
        options.animate    soft fade of the recommendations
@@ -2256,6 +2110,10 @@
 
         saveLoopState();
 
+        /* The big featured slot is the most visible spot of all */
+
+        Media.credit(id, FEATURED_WEIGHT);
+
         showFeatured(id, { animate: true });
 
         if (push) {
@@ -2270,7 +2128,7 @@
                     buildUrl(id)
                 );
 
-            } catch {}
+            } catch { }
         }
 
         saveLoopState();
@@ -2330,7 +2188,7 @@
                 buildUrl(id)
             );
 
-        } catch {}
+        } catch { }
 
         saveLoopState();
     });
@@ -2357,8 +2215,7 @@
 
             clearTimeout(loopScrollTimer);
 
-            loopScrollTimer =
-                setTimeout(saveLoopState, 50);
+            loopScrollTimer = setTimeout(saveLoopState, 50);
         },
         { passive: true }
     );
@@ -2366,56 +2223,49 @@
 
     window.addEventListener("pagehide", saveLoopState);
 
-    document.addEventListener(
-        "visibilitychange",
-        () => {
+    document.addEventListener("visibilitychange", () => {
 
-            if (document.visibilityState === "hidden") {
+        if (document.visibilityState === "hidden") {
 
-                saveLoopState();
-            }
+            saveLoopState();
         }
-    );
+    });
 
 
     document
         .querySelectorAll(".nav-item")
         .forEach(item => {
 
-            item.addEventListener(
-                "click",
-                event => {
+            item.addEventListener("click", event => {
 
-                    /* Opening in a new tab: this page stays */
+                /* Opening in a new tab: this page stays */
 
-                    if (
-                        event.ctrlKey ||
-                        event.metaKey ||
-                        event.shiftKey
-                    ) {
-                        return;
-                    }
-
-                    const href =
-                        item.getAttribute("href") || "";
-
-                    if (/home\/home\.html/.test(href)) {
-
-                        /* Save this page's own position first,
-                           then forget the "latest" marker */
-
-                        saveLoopState();
-
-                        leavingForHome = true;
-
-                        clearLoopState();
-
-                    } else {
-
-                        saveLoopState();
-                    }
+                if (
+                    event.ctrlKey ||
+                    event.metaKey ||
+                    event.shiftKey
+                ) {
+                    return;
                 }
-            );
+
+                const href = item.getAttribute("href") || "";
+
+                if (/home\/home\.html/.test(href)) {
+
+                    /* Save this page's own position first,
+                       then forget the "latest" marker */
+
+                    saveLoopState();
+
+                    leavingForHome = true;
+
+                    clearLoopState();
+
+                } else {
+
+                    saveLoopState();
+                }
+            });
         });
 
 
@@ -2433,7 +2283,7 @@
 
             sessionStorage.removeItem(LOOP_ENTRIES_KEY);
 
-        } catch {}
+        } catch { }
     }
 
 
@@ -2487,10 +2337,20 @@
 
     if (startId === null) {
 
+        /* No card chosen: feature the least-seen item */
+
         startId =
-            FEED_IDS[
-                Math.floor(Math.random() * FEED_IDS.length)
-            ];
+            Media.fairOrder(
+                FEED_IDS,
+                { columns: 1, record: false }
+            )[0];
+    }
+
+    /* A freshly opened (not restored) featured card counts as exposure */
+
+    if (!restoredState) {
+
+        Media.credit(startId, FEATURED_WEIGHT);
     }
 
     currentKey =
@@ -2505,7 +2365,7 @@
             buildUrl(startId)
         );
 
-    } catch {}
+    } catch { }
 
 
     featuredId = startId;
@@ -2514,7 +2374,7 @@
 
     /*
        Load the complete grid once. A restored page reuses its
-       saved order; every new Loop page gets a fresh shuffle.
+       saved order; every new Loop page gets a fresh fair order.
     */
     renderGrid(
         restoredState

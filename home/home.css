@@ -17,14 +17,7 @@ body {
 body {
     background: #fff;
     color: #111;
-    font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        Helvetica,
-        Arial,
-        sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     overflow: hidden;
 }
 
@@ -36,14 +29,10 @@ body {
 .sidebar {
     position: fixed;
     inset: 0 auto 0 0;
-
     width: 225px;
     padding: 32px 24px;
-
     background: #fff;
-
     z-index: 1000;
-
     overflow-y: auto;
     scrollbar-width: none;
 }
@@ -59,7 +48,6 @@ body {
 
 .logo {
     display: block;
-
     width: 120px;
     height: auto;
 }
@@ -72,42 +60,26 @@ body {
 .filter-button {
     display: flex;
     align-items: center;
-
     gap: 11px;
-
     width: 100%;
     height: 48px;
-
     margin-top: 38px;
     padding: 0 14px;
-
     border: 1px solid #e4e4e4;
     border-radius: 15px;
-
     background: #fff;
     color: #151515;
-
     font-size: 13px;
     font-weight: 500;
-
     cursor: pointer;
-
-    box-shadow:
-        0 6px 18px rgba(0, 0, 0, 0.06);
-
-    transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease,
-        border-color 0.2s ease;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .filter-button:hover {
     transform: translateY(-2px);
-
     border-color: #d5d5d5;
-
-    box-shadow:
-        0 10px 24px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
 }
 
 
@@ -118,61 +90,41 @@ body {
 .navigation {
     display: flex;
     flex-direction: column;
-
     gap: 5px;
-
     margin-top: 38px;
 }
 
 .nav-item {
     display: flex;
     align-items: center;
-
     gap: 16px;
-
     height: 52px;
     padding: 0 12px;
-
     border-radius: 14px;
-
     color: #222;
-
     text-decoration: none;
-
     font-size: 14px;
     font-weight: 450;
-
-    transition:
-        background 0.2s ease,
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .nav-item:hover {
     background: #f1f1f1;
-
     transform: translateX(2px);
 }
 
 .nav-item.active {
     background: #eee;
-
     font-weight: 550;
 }
 
 .nav-icon {
     width: 25px;
     height: 25px;
-
     color: #181818;
-
     stroke-width: 1.8;
-
     flex-shrink: 0;
-
-    transition:
-        transform 0.2s ease,
-        filter 0.2s ease;
+    transition: transform 0.2s ease, filter 0.2s ease;
 }
 
 
@@ -182,14 +134,8 @@ body {
 
 .main {
     position: fixed;
-
     inset: 0 0 0 225px;
-
-    padding:
-        32px
-        42px
-        70px;
-
+    padding: 32px 42px 70px;
     overflow-x: hidden;
     overflow-y: auto;
 }
@@ -197,11 +143,7 @@ body {
 
 /* =========================================================
    MOBILE-ONLY ELEMENTS
-   (mobile-topbar / mobile-filter-button)
-
-   Hidden by default so desktop & tablet are completely
-   unaffected. Only shown inside the mobile media queries
-   further down this file.
+   Hidden by default; shown only in the mobile media queries.
 ========================================================= */
 
 .mobile-topbar,
@@ -217,16 +159,9 @@ body {
 .categories {
     display: flex;
     align-items: flex-start;
-
     gap: 15px;
-
-    padding:
-        0
-        2px
-        10px;
-
+    padding: 0 2px 10px;
     overflow-x: auto;
-
     scrollbar-width: none;
 }
 
@@ -241,54 +176,32 @@ body {
 
 .category {
     position: relative;
-
     flex: 0 0 132px;
-
     width: 132px;
     height: 132px;
-
     overflow: hidden;
-
     border-radius: 20px;
-
     background: #eee;
-
     cursor: pointer;
-
     z-index: 1;
-
-    transition:
-        width 0.3s ease,
-        height 0.3s ease,
-        flex-basis 0.3s ease,
-        transform 0.3s ease,
-        box-shadow 0.3s ease;
+    transition: width 0.3s ease, height 0.3s ease, flex-basis 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .category:hover {
     flex-basis: 132px;
-
     width: 132px;
     height: 132px;
-
     transform: translateY(-2px);
-
-    box-shadow:
-        0 7px 16px rgba(0, 0, 0, 0.12);
-
+    box-shadow: 0 7px 16px rgba(0, 0, 0, 0.12);
     z-index: 20;
 }
 
 .category img {
     display: block;
-
     width: 100%;
     height: 100%;
-
     object-fit: cover;
-
-    transition:
-        transform 0.45s ease;
+    transition: transform 0.45s ease;
 }
 
 .category:hover img {
@@ -297,32 +210,19 @@ body {
 
 .category::after {
     content: "";
-
     position: absolute;
-
     inset: 0;
-
-    background:
-        linear-gradient(
-            to bottom,
-            transparent 30%,
-            rgba(0, 0, 0, 0.82)
-        );
-
+    background: linear-gradient(to bottom, transparent 30%, rgba(0, 0, 0, 0.82));
     pointer-events: none;
 }
 
 .category-name {
     position: absolute;
-
     left: 12px;
     right: 8px;
     bottom: 11px;
-
     z-index: 2;
-
     color: #fff;
-
     font-size: 12px;
     line-height: 1.2;
     font-weight: 650;
@@ -335,9 +235,7 @@ body {
 
 .pinterest-grid {
     display: block;
-
     margin-top: 30px;
-
     column-count: 3;
     column-gap: 17px;
 }
@@ -349,37 +247,22 @@ body {
 
 .media-card {
     --media-ratio: 1 / 1;
-
     position: relative;
-
     display: inline-block;
-
     width: 100%;
-
     margin-bottom: 17px;
-
     overflow: hidden;
-
     break-inside: avoid;
-
     aspect-ratio: var(--media-ratio);
-
     border-radius: 17px;
-
     background: #eee;
-
     cursor: pointer;
-
-    transition:
-        transform 0.25s ease,
-        box-shadow 0.25s ease;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .media-card:hover {
     transform: translateY(-3px);
-
-    box-shadow:
-        0 14px 30px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.15);
 }
 
 
@@ -390,12 +273,9 @@ body {
 .media-card img,
 .media-card video {
     display: block;
-
     width: 100%;
     height: 100%;
-
     object-fit: contain;
-
     background: #eee;
 }
 
@@ -406,27 +286,15 @@ body {
 
 .media-card::after {
     content: "";
-
     position: absolute;
-
     left: 0;
     right: 0;
     bottom: 0;
-
     height: 45%;
-
-    background:
-        linear-gradient(
-            transparent,
-            rgba(0, 0, 0, 0.65)
-        );
-
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.65));
     opacity: 0;
-
     pointer-events: none;
-
-    transition:
-        opacity 0.25s ease;
+    transition: opacity 0.25s ease;
 }
 
 .media-card:hover::after {
@@ -440,79 +308,54 @@ body {
 
 .media-actions {
     position: absolute;
-
     inset: 0;
-
     z-index: 10;
-
     pointer-events: none;
 }
 
 .action-button {
     position: absolute;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     width: 40px;
     height: 40px;
-
     padding: 0;
-
     border: 0;
     border-radius: 50%;
-
     background: rgba(0, 0, 0, 0.34);
-
     color: #fff;
-
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
-
     cursor: pointer;
-
     opacity: 0;
-
     pointer-events: none;
-
     -webkit-tap-highlight-color: transparent;
-
-    transition:
-        opacity 0.2s ease,
-        transform 0.2s ease,
-        background 0.2s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
 }
 
 .media-card:hover .action-button {
     opacity: 0.6;
-
     pointer-events: auto;
 }
 
 .action-button:hover {
     opacity: 1;
-
     transform: scale(1.06);
-
     background: rgba(0, 0, 0, 0.55);
 }
 
 .action-button:focus,
 .action-button:focus-visible {
     outline: none;
-
     box-shadow: none;
 }
 
 .action-button svg {
     width: 22px;
     height: 22px;
-
     fill: none;
-
     stroke: currentColor;
-
     stroke-width: 1.8;
 }
 
@@ -550,28 +393,16 @@ body {
 
     .sidebar {
         width: 195px;
-
-        padding:
-            30px
-            22px;
+        padding: 30px 22px;
     }
 
     .main {
-        inset:
-            0
-            0
-            0
-            195px;
-
-        padding:
-            30px
-            30px
-            60px;
+        inset: 0 0 0 195px;
+        padding: 30px 30px 60px;
     }
 
     .pinterest-grid {
         column-count: 2;
-
         column-gap: 14px;
     }
 
@@ -581,14 +412,12 @@ body {
 
     .category {
         flex-basis: 120px;
-
         width: 120px;
         height: 120px;
     }
 
     .category:hover {
         flex-basis: 135px;
-
         width: 135px;
         height: 135px;
     }
@@ -604,96 +433,53 @@ body {
 
     :root {
         --mobile-bar-height: 62px;
-
-        /*
-         * SAME WIDTH LOGIC AS REELS MOBILE NAVIGATION
-         *
-         * This variable exists ONLY in this breakpoint.
-         */
-        --mobile-nav-width:
-            min(
-                100vw,
-                calc(
-                    (
-                        100dvh -
-                        var(--mobile-bar-height)
-                    ) * 9 / 16
-                )
-            );
+        /* SAME WIDTH LOGIC AS REELS MOBILE NAVIGATION */
+        --mobile-nav-width: min(100vw, calc((100dvh - var(--mobile-bar-height)) * 9 / 16));
     }
 
 
-    /* =====================================================
-       SIDEBAR → BOTTOM BAR
-    ===================================================== */
+    /* SIDEBAR → BOTTOM BAR */
 
     .sidebar {
         position: fixed;
-
         top: auto;
         left: 0;
         right: 0;
         bottom: 0;
-
         width: 100%;
         height: var(--mobile-bar-height);
-
         padding: 0;
-
         display: flex;
         align-items: center;
         justify-content: center;
-
         overflow: visible;
-
         border-top: 1px solid #e8e8e8;
-
         z-index: 1000;
     }
-
-
-    /* =====================================================
-       LOGO
-    ===================================================== */
 
     .sidebar .logo {
         display: none !important;
     }
 
 
-    /* =====================================================
-       FILTER
-    ===================================================== */
+    /* FILTER */
 
     .sidebar .filter-button {
         position: fixed !important;
-
         top: 16px;
         left: 14px;
-
         width: 44px;
         height: 44px;
-
         margin: 0;
         padding: 0;
-
         border-radius: 50%;
-
         justify-content: center;
-
         gap: 0;
-
         font-size: 0;
-
         z-index: 1002;
-
         background: #fff;
-
         border: 1px solid #e2e2e2;
-
-        box-shadow:
-            0 5px 14px rgba(0, 0, 0, 0.16),
-            0 2px 5px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 5px 14px rgba(0, 0, 0, 0.16), 0 2px 5px rgba(0, 0, 0, 0.08);
     }
 
     .sidebar .filter-button span {
@@ -701,54 +487,33 @@ body {
     }
 
 
-    /* =====================================================
-       MOBILE NAVIGATION
-
-       THIS IS THE ONLY NAVIGATION WIDTH OVERRIDE.
-
-       Desktop/tablet remain completely untouched.
-    ===================================================== */
+    /* MOBILE NAVIGATION (the only navigation width override) */
 
     .sidebar .navigation {
         width: var(--mobile-nav-width);
-
         height: 100%;
-
         margin: 0 !important;
         padding: 0;
-
         display: flex;
         flex-direction: row;
-
         align-items: center;
-
         justify-content: space-between;
-
         gap: 0;
     }
 
     .sidebar .nav-item {
         width: auto;
-
         height: 100%;
-
         padding: 0;
         margin: 0;
-
         display: flex;
         align-items: center;
         justify-content: center;
-
         flex: 1 1 0;
-
         gap: 0;
-
         border-radius: 14px;
-
         font-size: 0;
-
         line-height: 1;
-
         transform: none;
     }
 
@@ -758,60 +523,38 @@ body {
 
     .sidebar .nav-item:hover {
         transform: none;
-
         background: transparent;
     }
 
 
-    /* =====================================================
-       MOBILE ACTIVE PAGE
-    ===================================================== */
+    /* MOBILE ACTIVE PAGE */
 
     .sidebar .nav-item.active {
         background: transparent !important;
-
-        box-shadow:
-            0 0 12px rgba(0, 0, 0, 0.16);
-
+        box-shadow: 0 0 12px rgba(0, 0, 0, 0.16);
         border-radius: 14px;
     }
 
     .sidebar .nav-icon {
         width: 23px;
         height: 23px;
-
         min-width: 23px;
         min-height: 23px;
-
         color: #222;
-
         stroke-width: 1.8;
-
         flex-shrink: 0;
-
-        transition:
-            transform 0.2s ease,
-            filter 0.2s ease;
+        transition: transform 0.2s ease, filter 0.2s ease;
     }
 
     .sidebar .nav-item.active .nav-icon {
         color: #111;
-
         stroke-width: 2.2;
-
-        filter:
-            drop-shadow(
-                0 2px 4px
-                rgba(0, 0, 0, 0.22)
-            );
-
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.22));
         transform: scale(1.05);
     }
 
 
-    /* =====================================================
-       HIDE NOTIFICATION + CREATE
-    ===================================================== */
+    /* HIDE NOTIFICATION + CREATE */
 
     .sidebar .navigation .nav-item:nth-child(6),
     .sidebar .navigation .nav-item:nth-child(7) {
@@ -819,61 +562,40 @@ body {
     }
 
 
-    /* =====================================================
-       MAIN
-    ===================================================== */
+    /* MAIN */
 
     .main {
         position: fixed;
-
         top: 0;
         left: 0;
         right: 0;
-
         bottom: var(--mobile-bar-height);
-
         width: 100%;
-
-        padding:
-            20px
-            14px
-            40px;
-
+        padding: 20px 14px 40px;
         overflow-x: hidden;
         overflow-y: auto;
     }
 
 
-    /* =====================================================
-       CATEGORIES
-    ===================================================== */
+    /* CATEGORIES */
 
     .categories {
         gap: 10px;
-
-        padding:
-            0
-            0
-            8px;
+        padding: 0 0 8px;
     }
 
     .category {
         flex-basis: 105px;
-
         width: 105px;
         height: 105px;
-
         border-radius: 16px;
     }
 
     .category:hover {
         flex-basis: 105px;
-
         width: 105px;
         height: 105px;
-
         transform: none;
-
         box-shadow: none;
     }
 
@@ -885,46 +607,35 @@ body {
         left: 9px;
         right: 8px;
         bottom: 9px;
-
         font-size: 10px;
     }
 
 
-    /* =====================================================
-       PINTEREST GRID
-    ===================================================== */
+    /* PINTEREST GRID */
 
     .pinterest-grid {
         margin-top: 22px;
-
         column-count: 2;
-
         column-gap: 10px;
     }
 
     .media-card {
         margin-bottom: 10px;
-
         border-radius: 13px;
     }
 
 
-    /* =====================================================
-       ACTION BUTTONS
-    ===================================================== */
+    /* ACTION BUTTONS */
 
     .action-button {
         width: 40px;
         height: 40px;
-
         opacity: 0;
-
         pointer-events: none;
     }
 
     .media-card:hover .action-button {
         opacity: 0.6;
-
         pointer-events: auto;
     }
 
@@ -959,21 +670,7 @@ body {
 
     :root {
         --mobile-bar-height: 58px;
-
-        /*
-         * Recalculate mobile nav width using the new
-         * mobile bar height.
-         */
-        --mobile-nav-width:
-            min(
-                100vw,
-                calc(
-                    (
-                        100dvh -
-                        var(--mobile-bar-height)
-                    ) * 9 / 16
-                )
-            );
+        --mobile-nav-width: min(100vw, calc((100dvh - var(--mobile-bar-height)) * 9 / 16));
     }
 
     .sidebar {
@@ -987,20 +684,13 @@ body {
     .sidebar .nav-icon {
         width: 22px;
         height: 22px;
-
         min-width: 22px;
         min-height: 22px;
     }
 
-
-    /* =====================================================
-       FILTER
-    ===================================================== */
-
     .filter-button {
         top: 13px;
         left: 12px;
-
         width: 42px;
         height: 42px;
     }
@@ -1010,24 +700,10 @@ body {
         height: 23px;
     }
 
-
-    /* =====================================================
-       MAIN
-    ===================================================== */
-
     .main {
         bottom: var(--mobile-bar-height);
-
-        padding:
-            16px
-            10px
-            35px;
+        padding: 16px 10px 35px;
     }
-
-
-    /* =====================================================
-       CATEGORIES
-    ===================================================== */
 
     .categories {
         gap: 8px;
@@ -1035,45 +711,28 @@ body {
 
     .category {
         flex-basis: 95px;
-
         width: 95px;
         height: 95px;
-
         border-radius: 14px;
     }
 
     .category:hover {
         flex-basis: 95px;
-
         width: 95px;
         height: 95px;
-
         transform: none;
-
         box-shadow: none;
     }
 
-
-    /* =====================================================
-       GRID
-    ===================================================== */
-
     .pinterest-grid {
         margin-top: 18px;
-
         column-gap: 8px;
     }
 
     .media-card {
         margin-bottom: 8px;
-
         border-radius: 11px;
     }
-
-
-    /* =====================================================
-       ACTIONS
-    ===================================================== */
 
     .action-button {
         width: 36px;
@@ -1116,20 +775,13 @@ body {
     .sidebar .nav-icon {
         width: 21px;
         height: 21px;
-
         min-width: 21px;
         min-height: 21px;
     }
 
-
-    /* =====================================================
-       FILTER
-    ===================================================== */
-
     .filter-button {
         top: 11px;
         left: 10px;
-
         width: 40px;
         height: 40px;
     }
@@ -1139,20 +791,10 @@ body {
         height: 22px;
     }
 
-
-    /* =====================================================
-       MAIN
-    ===================================================== */
-
     .main {
         padding-left: 8px;
         padding-right: 8px;
     }
-
-
-    /* =====================================================
-       GRID
-    ===================================================== */
 
     .pinterest-grid {
         column-gap: 7px;
@@ -1161,11 +803,6 @@ body {
     .media-card {
         margin-bottom: 7px;
     }
-
-
-    /* =====================================================
-       ACTIONS
-    ===================================================== */
 
     .action-button {
         width: 35px;
@@ -1198,32 +835,23 @@ body {
    RESPONSIVE SIDEBAR + MAIN NORMALIZATION
 ========================================================= */
 
-
-/* =========================================================
-   DESKTOP
-   1151px AND ABOVE
-========================================================= */
+/* DESKTOP 1151px AND ABOVE */
 
 @media (min-width: 1151px) {
 
     .sidebar {
         width: 225px;
-
-        padding:
-            32px
-            24px;
+        padding: 32px 24px;
     }
 
     .sidebar .logo {
         width: 120px;
         height: auto;
-
         flex-shrink: 0;
     }
 
     .sidebar .logo svg {
         display: block;
-
         width: 100%;
         height: auto;
     }
@@ -1231,18 +859,12 @@ body {
     .sidebar .filter-button {
         width: 100%;
         height: 48px;
-
         margin-top: 38px;
-
         padding: 0 14px;
-
         display: flex;
         align-items: center;
-
         gap: 11px;
-
         flex-shrink: 0;
-
         font-size: 13px;
         line-height: 1;
     }
@@ -1250,37 +872,25 @@ body {
     .sidebar .filter-button svg {
         width: 22px;
         height: 22px;
-
         flex-shrink: 0;
     }
 
-    /*
-     * DESKTOP NAVIGATION — UNCHANGED
-     */
     .sidebar .navigation {
         width: 100%;
-
         margin-top: 38px;
-
         display: flex;
         flex-direction: column;
-
         gap: 5px;
     }
 
     .sidebar .nav-item {
         width: 100%;
         height: 52px;
-
         padding: 0 12px;
-
         gap: 16px;
-
         display: flex;
         align-items: center;
-
         flex-shrink: 0;
-
         font-size: 14px;
         line-height: 1;
     }
@@ -1288,12 +898,9 @@ body {
     .sidebar .nav-icon {
         width: 25px;
         height: 25px;
-
         min-width: 25px;
         min-height: 25px;
-
         flex-shrink: 0;
-
         stroke-width: 1.8;
     }
 
@@ -1304,31 +911,23 @@ body {
 }
 
 
-/* =========================================================
-   TABLET
-   801px – 1150px
-========================================================= */
+/* TABLET 801px – 1150px */
 
 @media (min-width: 801px) and (max-width: 1150px) {
 
     .sidebar {
         width: 195px;
-
-        padding:
-            30px
-            22px;
+        padding: 30px 22px;
     }
 
     .sidebar .logo {
         width: 110px;
         height: auto;
-
         flex-shrink: 0;
     }
 
     .sidebar .logo svg {
         display: block;
-
         width: 100%;
         height: auto;
     }
@@ -1336,18 +935,12 @@ body {
     .sidebar .filter-button {
         width: 100%;
         height: 46px;
-
         margin-top: 34px;
-
         padding: 0 13px;
-
         display: flex;
         align-items: center;
-
         gap: 10px;
-
         flex-shrink: 0;
-
         font-size: 12px;
         line-height: 1;
     }
@@ -1355,37 +948,25 @@ body {
     .sidebar .filter-button svg {
         width: 21px;
         height: 21px;
-
         flex-shrink: 0;
     }
 
-    /*
-     * TABLET NAVIGATION — UNCHANGED
-     */
     .sidebar .navigation {
         width: 100%;
-
         margin-top: 34px;
-
         display: flex;
         flex-direction: column;
-
         gap: 4px;
     }
 
     .sidebar .nav-item {
         width: 100%;
         height: 50px;
-
         padding: 0 11px;
-
         gap: 14px;
-
         display: flex;
         align-items: center;
-
         flex-shrink: 0;
-
         font-size: 13px;
         line-height: 1;
     }
@@ -1393,12 +974,9 @@ body {
     .sidebar .nav-icon {
         width: 24px;
         height: 24px;
-
         min-width: 24px;
         min-height: 24px;
-
         flex-shrink: 0;
-
         stroke-width: 1.8;
     }
 
@@ -1409,32 +987,23 @@ body {
 }
 
 
-/* =========================================================
-   MOBILE NORMALIZATION
-   800px AND BELOW
-========================================================= */
+/* MOBILE NORMALIZATION 800px AND BELOW */
 
 @media (max-width: 800px) {
 
     .sidebar {
         position: fixed;
-
         top: auto;
         left: 0;
         right: 0;
         bottom: 0;
-
         width: 100%;
         height: var(--mobile-bar-height);
-
         padding: 0;
-
         display: flex;
         align-items: center;
         justify-content: center;
-
         overflow: visible;
-
         z-index: 1000;
     }
 
@@ -1444,12 +1013,9 @@ body {
 
     .sidebar .filter-button {
         display: flex;
-
         align-items: center;
         justify-content: center;
-
         flex-shrink: 0;
-
         font-size: 0;
     }
 
@@ -1457,50 +1023,30 @@ body {
         display: none !important;
     }
 
-
-    /*
-     * MOBILE NAVIGATION
-     *
-     * IMPORTANT:
-     * This is deliberately scoped to max-width: 800px.
-     *
-     * The desktop/tablet rules above are untouched.
-     */
     .sidebar .navigation {
         width: var(--mobile-nav-width);
-
         height: 100%;
-
         margin: 0 !important;
         padding: 0;
-
         display: flex;
         flex-direction: row;
-
         align-items: center;
         justify-content: space-between;
-
         gap: 0;
     }
 
     .sidebar .nav-item {
         width: auto;
         height: 100%;
-
         padding: 0;
         margin: 0;
-
         display: flex;
         align-items: center;
         justify-content: center;
-
         flex: 1 1 0;
-
         gap: 0;
-
         font-size: 0;
         line-height: 1;
-
         transform: none;
     }
 
@@ -1511,28 +1057,21 @@ body {
     .sidebar .nav-icon {
         width: 23px;
         height: 23px;
-
         min-width: 23px;
         min-height: 23px;
-
         flex-shrink: 0;
-
         stroke-width: 1.8;
     }
 
     .main {
         left: 0;
         right: 0;
-
         width: 100%;
     }
 }
 
 
-/* =========================================================
-   SMALL MOBILE
-   500px AND BELOW
-========================================================= */
+/* SMALL MOBILE 500px AND BELOW */
 
 @media (max-width: 500px) {
 
@@ -1547,17 +1086,13 @@ body {
     .sidebar .nav-icon {
         width: 22px;
         height: 22px;
-
         min-width: 22px;
         min-height: 22px;
     }
 }
 
 
-/* =========================================================
-   VERY SMALL PHONES
-   380px AND BELOW
-========================================================= */
+/* VERY SMALL PHONES 380px AND BELOW */
 
 @media (max-width: 380px) {
 
@@ -1568,16 +1103,13 @@ body {
     .sidebar .nav-icon {
         width: 21px;
         height: 21px;
-
         min-width: 21px;
         min-height: 21px;
     }
 }
 
 
-/* =========================================================
-   MOBILE — HIDE NOTIFICATION & CREATE
-========================================================= */
+/* MOBILE — HIDE NOTIFICATION & CREATE */
 
 @media (max-width: 800px) {
 
@@ -1590,60 +1122,38 @@ body {
 
 /* =========================================================
    MOBILE TOP BAR + FLOATING FILTER BUTTON
-   (NEW — mobile only. Desktop & tablet are completely
-   unaffected: these rules only exist inside the
-   max-width: 800px / 500px / 380px breakpoints below,
-   and the old fixed-circle filter behavior inside the
-   sidebar is switched off for mobile just below.)
+   (mobile only; desktop & tablet are unaffected)
 ========================================================= */
 
 @media (max-width: 800px) {
 
-    /* -----------------------------------------------------
-       The old fixed circular filter button that lived
-       inside the sidebar is replaced on mobile by the new
-       floating filter button inside .main (below the
-       categories row).
-    ----------------------------------------------------- */
+    /* The old fixed circular filter button inside the sidebar
+       is replaced by the floating one inside .main. */
 
     .sidebar .filter-button {
         display: none !important;
     }
 
 
-    /* =====================================================
-       MOBILE TOP BAR
-
-       Normal page flow — NOT fixed, NOT sticky. It scrolls
-       away with the rest of the page inside .main, exactly
-       like ordinary content.
-
-       Logo → top-left
-       Create + Notification → top-right
-    ===================================================== */
+    /* MOBILE TOP BAR — normal page flow, scrolls away with the page */
 
     .mobile-topbar {
         display: flex;
         align-items: center;
         justify-content: space-between;
-
         width: 100%;
-
         margin-bottom: 18px;
     }
 
     .mobile-topbar-logo {
         display: block;
-
         width: 96px;
         height: auto;
-
         flex-shrink: 0;
     }
 
     .mobile-topbar-logo svg {
         display: block;
-
         width: 100%;
         height: auto;
     }
@@ -1651,9 +1161,7 @@ body {
     .mobile-topbar-actions {
         display: flex;
         align-items: center;
-
         gap: 6px;
-
         flex-shrink: 0;
     }
 
@@ -1661,18 +1169,12 @@ body {
         display: flex;
         align-items: center;
         justify-content: center;
-
         width: 40px;
         height: 40px;
-
         border-radius: 50%;
-
         color: #222;
-
         text-decoration: none;
-
         -webkit-tap-highlight-color: transparent;
-
         transition: background 0.2s ease;
     }
 
@@ -1683,76 +1185,46 @@ body {
     .mobile-topbar-icon svg {
         width: 23px;
         height: 23px;
-
         fill: none;
-
         stroke: currentColor;
         stroke-width: 1.8;
     }
 
 
-    /* =====================================================
-       FLOATING FILTER BUTTON
-
-       Sits immediately under the categories, positioned so
-       it overlaps the beginning of the content area (the
-       media grid) rather than the categories or the top
-       bar. The negative bottom margin pulls the grid up
-       underneath it to create that overlap.
-
-       On scroll it moves upward with the page (normal
-       flow) until it reaches the top of the viewport, at
-       which point it sticks there and is allowed to
-       overlap the media content scrolling beneath it.
-    ===================================================== */
+    /* FLOATING FILTER BUTTON — sits under the categories, overlaps
+       the start of the grid, sticks to the top when scrolling. */
 
     .mobile-filter-button {
         display: flex;
         align-items: center;
         justify-content: center;
-
         position: -webkit-sticky;
         position: sticky;
         top: 14px;
-
         width: 46px;
         height: 46px;
-
         margin: 14px 0 -32px;
         padding: 0;
-
         border: 1px solid #e2e2e2;
         border-radius: 50%;
-
         background: #fff;
         color: #151515;
-
-        box-shadow:
-            0 5px 14px rgba(0, 0, 0, 0.16),
-            0 2px 5px rgba(0, 0, 0, 0.08);
-
+        box-shadow: 0 5px 14px rgba(0, 0, 0, 0.16), 0 2px 5px rgba(0, 0, 0, 0.08);
         cursor: pointer;
-
         -webkit-tap-highlight-color: transparent;
-
         z-index: 500;
     }
 
     .mobile-filter-button svg {
         width: 22px;
         height: 22px;
-
         fill: currentColor;
-
         stroke: none;
     }
 }
 
 
-/* =========================================================
-   SMALL MOBILE — TOP BAR + FILTER
-   500px AND BELOW
-========================================================= */
+/* SMALL MOBILE — TOP BAR + FILTER */
 
 @media (max-width: 500px) {
 
@@ -1772,10 +1244,8 @@ body {
 
     .mobile-filter-button {
         top: 12px;
-
         width: 42px;
         height: 42px;
-
         margin: 12px 0 -28px;
     }
 
@@ -1786,10 +1256,7 @@ body {
 }
 
 
-/* =========================================================
-   VERY SMALL PHONES — TOP BAR + FILTER
-   380px AND BELOW
-========================================================= */
+/* VERY SMALL PHONES — TOP BAR + FILTER */
 
 @media (max-width: 380px) {
 
@@ -1810,51 +1277,46 @@ body {
     .mobile-filter-button {
         width: 40px;
         height: 40px;
-
         margin: 10px 0 -26px;
     }
 }
 
+
 /* =========================================================
-   VIDEO INDICATOR
+   VIDEO DURATION BADGE
+   (replaces the old round video icon). Shows the length of
+   the video, e.g. 0:12 or 1:05. Stays invisible until the
+   video metadata has loaded, and hides on hover.
 ========================================================= */
 
 .video-indicator {
     position: absolute;
     top: 10px;
     left: 10px;
-
-    width: 32px;
-    height: 32px;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
+    min-width: 40px;
+    height: 24px;
+    padding: 0 9px;
     background: rgba(0, 0, 0, 0.58);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-
-    border-radius: 50%;
-
+    border-radius: 12px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.2px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
     z-index: 8;
-
     pointer-events: none;
-
-    transition:
-        opacity 0.18s ease,
-        transform 0.18s ease;
+    transition: opacity 0.18s ease, transform 0.18s ease;
 }
 
-.video-indicator svg {
-    width: 14px;
-    height: 14px;
-
-    fill: none;
-    stroke: #ffffff;
-    stroke-width: 1.8;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+.video-indicator:not(.has-duration) {
+    opacity: 0;
 }
 
 .video-indicator.hidden {
@@ -1869,49 +1331,33 @@ body {
 
 .card-profile {
     position: absolute;
-
     left: 50%;
     bottom: 14px;
-
     /* Leave room for the unmute (left) and share (right) buttons */
     max-width: calc(100% - 116px);
-
     display: flex;
     align-items: center;
     gap: 8px;
-
     transform: translate(-50%, 6px);
-
     color: #fff;
-
     opacity: 0;
     pointer-events: none;
-
     z-index: 10;
-
-    transition:
-        opacity 0.2s ease,
-        transform 0.2s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .media-card:hover .card-profile {
     opacity: 1;
-
     transform: translate(-50%, 0);
 }
 
 .card-profile-image {
     flex-shrink: 0;
-
     width: 32px;
     height: 32px;
-
     border-radius: 50%;
-
     object-fit: cover;
-
     border: 2px solid rgba(255, 255, 255, 0.9);
-
     background: #444;
 }
 
@@ -1920,32 +1366,23 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-
     flex-shrink: 0;
-
     width: 32px;
     height: 32px;
-
     border-radius: 50%;
-
     border: 2px solid rgba(255, 255, 255, 0.9);
-
     background: linear-gradient(135deg, #B90066, #FB0838, #F6801E);
-
     font-size: 13px;
     font-weight: 650;
 }
 
 .card-profile-name {
     min-width: 0;
-
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-
     font-size: 13px;
     font-weight: 600;
-
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 
@@ -1953,7 +1390,6 @@ body {
 
     .card-profile {
         bottom: 14px;
-
         max-width: calc(100% - 108px);
     }
 
@@ -1966,15 +1402,20 @@ body {
     .card-profile-name {
         font-size: 12px;
     }
+
+    .video-indicator {
+        height: 22px;
+        padding: 0 8px;
+        font-size: 11px;
+        border-radius: 11px;
+    }
 }
 
 @media (max-width: 500px) {
 
     .card-profile {
         bottom: 10px;
-
         gap: 6px;
-
         max-width: calc(100% - 92px);
     }
 
@@ -1986,5 +1427,10 @@ body {
 
     .card-profile-name {
         font-size: 11px;
+    }
+
+    .video-indicator {
+        top: 8px;
+        left: 8px;
     }
 }

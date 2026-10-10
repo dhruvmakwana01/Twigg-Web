@@ -18,32 +18,19 @@ const HOME_RATIO_KEY = "twigg_home_ratios";
 /* LOOP PAGE: remembers the user's mute choice for the Loop Page */
 const MUTE_KEY = "twigg_shared_muted";
 
-/*
-   LOOP PAGE: the Loop Page saves where the user left off
-   (featured card + grid order + scroll position) under this
-   key. Home reads it so that Home → Loop → another page →
-   Home brings the user back to the Loop position.
-*/
+/* LOOP PAGE: where the user left off (featured card + grid order + scroll) */
 const LOOP_STATE_KEY = "twigg_loop_state";
 
 /* Per-Loop-page positions (each Loop page remembers its own scroll) */
 const LOOP_ENTRIES_KEY = "twigg_loop_entries";
 
 
-/*
-   Shared mute state for all Home videos.
-
-   true  = videos start muted
-   false = videos start unmuted
-*/
+/* Shared mute state for all Home videos. true = start muted */
 
 let sharedVideoMuted = true;
 
 
-/*
-   Disable the browser's automatic scroll restoration so it
-   cannot fight our own restoration (visible jump).
-*/
+/* Disable the browser's automatic scroll restoration. */
 
 if ("scrollRestoration" in history) {
     history.scrollRestoration = "manual";
@@ -58,10 +45,7 @@ const isHomeReload =
     navigationEntry.type === "reload";
 
 
-/*
-   A real browser refresh creates a completely fresh
-   Twigg feed (new order, scroll back to the top).
-*/
+/* A real browser refresh creates a completely fresh feed. */
 
 if (isHomeReload) {
 
@@ -70,11 +54,7 @@ if (isHomeReload) {
     sessionStorage.removeItem(REELS_ORDER_KEY);
     sessionStorage.removeItem(REELS_STATE_KEY);
     sessionStorage.removeItem(HOME_RATIO_KEY);
-
-    /* LOOP PAGE: a fresh feed also resets the mute choice */
     sessionStorage.removeItem(MUTE_KEY);
-
-    /* LOOP PAGE: a fresh feed also forgets the Loop positions */
     sessionStorage.removeItem(LOOP_STATE_KEY);
     sessionStorage.removeItem(LOOP_ENTRIES_KEY);
 }
@@ -94,65 +74,45 @@ if (!isHomeReload) {
     let hasLoopState = false;
 
     try {
-
         hasLoopState =
-            sessionStorage.getItem(
-                LOOP_STATE_KEY
-            ) !== null;
-
+            sessionStorage.getItem(LOOP_STATE_KEY) !== null;
     } catch {
-
         hasLoopState = false;
     }
-
 
     const isBackForward =
         navigationEntry &&
         navigationEntry.type === "back_forward";
 
-
     if (hasLoopState && !isBackForward) {
 
         redirectingToLoop = true;
 
-        document.documentElement.style.visibility =
-            "hidden";
+        document.documentElement.style.visibility = "hidden";
 
-        window.location.replace(
-            "../loop/loop.html?restore=1"
-        );
+        window.location.replace("../loop/loop.html?restore=1");
 
     } else if (hasLoopState) {
 
         try {
-
-            sessionStorage.removeItem(
-                LOOP_STATE_KEY
-            );
-
+            sessionStorage.removeItem(LOOP_STATE_KEY);
         } catch { }
     }
 }
 
 
 /*
-   Cached media aspect ratios (keyed by media id).
-
-   Card heights depend on these ratios. Applying them
-   immediately lets the page be tall enough to restore
-   the exact scroll position before images have loaded.
+   Cached media aspect ratios (keyed by media id) so the page
+   is tall enough to restore the exact scroll position early.
 */
 
 let homeRatios = {};
 
 try {
-
     homeRatios = JSON.parse(
         sessionStorage.getItem(HOME_RATIO_KEY) || "{}"
     ) || {};
-
 } catch {
-
     homeRatios = {};
 }
 
@@ -202,16 +162,10 @@ const ICONS = {
 
 /* =========================================================
    RENDER HOME CARDS FROM THE SHARED MEDIA DATA
-
-   Home only decides WHICH shared items it shows ("home"
-   feed) and how they are drawn. The content itself lives in
-   ../shared/media-data.js.
 ========================================================= */
 
 const homeGrid =
-    document.querySelector(
-        ".pinterest-grid"
-    );
+    document.querySelector(".pinterest-grid");
 
 const homeFeed =
     window.TwiggMedia
@@ -286,7 +240,7 @@ if (homeGrid) {
 
 /* =========================================================
    PINTEREST GRID
-   SHUFFLE + RESTORE
+   FAIR ORDER + RESTORE
 ========================================================= */
 
 const grid = homeGrid;
@@ -295,23 +249,13 @@ const grid = homeGrid;
 if (grid) {
 
     const cards =
-        Array.from(
-            grid.querySelectorAll(
-                ".media-card"
-            )
-        );
+        Array.from(grid.querySelectorAll(".media-card"));
 
 
-    /*
-       Remember each card's original index (position in the
-       Home feed) so the saved shuffle order can be restored.
-    */
+    /* Remember each card's original index (position in the Home feed) */
 
     cards.forEach((card, index) => {
-
-        card.dataset.homeIndex =
-            String(index);
-
+        card.dataset.homeIndex = String(index);
     });
 
 
@@ -321,18 +265,11 @@ if (grid) {
     try {
 
         const storedOrder =
-            sessionStorage.getItem(
-                HOME_ORDER_KEY
-            );
-
+            sessionStorage.getItem(HOME_ORDER_KEY);
 
         if (storedOrder) {
 
-            const parsed =
-                JSON.parse(
-                    storedOrder
-                );
-
+            const parsed = JSON.parse(storedOrder);
 
             if (
                 Array.isArray(parsed) &&
@@ -345,97 +282,68 @@ if (grid) {
                         index < cards.length
                 )
             ) {
-
                 savedOrder = parsed;
             }
         }
 
     } catch {
-
         savedOrder = null;
     }
 
 
     /*
-       Create a fresh random order only when there
-       is no previously saved order.
+       No saved order → build a FAIR order: the items that
+       have had the least visibility so far get the best
+       positions (see TwiggMedia.fairOrder in media-data.js).
+       A saved order (coming back from another page) is reused
+       as-is and does NOT count as new exposure.
     */
 
     if (!savedOrder) {
 
+        const ids =
+            cards.map(card => Number(card.dataset.mediaId));
+
+        const fairIds =
+            window.TwiggMedia
+                ? window.TwiggMedia.fairOrder(
+                    ids,
+                    { columns: window.TwiggMedia.columns() }
+                )
+                : ids;
+
         savedOrder =
-            cards.map(
-                (_, index) => index
-            );
-
-
-        for (
-            let i = savedOrder.length - 1;
-            i > 0;
-            i--
-        ) {
-
-            const j =
-                Math.floor(
-                    Math.random() * (i + 1)
-                );
-
-
-            [
-                savedOrder[i],
-                savedOrder[j]
-            ] = [
-                    savedOrder[j],
-                    savedOrder[i]
-                ];
-        }
-
+            fairIds.map(id => ids.indexOf(id));
 
         try {
-
             sessionStorage.setItem(
                 HOME_ORDER_KEY,
                 JSON.stringify(savedOrder)
             );
-
         } catch { }
     }
 
 
     /* Apply the saved order immediately. */
 
-    savedOrder.forEach(
-        index => {
-
-            grid.appendChild(
-                cards[index]
-            );
-
-        }
-    );
+    savedOrder.forEach(index => {
+        grid.appendChild(cards[index]);
+    });
 
 
-    /*
-       Apply cached aspect ratios immediately so the
-       page has its final height before scroll restore.
-    */
+    /* Apply cached aspect ratios immediately. */
 
     cards.forEach(card => {
 
         const ratio =
-            homeRatios[
-            card.dataset.mediaId
-            ];
-
+            homeRatios[card.dataset.mediaId];
 
         if (ratio) {
-
             card.style.setProperty(
                 "--media-ratio",
                 String(ratio)
             );
         }
-
     });
 }
 
@@ -452,41 +360,27 @@ if (!isHomeReload && !redirectingToLoop) {
     let storedScroll = null;
 
     try {
-
         storedScroll =
-            sessionStorage.getItem(
-                HOME_SCROLL_KEY
-            );
-
+            sessionStorage.getItem(HOME_SCROLL_KEY);
     } catch {
-
         storedScroll = null;
     }
 
-
     if (storedScroll !== null) {
 
-        const parsedScroll =
-            Number(storedScroll);
-
+        const parsedScroll = Number(storedScroll);
 
         if (
             Number.isFinite(parsedScroll) &&
             parsedScroll >= 0
         ) {
-
-            savedHomeScroll =
-                parsedScroll;
+            savedHomeScroll = parsedScroll;
         }
     }
 }
 
 
-/*
-   Find the element that actually scrolls the Home page.
-   Most pages scroll the window, but some layouts scroll
-   an inner container (as .main does here).
-*/
+/* Find the element that actually scrolls the Home page. */
 
 function findHomeScroller() {
 
@@ -494,11 +388,9 @@ function findHomeScroller() {
         document.scrollingElement ||
         document.documentElement;
 
-
     const isScrollableStyle = el => {
 
-        const overflowY =
-            getComputedStyle(el).overflowY;
+        const overflowY = getComputedStyle(el).overflowY;
 
         return (
             overflowY === "auto" ||
@@ -507,26 +399,17 @@ function findHomeScroller() {
         );
     };
 
-
     if (doc.scrollHeight > doc.clientHeight + 1) {
         return doc;
     }
 
+    let el = grid ? grid.parentElement : null;
 
-    let el =
-        grid ? grid.parentElement : null;
-
-
-    while (
-        el &&
-        el !== document.documentElement
-    ) {
+    while (el && el !== document.documentElement) {
 
         if (
             el === document.body &&
-            getComputedStyle(
-                document.documentElement
-            ).overflowY === "visible"
+            getComputedStyle(document.documentElement).overflowY === "visible"
         ) {
             break;
         }
@@ -538,13 +421,11 @@ function findHomeScroller() {
         el = el.parentElement;
     }
 
-
     return doc;
 }
 
 
-const homeScroller =
-    findHomeScroller();
+const homeScroller = findHomeScroller();
 
 const homeScrollerIsDocument =
     homeScroller === document.scrollingElement ||
@@ -567,31 +448,21 @@ function jumpToScroll(y) {
             ? document.documentElement
             : homeScroller;
 
-    const previous =
-        target.style.scrollBehavior;
+    const previous = target.style.scrollBehavior;
 
-    target.style.scrollBehavior =
-        "auto";
+    target.style.scrollBehavior = "auto";
 
     if (homeScrollerIsDocument) {
-
         window.scrollTo(0, y);
-
     } else {
-
         homeScroller.scrollTop = y;
     }
 
-    target.style.scrollBehavior =
-        previous;
+    target.style.scrollBehavior = previous;
 }
 
 
-/*
-   While true, the saved position is protected: scroll
-   events caused by the restoration itself must NOT
-   overwrite the good saved value.
-*/
+/* While true, scroll events from the restoration must NOT overwrite the saved value. */
 
 let homeRestoring = false;
 
@@ -600,30 +471,21 @@ if (savedHomeScroll !== null) {
 
     jumpToScroll(savedHomeScroll);
 
-
     const reached = () =>
-        Math.abs(
-            getScrollY() - savedHomeScroll
-        ) <= 2;
-
+        Math.abs(getScrollY() - savedHomeScroll) <= 2;
 
     if (!reached()) {
 
         homeRestoring = true;
 
+        const root = document.documentElement;
 
-        const root =
-            document.documentElement;
-
-        root.style.visibility =
-            "hidden";
-
+        root.style.visibility = "hidden";
 
         let watcher = null;
         let revealTimer = null;
         let correctionTimer = null;
         let revealed = false;
-
 
         const userEvents = [
             "wheel",
@@ -631,7 +493,6 @@ if (savedHomeScroll !== null) {
             "keydown",
             "mousedown"
         ];
-
 
         const stopRestoring = () => {
 
@@ -648,15 +509,9 @@ if (savedHomeScroll !== null) {
             clearTimeout(correctionTimer);
 
             userEvents.forEach(type => {
-
-                window.removeEventListener(
-                    type,
-                    stopRestoring
-                );
-
+                window.removeEventListener(type, stopRestoring);
             });
         };
-
 
         const reveal = () => {
 
@@ -677,73 +532,49 @@ if (savedHomeScroll !== null) {
             }
         };
 
-
         const attempt = () => {
 
             jumpToScroll(savedHomeScroll);
 
             if (reached()) {
-
                 reveal();
-
                 stopRestoring();
             }
         };
 
-
         if ("ResizeObserver" in window) {
 
-            watcher =
-                new ResizeObserver(attempt);
+            watcher = new ResizeObserver(attempt);
 
-            watcher.observe(
-                document.body
-            );
+            watcher.observe(document.body);
 
             if (grid) {
                 watcher.observe(grid);
             }
         }
 
-
         userEvents.forEach(type => {
-
             window.addEventListener(
                 type,
                 stopRestoring,
                 { passive: true }
             );
-
         });
 
-
         const onLoaded = () => {
-
             attempt();
-
             reveal();
         };
 
-
         if (document.readyState === "complete") {
-
             onLoaded();
-
         } else {
-
-            window.addEventListener(
-                "load",
-                onLoaded,
-                { once: true }
-            );
+            window.addEventListener("load", onLoaded, { once: true });
         }
 
+        revealTimer = setTimeout(reveal, 1500);
 
-        revealTimer =
-            setTimeout(reveal, 1500);
-
-        correctionTimer =
-            setTimeout(stopRestoring, 3500);
+        correctionTimer = setTimeout(stopRestoring, 3500);
     }
 }
 
@@ -759,47 +590,31 @@ function saveHomeState() {
     }
 
     try {
-
         sessionStorage.setItem(
             HOME_SCROLL_KEY,
             String(getScrollY())
         );
-
     } catch { }
 }
 
 
-window.addEventListener(
-    "pagehide",
-    saveHomeState
-);
+window.addEventListener("pagehide", saveHomeState);
 
 
-document.addEventListener(
-    "visibilitychange",
-    () => {
+document.addEventListener("visibilitychange", () => {
 
-        if (document.visibilityState === "hidden") {
-
-            saveHomeState();
-        }
+    if (document.visibilityState === "hidden") {
+        saveHomeState();
     }
-);
+});
 
 
 document
     .querySelectorAll(".nav-item")
     .forEach(item => {
-
-        item.addEventListener(
-            "click",
-            () => {
-
-                saveHomeState();
-
-            }
-        );
-
+        item.addEventListener("click", () => {
+            saveHomeState();
+        });
     });
 
 
@@ -810,21 +625,12 @@ window.addEventListener(
     "scroll",
     () => {
 
-        clearTimeout(
-            homeScrollSaveTimeout
-        );
-
+        clearTimeout(homeScrollSaveTimeout);
 
         homeScrollSaveTimeout =
-            setTimeout(
-                () => {
-
-                    saveHomeState();
-
-                },
-                50
-            );
-
+            setTimeout(() => {
+                saveHomeState();
+            }, 50);
     },
     {
         passive: true,
@@ -837,51 +643,31 @@ window.addEventListener(
    MEDIA ASPECT RATIO
 ========================================================= */
 
-function setMediaAspectRatio(
-    card,
-    width,
-    height
-) {
+function setMediaAspectRatio(card, width, height) {
 
     if (!width || !height) {
         return;
     }
 
+    const ratio = width / height;
 
-    const ratio =
-        width / height;
-
-
-    if (
-        !Number.isFinite(ratio) ||
-        ratio <= 0
-    ) {
+    if (!Number.isFinite(ratio) || ratio <= 0) {
         return;
     }
 
-
-    card.style.setProperty(
-        "--media-ratio",
-        `${ratio}`
-    );
-
+    card.style.setProperty("--media-ratio", `${ratio}`);
 
     /* Cache by media id so it is applied instantly on revisit. */
 
     if (card.dataset.mediaId !== undefined) {
 
-        homeRatios[
-            card.dataset.mediaId
-        ] = ratio;
-
+        homeRatios[card.dataset.mediaId] = ratio;
 
         try {
-
             sessionStorage.setItem(
                 HOME_RATIO_KEY,
                 JSON.stringify(homeRatios)
             );
-
         } catch { }
     }
 }
@@ -891,45 +677,26 @@ function setMediaAspectRatio(
    IMAGE ASPECT RATIO
 ========================================================= */
 
-function setupImageAspectRatio(
-    card,
-    image
-) {
+function setupImageAspectRatio(card, image) {
 
     const updateRatio = () => {
-
         setMediaAspectRatio(
             card,
             image.naturalWidth,
             image.naturalHeight
         );
-
     };
 
-
     if (image.complete) {
-
         updateRatio();
-
     } else {
-
-        image.addEventListener(
-            "load",
-            updateRatio,
-            { once: true }
-        );
-
+        image.addEventListener("load", updateRatio, { once: true });
     }
-
 
     image.addEventListener(
         "error",
         () => {
-
-            card.style.removeProperty(
-                "--media-ratio"
-            );
-
+            card.style.removeProperty("--media-ratio");
         },
         { once: true }
     );
@@ -940,10 +707,7 @@ function setupImageAspectRatio(
    VIDEO THUMBNAIL + ASPECT RATIO
 ========================================================= */
 
-function setupVideoAspectRatio(
-    card,
-    video
-) {
+function setupVideoAspectRatio(card, video) {
 
     /*
        The first available video frame is captured and
@@ -953,13 +717,9 @@ function setupVideoAspectRatio(
 
     const generateVideoThumbnail = () => {
 
-        if (
-            !video.videoWidth ||
-            !video.videoHeight
-        ) {
+        if (!video.videoWidth || !video.videoHeight) {
             return;
         }
-
 
         setMediaAspectRatio(
             card,
@@ -967,33 +727,22 @@ function setupVideoAspectRatio(
             video.videoHeight
         );
 
-
         if (video.poster) {
             return;
         }
 
-
         try {
 
-            const canvas =
-                document.createElement("canvas");
+            const canvas = document.createElement("canvas");
 
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
 
-            canvas.width =
-                video.videoWidth;
-
-            canvas.height =
-                video.videoHeight;
-
-
-            const context =
-                canvas.getContext("2d");
-
+            const context = canvas.getContext("2d");
 
             if (!context) {
                 return;
             }
-
 
             const captureFrame = () => {
 
@@ -1007,42 +756,24 @@ function setupVideoAspectRatio(
                         video.videoHeight
                     );
 
-
                     video.poster =
-                        canvas.toDataURL(
-                            "image/jpeg",
-                            0.88
-                        );
+                        canvas.toDataURL("image/jpeg", 0.88);
 
                 } catch {
                     /* Canvas extraction may be blocked. */
                 }
             };
 
-
-            if (
-                Math.abs(video.currentTime) < 0.01
-            ) {
-
+            if (Math.abs(video.currentTime) < 0.01) {
                 captureFrame();
-
                 return;
             }
 
-
-            const handleSeeked = () => {
-
-                captureFrame();
-
-            };
-
-
             video.addEventListener(
                 "seeked",
-                handleSeeked,
+                captureFrame,
                 { once: true }
             );
-
 
             video.currentTime = 0;
 
@@ -1051,23 +782,15 @@ function setupVideoAspectRatio(
         }
     };
 
-
     const updateRatio = () => {
-
         setMediaAspectRatio(
             card,
             video.videoWidth,
             video.videoHeight
         );
-
     };
 
-
-    video.addEventListener(
-        "loadedmetadata",
-        updateRatio
-    );
-
+    video.addEventListener("loadedmetadata", updateRatio);
 
     video.addEventListener(
         "loadeddata",
@@ -1075,20 +798,13 @@ function setupVideoAspectRatio(
         { once: true }
     );
 
-
     if (video.readyState >= 1) {
-
         updateRatio();
-
     }
-
 
     if (video.readyState >= 2) {
-
         generateVideoThumbnail();
-
     }
-
 
     video.load();
 }
@@ -1102,32 +818,16 @@ document
     .querySelectorAll(".media-card")
     .forEach(card => {
 
-        const image =
-            card.querySelector("img");
-
-        const video =
-            card.querySelector("video");
-
+        const image = card.querySelector("img");
+        const video = card.querySelector("video");
 
         if (image) {
-
-            setupImageAspectRatio(
-                card,
-                image
-            );
-
+            setupImageAspectRatio(card, image);
         }
-
 
         if (video) {
-
-            setupVideoAspectRatio(
-                card,
-                video
-            );
-
+            setupVideoAspectRatio(card, video);
         }
-
     });
 
 
@@ -1139,57 +839,48 @@ document
     .querySelectorAll(".media-card")
     .forEach(card => {
 
-        const video =
-            card.querySelector(
-                "video"
-            );
+        const video = card.querySelector("video");
 
-        const muteButton =
-            card.querySelector(
-                ".unmute-button"
-            );
-
+        const muteButton = card.querySelector(".unmute-button");
 
         if (!video) {
             return;
         }
 
 
-        /* ----- VIDEO INDICATOR ----- */
+        /* ----- VIDEO DURATION BADGE (replaces the old video icon) ----- */
 
-        let videoIndicator =
-            card.querySelector(
-                ".video-indicator"
-            );
-
+        let videoIndicator = card.querySelector(".video-indicator");
 
         if (!videoIndicator) {
 
-            videoIndicator =
-                document.createElement(
-                    "div"
-                );
+            videoIndicator = document.createElement("div");
 
+            videoIndicator.className = "video-indicator";
 
-            videoIndicator.className =
-                "video-indicator";
-
-
-            videoIndicator.innerHTML = `
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M8 5.5v13l10-6.5-10-6.5z"></path>
-                </svg>
-            `;
-
-
-            card.appendChild(
-                videoIndicator
-            );
+            card.appendChild(videoIndicator);
         }
 
+        const showDuration = () => {
 
-        video.muted =
-            sharedVideoMuted;
+            const text =
+                window.TwiggMedia
+                    ? window.TwiggMedia.formatDuration(video.duration)
+                    : "";
+
+            if (text) {
+                videoIndicator.textContent = text;
+                videoIndicator.classList.add("has-duration");
+            }
+        };
+
+        video.addEventListener("loadedmetadata", showDuration);
+        video.addEventListener("durationchange", showDuration);
+
+        showDuration();
+
+
+        video.muted = sharedVideoMuted;
 
 
         if (muteButton) {
@@ -1198,183 +889,113 @@ document
                 sharedVideoMuted
                     ? ICONS.muted
                     : ICONS.unmuted;
-
         }
 
 
         /* ----- HOVER AUTOPLAY ----- */
 
-        card.addEventListener(
-            "mouseenter",
-            () => {
+        card.addEventListener("mouseenter", () => {
 
-                if (videoIndicator) {
-
-                    videoIndicator.classList.add(
-                        "hidden"
-                    );
-
-                }
-
-
-                video.muted =
-                    sharedVideoMuted;
-
-
-                /* Only the hovered video may have audio. */
-
-                document
-                    .querySelectorAll(
-                        ".media-card video"
-                    )
-                    .forEach(otherVideo => {
-
-                        if (otherVideo !== video) {
-
-                            otherVideo.muted =
-                                true;
-
-                        }
-
-                    });
-
-
-                if (muteButton) {
-
-                    muteButton.innerHTML =
-                        video.muted
-                            ? ICONS.muted
-                            : ICONS.unmuted;
-
-                }
-
-
-                video.play()
-                    .catch(() => { });
-
+            if (videoIndicator) {
+                videoIndicator.classList.add("hidden");
             }
-        );
+
+            video.muted = sharedVideoMuted;
+
+            /* Only the hovered video may have audio. */
+
+            document
+                .querySelectorAll(".media-card video")
+                .forEach(otherVideo => {
+                    if (otherVideo !== video) {
+                        otherVideo.muted = true;
+                    }
+                });
+
+            if (muteButton) {
+                muteButton.innerHTML =
+                    video.muted
+                        ? ICONS.muted
+                        : ICONS.unmuted;
+            }
+
+            video.play().catch(() => { });
+        });
 
 
         /* ----- HOVER END ----- */
 
-        card.addEventListener(
-            "mouseleave",
-            () => {
+        card.addEventListener("mouseleave", () => {
 
-                if (videoIndicator) {
-
-                    videoIndicator.classList.remove(
-                        "hidden"
-                    );
-
-                }
-
-
-                video.pause();
-
-                video.currentTime = 0;
-
-                video.muted = true;
-
-
-                if (muteButton) {
-
-                    muteButton.innerHTML =
-                        sharedVideoMuted
-                            ? ICONS.muted
-                            : ICONS.unmuted;
-
-                }
-
+            if (videoIndicator) {
+                videoIndicator.classList.remove("hidden");
             }
-        );
+
+            video.pause();
+
+            video.currentTime = 0;
+
+            video.muted = true;
+
+            if (muteButton) {
+                muteButton.innerHTML =
+                    sharedVideoMuted
+                        ? ICONS.muted
+                        : ICONS.unmuted;
+            }
+        });
 
 
         /* ----- MUTE / UNMUTE ----- */
 
         if (muteButton) {
 
-            muteButton.addEventListener(
-                "click",
-                event => {
+            muteButton.addEventListener("click", event => {
 
-                    event.stopPropagation();
+                event.stopPropagation();
 
+                sharedVideoMuted = !sharedVideoMuted;
 
-                    sharedVideoMuted =
-                        !sharedVideoMuted;
+                /* LOOP PAGE: remember the choice. */
 
+                try {
+                    sessionStorage.setItem(
+                        MUTE_KEY,
+                        String(sharedVideoMuted)
+                    );
+                } catch { }
 
-                    /* LOOP PAGE: remember the choice. */
+                document
+                    .querySelectorAll(".media-card video")
+                    .forEach(otherVideo => {
+                        otherVideo.muted =
+                            sharedVideoMuted ||
+                            otherVideo !== video;
+                    });
 
-                    try {
+                document
+                    .querySelectorAll(".media-card")
+                    .forEach(otherCard => {
 
-                        sessionStorage.setItem(
-                            MUTE_KEY,
-                            String(sharedVideoMuted)
-                        );
+                        const otherVideo =
+                            otherCard.querySelector("video");
 
-                    } catch { }
+                        const otherMuteButton =
+                            otherCard.querySelector(".unmute-button");
 
+                        if (otherVideo && otherMuteButton) {
+                            otherMuteButton.innerHTML =
+                                sharedVideoMuted
+                                    ? ICONS.muted
+                                    : ICONS.unmuted;
+                        }
+                    });
 
-                    document
-                        .querySelectorAll(
-                            ".media-card video"
-                        )
-                        .forEach(otherVideo => {
-
-                            otherVideo.muted =
-                                sharedVideoMuted ||
-                                otherVideo !== video;
-
-                        });
-
-
-                    document
-                        .querySelectorAll(
-                            ".media-card"
-                        )
-                        .forEach(otherCard => {
-
-                            const otherVideo =
-                                otherCard.querySelector(
-                                    "video"
-                                );
-
-                            const otherMuteButton =
-                                otherCard.querySelector(
-                                    ".unmute-button"
-                                );
-
-
-                            if (
-                                otherVideo &&
-                                otherMuteButton
-                            ) {
-
-                                otherMuteButton.innerHTML =
-                                    sharedVideoMuted
-                                        ? ICONS.muted
-                                        : ICONS.unmuted;
-
-                            }
-
-                        });
-
-
-                    if (!sharedVideoMuted) {
-
-                        video.play()
-                            .catch(() => { });
-
-                    }
-
+                if (!sharedVideoMuted) {
+                    video.play().catch(() => { });
                 }
-            );
-
+            });
         }
-
     });
 
 
@@ -1388,36 +1009,23 @@ document
 
         button.classList.remove("saved");
 
-        button.innerHTML =
-            ICONS.unsaved;
-
+        button.innerHTML = ICONS.unsaved;
 
         button.style.display = "flex";
         button.style.alignItems = "center";
         button.style.justifyContent = "center";
 
+        button.addEventListener("click", event => {
 
-        button.addEventListener(
-            "click",
-            event => {
+            event.stopPropagation();
 
-                event.stopPropagation();
+            const isSaved = button.classList.toggle("saved");
 
-
-                const isSaved =
-                    button.classList.toggle(
-                        "saved"
-                    );
-
-
-                button.innerHTML =
-                    isSaved
-                        ? ICONS.saved
-                        : ICONS.unsaved;
-
-            }
-        );
-
+            button.innerHTML =
+                isSaved
+                    ? ICONS.saved
+                    : ICONS.unsaved;
+        });
     });
 
 
@@ -1429,52 +1037,37 @@ document
     .querySelectorAll(".share-button")
     .forEach(button => {
 
-        button.addEventListener(
-            "click",
-            async event => {
+        button.addEventListener("click", async event => {
 
-                event.stopPropagation();
+            event.stopPropagation();
 
-
-                if (navigator.share) {
-
-                    try {
-
-                        await navigator.share({
-                            title: "Twigg",
-                            text: "Check out this creative work on Twigg."
-                        });
-
-                    } catch {
-                        /* User cancelled sharing. */
-                    }
-
-                    return;
-                }
-
+            if (navigator.share) {
 
                 try {
-
-                    await navigator.clipboard.writeText(
-                        window.location.href
-                    );
-
-
-                    alert(
-                        "Link copied!"
-                    );
-
+                    await navigator.share({
+                        title: "Twigg",
+                        text: "Check out this creative work on Twigg."
+                    });
                 } catch {
-
-                    alert(
-                        "Share is not supported in this browser."
-                    );
-
+                    /* User cancelled sharing. */
                 }
 
+                return;
             }
-        );
 
+            try {
+
+                await navigator.clipboard.writeText(
+                    window.location.href
+                );
+
+                alert("Link copied!");
+
+            } catch {
+
+                alert("Share is not supported in this browser.");
+            }
+        });
     });
 
 
@@ -1482,47 +1075,26 @@ document
    NAVIGATION ACTIVE STATE
 ========================================================= */
 
-const navItems =
-    document.querySelectorAll(
-        ".nav-item"
-    );
+const navItems = document.querySelectorAll(".nav-item");
 
 
 navItems.forEach(item => {
 
-    item.addEventListener(
-        "click",
-        () => {
+    item.addEventListener("click", () => {
 
-            saveHomeState();
+        saveHomeState();
 
+        navItems.forEach(navItem => {
+            navItem.classList.remove("active");
+        });
 
-            navItems.forEach(
-                navItem => {
-
-                    navItem.classList.remove(
-                        "active"
-                    );
-
-                }
-            );
-
-
-            item.classList.add(
-                "active"
-            );
-
-        }
-    );
-
+        item.classList.add("active");
+    });
 });
 
 
 /* =========================================================
    CARD PROFILE (image + name, shown on hover via CSS)
-
-   Creator data comes from the shared media data (written to
-   the card's data-profile-* attributes by buildHomeCard).
 ========================================================= */
 
 document
@@ -1534,61 +1106,44 @@ document
         }
 
         const name =
-            card.dataset.profileName ||
-            "Twigg Creator";
+            card.dataset.profileName || "Twigg Creator";
 
-        const imageSrc =
-            card.dataset.profileImage;
+        const imageSrc = card.dataset.profileImage;
 
+        const profile = document.createElement("div");
 
-        const profile =
-            document.createElement("div");
-
-        profile.className =
-            "card-profile";
-
+        profile.className = "card-profile";
 
         let avatar;
 
         if (imageSrc) {
 
-            avatar =
-                document.createElement("img");
+            avatar = document.createElement("img");
 
-            avatar.className =
-                "card-profile-image";
-
+            avatar.className = "card-profile-image";
             avatar.src = imageSrc;
             avatar.alt = name;
             avatar.loading = "lazy";
 
         } else {
 
-            avatar =
-                document.createElement("div");
+            avatar = document.createElement("div");
 
-            avatar.className =
-                "card-profile-initial";
+            avatar.className = "card-profile-initial";
 
-            avatar.textContent =
-                name.charAt(0).toUpperCase();
+            avatar.textContent = name.charAt(0).toUpperCase();
         }
 
+        const label = document.createElement("span");
 
-        const label =
-            document.createElement("span");
-
-        label.className =
-            "card-profile-name";
+        label.className = "card-profile-name";
 
         label.textContent = name;
-
 
         profile.appendChild(avatar);
         profile.appendChild(label);
 
         card.appendChild(profile);
-
     });
 
 
@@ -1605,74 +1160,43 @@ document
     .querySelectorAll(".media-card")
     .forEach(card => {
 
-        card.addEventListener(
-            "click",
-            event => {
+        card.addEventListener("click", event => {
 
-                if (
-                    event.target.closest(
-                        ".action-button"
-                    )
-                ) {
-                    return;
-                }
-
-
-                saveHomeState();
-
-
-                let homeScroll = 0;
-
-                try {
-
-                    const storedScroll =
-                        sessionStorage.getItem(
-                            HOME_SCROLL_KEY
-                        );
-
-                    const parsedScroll =
-                        Number(storedScroll);
-
-                    if (
-                        Number.isFinite(parsedScroll) &&
-                        parsedScroll >= 0
-                    ) {
-
-                        homeScroll =
-                            parsedScroll;
-                    }
-
-                } catch { }
-
-
-                const url =
-                    "../loop/loop.html?card=" +
-                    encodeURIComponent(
-                        card.dataset.mediaId
-                    ) +
-                    "&homeScroll=" +
-                    encodeURIComponent(
-                        homeScroll
-                    );
-
-
-                if (
-                    event.metaKey ||
-                    event.ctrlKey
-                ) {
-
-                    window.open(
-                        url,
-                        "_blank"
-                    );
-
-                    return;
-                }
-
-
-                window.location.href = url;
-
+            if (event.target.closest(".action-button")) {
+                return;
             }
-        );
 
+            saveHomeState();
+
+            let homeScroll = 0;
+
+            try {
+
+                const storedScroll =
+                    sessionStorage.getItem(HOME_SCROLL_KEY);
+
+                const parsedScroll = Number(storedScroll);
+
+                if (
+                    Number.isFinite(parsedScroll) &&
+                    parsedScroll >= 0
+                ) {
+                    homeScroll = parsedScroll;
+                }
+
+            } catch { }
+
+            const url =
+                "../loop/loop.html?card=" +
+                encodeURIComponent(card.dataset.mediaId) +
+                "&homeScroll=" +
+                encodeURIComponent(homeScroll);
+
+            if (event.metaKey || event.ctrlKey) {
+                window.open(url, "_blank");
+                return;
+            }
+
+            window.location.href = url;
+        });
     });

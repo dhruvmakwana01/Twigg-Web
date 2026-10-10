@@ -4,14 +4,12 @@ document.addEventListener("DOMContentLoaded", () => {
        REEL DATA
 
        Comes from the SHARED media data
-       (../shared/media-data.js). Reels only picks the items
-       flagged for the "reels" feed and maps them to the shape
-       this page renders. Ordering, playback and interactions
+       (../shared/media-data.js). Reels shows EVERY video
+       (feed "reels"). Ordering, playback and interactions
        stay in this file.
 
        Optional per-item field in the shared data:
            creator.profileImage
-
        If it is missing (or fails to load) the creator's
        initial is shown inside the circular avatar.
     ===================================================== */
@@ -28,7 +26,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 reviews: item.reviews,
                 video: item.src,
                 thumbnail: item.thumbnail,
-                profileImage: item.creator.profileImage
+                profileImage: item.creator.profileImage,
+                caption: item.caption || item.description || ""
             }))
             : [];
 
@@ -56,6 +55,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const HOME_RATIO_KEY = "twigg_home_ratios";
     const REELS_ORDER_KEY = "twigg_reels_order";
     const REELS_STATE_KEY = "twigg_reels_state";
+
+    /* Captions collapse behind "Show more" up to this width
+       (mobile AND tablet, where the info sits over the video). */
+    const COMPACT_CAPTION_QUERY = "(max-width: 1150px)";
 
     const navigationEntry =
         performance.getEntriesByType("navigation")[0];
@@ -124,10 +127,21 @@ document.addEventListener("DOMContentLoaded", () => {
             </svg>
         `,
 
+        /* MOBILE: rotate the video in place */
         rotate: `
             <svg viewBox="0 0 24 24">
                 <path d="M20 12a8 8 0 1 1-2.34-5.66"></path>
                 <path d="M20 4v5h-5"></path>
+            </svg>
+        `,
+
+        /* DESKTOP / TABLET: portrait frame → landscape frame */
+        orient: `
+            <svg viewBox="0 0 24 24">
+                <rect x="3" y="4" width="7" height="12" rx="1.6"></rect>
+                <rect x="12" y="13" width="9" height="7" rx="1.6"></rect>
+                <path d="M13 8h6.5"></path>
+                <path d="M17 5.5 19.5 8 17 10.5"></path>
             </svg>
         `,
 
@@ -161,6 +175,41 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =====================================================
+       ROTATE BUTTON ICON
+
+       Mobile (800px and below): the classic rotate icon.
+       Desktop / tablet (above 800px): the portrait →
+       landscape icon, because there the card itself turns
+       into a landscape box.
+    ===================================================== */
+
+    function getRotateIcon() {
+
+        return window.matchMedia("(max-width: 800px)").matches
+            ? icons.rotate
+            : icons.orient;
+    }
+
+
+    function refreshRotateIcons() {
+
+        const icon = getRotateIcon();
+
+        document
+            .querySelectorAll(".reel-rotate-btn")
+            .forEach(button => {
+
+                if (button.dataset.iconKind !== icon) {
+
+                    button.innerHTML = icon;
+
+                    button.dataset.iconKind = icon;
+                }
+            });
+    }
+
+
+    /* =====================================================
        CREATE STARS
     ===================================================== */
 
@@ -168,10 +217,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return Array.from(
             { length: 5 },
             () => `
-                <svg
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M12 3.5l2.6 5.4 5.9.7-4.4 4 1.2 5.9L12 16.7l-5.3 2.8 1.2-5.9-4.4-4 5.9-.7z"></path>
                 </svg>
             `
@@ -209,6 +255,34 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="reel-avatar" aria-hidden="true">
                 <span class="reel-avatar-initial">${initial}</span>
                 ${image}
+            </div>
+        `;
+    }
+
+
+    /* =====================================================
+       CAPTION HELPERS
+    ===================================================== */
+
+    function escapeHtml(value) {
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+    }
+
+    function createCaption(reel) {
+        if (!reel.caption) return "";
+
+        return `
+            <div class="reel-caption-wrap">
+                <p class="reel-caption">${escapeHtml(reel.caption)}</p>
+                <button
+                    type="button"
+                    class="reel-caption-toggle"
+                    aria-expanded="false"
+                >Show more</button>
             </div>
         `;
     }
@@ -256,6 +330,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
                         </div>
 
+                        ${createCaption(reel)}
+
                     </div>
 
 
@@ -299,7 +375,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             class="reel-rotate-btn"
                             aria-label="Rotate video"
                         >
-                            ${icons.rotate}
+                            ${getRotateIcon()}
                         </button>
 
 
@@ -365,7 +441,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =====================================================
-       RANDOMIZE REELS (ONCE) + RESTORE SAVED ORDER
+       ORDER REELS FAIRLY (ONCE) + RESTORE SAVED ORDER
+
+       A new session builds a fair order: the reels with the
+       least visibility so far go first (see
+       TwiggMedia.fairOrder in media-data.js). Coming back
+       from another page reuses the saved order and does not
+       count as new exposure.
     ===================================================== */
 
     let reelOrder = null;
@@ -397,20 +479,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!reelOrder) {
 
-        reelOrder = reels.map((_, index) => index);
+        const ids = reels.map(reel => reel.id);
 
-        for (let i = reelOrder.length - 1; i > 0; i--) {
+        const fairIds =
+            sharedMedia
+                ? sharedMedia.fairOrder(ids, { columns: 1 })
+                : ids;
 
-            const j = Math.floor(Math.random() * (i + 1));
-
-            [
-                reelOrder[i],
-                reelOrder[j]
-            ] = [
-                reelOrder[j],
-                reelOrder[i]
-            ];
-        }
+        reelOrder = fairIds.map(id => ids.indexOf(id));
 
         try {
             sessionStorage.setItem(
@@ -425,6 +501,15 @@ document.addEventListener("DOMContentLoaded", () => {
         reelOrder
             .map(i => createReel(reels[i]))
             .join("");
+
+
+    /* Remember which rotate icon each button was built with */
+
+    track
+        .querySelectorAll(".reel-rotate-btn")
+        .forEach(button => {
+            button.dataset.iconKind = getRotateIcon();
+        });
 
 
     /* =====================================================
@@ -449,9 +534,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ===================================================== */
 
     const slides =
-        Array.from(
-            track.querySelectorAll(".reel-slide")
-        );
+        Array.from(track.querySelectorAll(".reel-slide"));
 
 
     /* =====================================================
@@ -469,26 +552,18 @@ document.addEventListener("DOMContentLoaded", () => {
        MUTE BUTTON UI
     ===================================================== */
 
-    function updateMuteButton(
-        slide,
-        muted
-    ) {
+    function updateMuteButton(slide, muted) {
 
-        const button =
-            slide.querySelector(
-                ".reel-mute-btn"
-            );
+        const button = slide.querySelector(".reel-mute-btn");
 
         if (!button) {
             return;
         }
 
-
         button.innerHTML =
             muted
                 ? icons.mute
                 : icons.unmute;
-
 
         button.setAttribute(
             "aria-label",
@@ -501,16 +576,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function updateAllMuteButtons() {
 
-        slides.forEach(
-            slide => {
-
-                updateMuteButton(
-                    slide,
-                    sharedMuted
-                );
-
-            }
-        );
+        slides.forEach(slide => {
+            updateMuteButton(slide, sharedMuted);
+        });
     }
 
 
@@ -522,38 +590,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function applyMuteState() {
 
-        slides.forEach(
-            (slide, index) => {
+        slides.forEach((slide, index) => {
 
-                const video =
-                    slide.querySelector(
-                        ".reel-video"
-                    );
+            const video = slide.querySelector(".reel-video");
 
-                if (!video) {
-                    return;
-                }
-
-
-                if (index === currentIndex) {
-
-                    video.muted =
-                        sharedMuted;
-
-                } else {
-
-                    video.muted =
-                        true;
-                }
-
-
-                updateMuteButton(
-                    slide,
-                    sharedMuted
-                );
-
+            if (!video) {
+                return;
             }
-        );
+
+            if (index === currentIndex) {
+                video.muted = sharedMuted;
+            } else {
+                video.muted = true;
+            }
+
+            updateMuteButton(slide, sharedMuted);
+        });
     }
 
 
@@ -590,8 +642,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         currentIndex = savedReelsState.index;
 
-        const previousBehavior =
-            feed.style.scrollBehavior;
+        const previousBehavior = feed.style.scrollBehavior;
 
         feed.style.scrollBehavior = "auto";
         feed.scrollTop = savedReelsState.scrollTop;
@@ -627,25 +678,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
             clearTimeout(reelsSaveTimeout);
 
-            reelsSaveTimeout =
-                setTimeout(saveReelsState, 50);
+            reelsSaveTimeout = setTimeout(saveReelsState, 50);
         },
         { passive: true }
     );
 
-    window.addEventListener(
-        "pagehide",
-        saveReelsState
-    );
+    window.addEventListener("pagehide", saveReelsState);
 
     document
         .querySelectorAll(".nav-item")
         .forEach(item => {
-
-            item.addEventListener(
-                "click",
-                saveReelsState
-            );
+            item.addEventListener("click", saveReelsState);
         });
 
 
@@ -656,19 +699,11 @@ document.addEventListener("DOMContentLoaded", () => {
     function setActiveSlide(index) {
 
         slides.forEach((slide, i) => {
-
-            slide.classList.toggle(
-                "is-active",
-                i === index
-            );
-
+            slide.classList.toggle("is-active", i === index);
         });
 
-
-        /*
-         * Whenever the active Reel changes, make sure
-         * only that Reel can have sound.
-         */
+        /* Whenever the active Reel changes, make sure
+           only that Reel can have sound. */
 
         applyMuteState();
     }
@@ -681,13 +716,11 @@ document.addEventListener("DOMContentLoaded", () => {
     function updateNavButtons() {
 
         if (upButton) {
-            upButton.disabled =
-                currentIndex === 0;
+            upButton.disabled = currentIndex === 0;
         }
 
         if (downButton) {
-            downButton.disabled =
-                currentIndex === slides.length - 1;
+            downButton.disabled = currentIndex === slides.length - 1;
         }
     }
 
@@ -712,9 +745,7 @@ document.addEventListener("DOMContentLoaded", () => {
         updateNavButtons();
 
         feed.scrollTo({
-            top:
-                currentIndex *
-                feed.clientHeight,
+            top: currentIndex * feed.clientHeight,
             behavior: "smooth"
         });
 
@@ -728,35 +759,76 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (upButton) {
 
-        upButton.addEventListener(
-            "click",
-            event => {
+        upButton.addEventListener("click", event => {
 
-                event.preventDefault();
-                event.stopPropagation();
+            event.preventDefault();
+            event.stopPropagation();
 
-                goToIndex(
-                    currentIndex - 1
-                );
-            }
-        );
+            goToIndex(currentIndex - 1);
+        });
     }
 
 
     if (downButton) {
 
-        downButton.addEventListener(
-            "click",
-            event => {
+        downButton.addEventListener("click", event => {
 
-                event.preventDefault();
-                event.stopPropagation();
+            event.preventDefault();
+            event.stopPropagation();
 
-                goToIndex(
-                    currentIndex + 1
-                );
+            goToIndex(currentIndex + 1);
+        });
+    }
+
+
+    /* =====================================================
+       CAPTION: SHOW MORE / SHOW LESS (MOBILE + TABLET)
+    ===================================================== */
+
+    function collapseCaption(slide) {
+
+        const info = slide.querySelector(".reel-info-outside");
+        const toggle = slide.querySelector(".reel-caption-toggle");
+
+        if (info) info.classList.remove("is-caption-expanded");
+
+        if (toggle) {
+            toggle.textContent = "Show more";
+            toggle.setAttribute("aria-expanded", "false");
+        }
+    }
+
+
+    /* Mobile + tablet: captions stay hidden until Show more is tapped. */
+
+    function refreshCaptionToggles() {
+
+        const compact =
+            window.matchMedia(COMPACT_CAPTION_QUERY).matches;
+
+        slides.forEach(slide => {
+
+            const caption = slide.querySelector(".reel-caption");
+            const toggle = slide.querySelector(".reel-caption-toggle");
+            const info = slide.querySelector(".reel-info-outside");
+
+            if (!caption || !toggle || !info) return;
+
+            if (!compact) {
+                info.classList.remove("is-caption-expanded");
+                toggle.hidden = true;
+                toggle.textContent = "Show more";
+                toggle.setAttribute("aria-expanded", "false");
+                return;
             }
-        );
+
+            /* Always show the toggle on mobile/tablet when a caption exists. */
+            toggle.hidden = false;
+
+            const expanded = info.classList.contains("is-caption-expanded");
+            toggle.textContent = expanded ? "Show less" : "Show more";
+            toggle.setAttribute("aria-expanded", String(expanded));
+        });
     }
 
 
@@ -768,62 +840,41 @@ document.addEventListener("DOMContentLoaded", () => {
 
         slides.forEach((slide, index) => {
 
-            const video =
-                slide.querySelector(".reel-video");
+            const video = slide.querySelector(".reel-video");
 
             if (!video) return;
 
-
             if (index === currentIndex) {
 
-                /*
-                 * The active Reel inherits the shared
-                 * mute setting.
-                 */
+                /* The active Reel inherits the shared mute setting. */
 
-                video.muted =
-                    sharedMuted;
+                video.muted = sharedMuted;
 
-                updateMuteButton(
-                    slide,
-                    sharedMuted
-                );
-
+                updateMuteButton(slide, sharedMuted);
 
                 if (!slide.dataset.userPaused) {
 
                     video.play()
                         .then(() => {
-
-                            slide.classList.remove(
-                                "is-paused"
-                            );
-
+                            slide.classList.remove("is-paused");
                         })
                         .catch(() => {});
-
                 }
 
                 return;
             }
 
-
-            /*
-             * Every non-active Reel is always muted.
-             */
+            /* Every non-active Reel is always muted. */
 
             video.pause();
             video.muted = true;
             video.currentTime = 0;
 
-            updateMuteButton(
-                slide,
-                sharedMuted
-            );
+            collapseCaption(slide);
 
-            slide.classList.remove(
-                "is-paused"
-            );
+            updateMuteButton(slide, sharedMuted);
+
+            slide.classList.remove("is-paused");
 
             delete slide.dataset.userPaused;
         });
@@ -848,12 +899,8 @@ document.addEventListener("DOMContentLoaded", () => {
     function isFallbackFullscreenActive(slide) {
 
         return (
-            slide.classList.contains(
-                "mobile-reel-fullscreen"
-            ) ||
-            slide.classList.contains(
-                "tablet-reel-fullscreen"
-            )
+            slide.classList.contains("mobile-reel-fullscreen") ||
+            slide.classList.contains("tablet-reel-fullscreen")
         );
     }
 
@@ -889,9 +936,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function isMobileRotateView() {
 
-        return window.matchMedia(
-            "(max-width: 800px)"
-        ).matches;
+        return window.matchMedia("(max-width: 800px)").matches;
     }
 
 
@@ -899,21 +944,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!video) return;
 
-        video.classList.remove(
-            "reel-video-rotated"
-        );
+        video.classList.remove("reel-video-rotated");
 
         video.style.width = "";
         video.style.height = "";
         video.style.transform = "";
 
-        video.style.removeProperty(
-            "--reel-media-rotate-w"
-        );
-
-        video.style.removeProperty(
-            "--reel-media-rotate-h"
-        );
+        video.style.removeProperty("--reel-media-rotate-w");
+        video.style.removeProperty("--reel-media-rotate-h");
     }
 
 
@@ -921,41 +959,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!card) return;
 
-        card.classList.remove(
-            "reel-card-rotated"
-        );
+        card.classList.remove("reel-card-rotated");
 
-        card.style.removeProperty(
-            "--reel-rotate-w"
-        );
+        card.style.removeProperty("--reel-rotate-w");
+        card.style.removeProperty("--reel-rotate-h");
 
-        card.style.removeProperty(
-            "--reel-rotate-h"
-        );
-
-        const slide =
-            card.closest(".reel-slide");
+        const slide = card.closest(".reel-slide");
 
         if (slide) {
 
-            slide.classList.remove(
-                "reel-slide-rotated"
-            );
+            slide.classList.remove("reel-slide-rotated");
 
-            slide.style.removeProperty(
-                "--reel-rotate-w"
-            );
-
-            slide.style.removeProperty(
-                "--reel-rotate-h"
-            );
+            slide.style.removeProperty("--reel-rotate-w");
+            slide.style.removeProperty("--reel-rotate-h");
         }
 
         if (video) {
-
-            video.classList.remove(
-                "reel-video-contain"
-            );
+            video.classList.remove("reel-video-contain");
         }
     }
 
@@ -973,31 +993,16 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        video.classList.add(
-            "reel-video-rotated"
-        );
+        video.classList.add("reel-video-rotated");
 
-        /*
-         * Swap the rendered box so that once rotated
-         * 90deg, its bounding box exactly matches the
-         * card which always stays 9:16 on mobile.
-         */
+        /* Swap the rendered box so that once rotated 90deg,
+           its bounding box exactly matches the 9:16 card. */
 
-        video.style.setProperty(
-            "--reel-media-rotate-w",
-            `${height}px`
-        );
+        video.style.setProperty("--reel-media-rotate-w", `${height}px`);
+        video.style.setProperty("--reel-media-rotate-h", `${width}px`);
 
-        video.style.setProperty(
-            "--reel-media-rotate-h",
-            `${width}px`
-        );
-
-        video.style.width =
-            `${height}px`;
-
-        video.style.height =
-            `${width}px`;
+        video.style.width = `${height}px`;
+        video.style.height = `${width}px`;
 
         video.style.transform =
             "translate(-50%, -50%) rotate(90deg)";
@@ -1015,32 +1020,22 @@ document.addEventListener("DOMContentLoaded", () => {
             isFallbackFullscreenActive(slide);
 
         if (inFullscreen) {
-
             return window.innerWidth * 0.96;
         }
 
-
-        const row =
-            slide.querySelector(".reel-row");
+        const row = slide.querySelector(".reel-row");
 
         if (!row) {
             return window.innerWidth * 0.6;
         }
 
-
         const rowWidth = row.clientWidth;
 
-        /*
-         * Leave room for the info panel and action
-         * buttons that sit beside the card.
-         */
+        /* Leave room for the info panel and action buttons. */
 
         const reserved = 480;
 
-        return Math.max(
-            rowWidth - reserved,
-            320
-        );
+        return Math.max(rowWidth - reserved, 320);
     }
 
 
@@ -1048,38 +1043,24 @@ document.addEventListener("DOMContentLoaded", () => {
        DESKTOP / TABLET: rotate the card to landscape
     ----------------------------------------------------- */
 
-    function rotateCardToLandscape(
-        slide,
-        card,
-        video
-    ) {
+    function rotateCardToLandscape(slide, card, video) {
 
         const inFullscreen =
             isRealFullscreenActive() ||
             isFallbackFullscreenActive(slide);
 
         const wasRotated =
-            card.classList.contains(
-                "reel-card-rotated"
-            );
+            card.classList.contains("reel-card-rotated");
 
         if (wasRotated) {
 
-            card.classList.remove(
-                "reel-card-rotated"
-            );
+            card.classList.remove("reel-card-rotated");
 
-            card.style.removeProperty(
-                "--reel-rotate-w"
-            );
-
-            card.style.removeProperty(
-                "--reel-rotate-h"
-            );
+            card.style.removeProperty("--reel-rotate-w");
+            card.style.removeProperty("--reel-rotate-h");
 
             void card.offsetHeight;
         }
-
 
         const naturalHeight =
             inFullscreen
@@ -1090,95 +1071,48 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        let targetHeight = naturalHeight;
+        let targetWidth = targetHeight * (16 / 9);
 
-        let targetHeight =
-            naturalHeight;
-
-        let targetWidth =
-            targetHeight *
-            (16 / 9);
-
-
-        const availableWidth =
-            getAvailableCardWidth(slide);
-
+        const availableWidth = getAvailableCardWidth(slide);
 
         if (targetWidth > availableWidth) {
 
-            targetWidth =
-                availableWidth;
+            targetWidth = availableWidth;
 
-            targetHeight =
-                targetWidth *
-                (9 / 16);
+            targetHeight = targetWidth * (9 / 16);
         }
-
 
         if (inFullscreen) {
 
-            const maxHeight =
-                window.innerHeight *
-                0.98;
+            const maxHeight = window.innerHeight * 0.98;
 
             if (targetHeight > maxHeight) {
 
-                targetHeight =
-                    maxHeight;
+                targetHeight = maxHeight;
 
-                targetWidth =
-                    targetHeight *
-                    (16 / 9);
+                targetWidth = targetHeight * (16 / 9);
             }
         }
 
-
         /* CARD ROTATION SIZE */
 
-        card.style.setProperty(
-            "--reel-rotate-w",
-            `${targetWidth}px`
-        );
+        card.style.setProperty("--reel-rotate-w", `${targetWidth}px`);
+        card.style.setProperty("--reel-rotate-h", `${targetHeight}px`);
 
-        card.style.setProperty(
-            "--reel-rotate-h",
-            `${targetHeight}px`
-        );
+        /* SLIDE ROTATION SIZE: the slide receives the same
+           dimensions so the outside info and action rail can
+           position themselves relative to the landscape card. */
 
+        slide.style.setProperty("--reel-rotate-w", `${targetWidth}px`);
+        slide.style.setProperty("--reel-rotate-h", `${targetHeight}px`);
 
-        /*
-           SLIDE ROTATION SIZE
+        slide.classList.add("reel-slide-rotated");
 
-           The slide receives the exact same dimensions
-           so the outside information and action rail can
-           position themselves relative to the landscape
-           card.
-        */
-
-        slide.style.setProperty(
-            "--reel-rotate-w",
-            `${targetWidth}px`
-        );
-
-        slide.style.setProperty(
-            "--reel-rotate-h",
-            `${targetHeight}px`
-        );
-
-        slide.classList.add(
-            "reel-slide-rotated"
-        );
-
-
-        card.classList.add(
-            "reel-card-rotated"
-        );
-
+        card.classList.add("reel-card-rotated");
 
         if (video) {
-
-            video.classList.add(
-                "reel-video-contain"
-            );
+            video.classList.add("reel-video-contain");
         }
     }
 
@@ -1189,68 +1123,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function applyRotationState(slide) {
 
-        const card =
-            slide.querySelector(
-                ".reel-card"
-            );
-
-        const video =
-            slide.querySelector(
-                ".reel-video"
-            );
+        const card = slide.querySelector(".reel-card");
+        const video = slide.querySelector(".reel-video");
 
         if (!card || !video) {
             return;
         }
 
-
-        const rotated =
-            slide.dataset.rotated === "true";
-
+        const rotated = slide.dataset.rotated === "true";
 
         if (isMobileRotateView()) {
 
-            resetCardRotation(
-                card,
-                video
-            );
-
+            resetCardRotation(card, video);
 
             if (rotated) {
-
-                rotateVideoInPlace(
-                    card,
-                    video
-                );
-
+                rotateVideoInPlace(card, video);
             } else {
-
-                resetVideoRotation(
-                    video
-                );
+                resetVideoRotation(video);
             }
 
         } else {
 
-            resetVideoRotation(
-                video
-            );
-
+            resetVideoRotation(video);
 
             if (rotated) {
-
-                rotateCardToLandscape(
-                    slide,
-                    card,
-                    video
-                );
-
+                rotateCardToLandscape(slide, card, video);
             } else {
-
-                resetCardRotation(
-                    card,
-                    video
-                );
+                resetCardRotation(card, video);
             }
         }
     }
@@ -1260,26 +1159,15 @@ document.addEventListener("DOMContentLoaded", () => {
        ROTATE BUTTON STATE
     ===================================================== */
 
-    function updateRotateButton(
-        slide,
-        rotated
-    ) {
+    function updateRotateButton(slide, rotated) {
 
-        const button =
-            slide.querySelector(
-                ".reel-rotate-btn"
-            );
+        const button = slide.querySelector(".reel-rotate-btn");
 
         if (!button) {
             return;
         }
 
-
-        button.classList.toggle(
-            "is-rotated",
-            rotated
-        );
-
+        button.classList.toggle("is-rotated", rotated);
 
         button.setAttribute(
             "aria-label",
@@ -1296,50 +1184,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function toggleRotate(slide) {
 
-        const rotated =
-            slide.dataset.rotated === "true";
+        const rotated = slide.dataset.rotated === "true";
 
-        const next =
-            !rotated;
+        const next = !rotated;
 
-        slide.dataset.rotated =
-            String(next);
+        slide.dataset.rotated = String(next);
 
-        applyRotationState(
-            slide
-        );
+        applyRotationState(slide);
 
-        updateRotateButton(
-            slide,
-            next
-        );
+        updateRotateButton(slide, next);
     }
 
 
     /* =====================================================
-       REAPPLY AFTER A LAYOUT CHANGE
-       (fullscreen enter/exit)
+       REAPPLY AFTER A LAYOUT CHANGE (fullscreen enter/exit)
 
        Never changes the rotation state itself,
        only re-measures sizing.
     ===================================================== */
 
-    function reapplyRotationAfterLayoutChange(
-        slide
-    ) {
+    function reapplyRotationAfterLayoutChange(slide) {
 
         if (!slide) {
             return;
         }
 
-
         requestAnimationFrame(() => {
 
             requestAnimationFrame(() => {
 
-                applyRotationState(
-                    slide
-                );
+                applyRotationState(slide);
 
             });
 
@@ -1353,37 +1227,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let rotateResizeTimeout = null;
 
+    window.addEventListener("resize", () => {
 
-    window.addEventListener(
-        "resize",
-        () => {
+        /* Swap the rotate icon when crossing the mobile breakpoint */
+        refreshRotateIcons();
 
-            clearTimeout(
-                rotateResizeTimeout
-            );
+        clearTimeout(rotateResizeTimeout);
 
+        rotateResizeTimeout =
+            setTimeout(() => {
 
-            rotateResizeTimeout =
-                setTimeout(() => {
+                slides.forEach(slide => {
 
-                    slides.forEach(
-                        slide => {
+                    if (slide.dataset.rotated === "true") {
 
-                            if (
-                                slide.dataset.rotated ===
-                                "true"
-                            ) {
+                        applyRotationState(slide);
+                    }
+                });
 
-                                applyRotationState(
-                                    slide
-                                );
-                            }
-                        }
-                    );
-
-                }, 150);
-        }
-    );
+            }, 150);
+    });
 
 
     /* =====================================================
@@ -1394,59 +1257,39 @@ document.addEventListener("DOMContentLoaded", () => {
         new IntersectionObserver(
             entries => {
 
-                /*
-                 * Never let the observer change the
-                 * active reel while fullscreen is active.
-                 */
+                /* Never let the observer change the active
+                   reel while fullscreen is active. */
 
-                if (
-                    isAnyFullscreenActive()
-                ) {
+                if (isAnyFullscreenActive()) {
                     return;
                 }
 
-
                 const visibleSlides =
                     entries
-                        .filter(
-                            entry =>
-                                entry.isIntersecting
-                        )
+                        .filter(entry => entry.isIntersecting)
                         .sort(
                             (a, b) =>
                                 b.intersectionRatio -
                                 a.intersectionRatio
                         );
 
-
                 if (!visibleSlides.length) {
                     return;
                 }
 
+                const visibleSlide = visibleSlides[0].target;
 
-                const visibleSlide =
-                    visibleSlides[0].target;
-
-
-                const index =
-                    slides.indexOf(
-                        visibleSlide
-                    );
-
+                const index = slides.indexOf(visibleSlide);
 
                 if (index === -1) {
                     return;
                 }
 
-
                 if (index !== currentIndex) {
 
-                    currentIndex =
-                        index;
+                    currentIndex = index;
 
-                    setActiveSlide(
-                        currentIndex
-                    );
+                    setActiveSlide(currentIndex);
 
                     updateNavButtons();
 
@@ -1455,594 +1298,388 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             {
                 root: feed,
-                threshold: [
-                    0.55,
-                    0.7,
-                    0.85,
-                    1
-                ]
+                threshold: [0.55, 0.7, 0.85, 1]
             }
         );
 
 
-    slides.forEach(
-        slide => {
-            observer.observe(slide);
-        }
-    );
+    slides.forEach(slide => {
+        observer.observe(slide);
+    });
 
 
     /* =====================================================
        VIDEO STATE + PROGRESS (click / tap / drag to seek)
     ===================================================== */
 
-    slides.forEach(
-        slide => {
+    slides.forEach(slide => {
 
-            const video =
-                slide.querySelector(
-                    ".reel-video"
-                );
+        const video = slide.querySelector(".reel-video");
+        const fill = slide.querySelector(".reel-progress-fill");
+        const progress = slide.querySelector(".reel-progress");
 
-            const fill =
-                slide.querySelector(
-                    ".reel-progress-fill"
-                );
-
-            const progress =
-                slide.querySelector(
-                    ".reel-progress"
-                );
+        if (!video) {
+            return;
+        }
 
 
-            if (!video) {
+        /* FIRST FRAME: keep non-active videos at their beginning. */
+
+        video.addEventListener(
+            "loadeddata",
+            () => {
+
+                if (slides.indexOf(slide) !== currentIndex) {
+
+                    video.pause();
+                    video.currentTime = 0;
+                    video.muted = true;
+                }
+
+            },
+            { once: true }
+        );
+
+
+        /* PLAY */
+
+        video.addEventListener("play", () => {
+            slide.classList.remove("is-paused");
+        });
+
+
+        /* PLAYING */
+
+        video.addEventListener("playing", () => {
+            slide.classList.remove("is-paused");
+        });
+
+
+        /* PAUSE: only show the play indicator when the
+           user deliberately paused this reel. */
+
+        video.addEventListener("pause", () => {
+
+            if (slide.dataset.userPaused === "true") {
+                slide.classList.add("is-paused");
+            }
+        });
+
+
+        /* PROGRESS */
+
+        function updateProgress() {
+
+            if (!fill) {
                 return;
             }
 
+            if (!video.duration) {
 
-            /* ---------------------------------------------
-               FIRST FRAME
+                fill.style.width = "0%";
 
-               The browser loads the actual video and
-               displays its own first decoded frame.
-            --------------------------------------------- */
-
-            video.addEventListener(
-                "loadeddata",
-                () => {
-
-                    /*
-                     * Keep non-active videos at their
-                     * beginning so their own first frame
-                     * remains available visually.
-                     */
-
-                    if (
-                        slides.indexOf(slide) !==
-                        currentIndex
-                    ) {
-
-                        video.pause();
-                        video.currentTime = 0;
-                        video.muted = true;
-                    }
-
-                },
-                { once: true }
-            );
-
-
-            /* ---------------------------------------------
-               PLAY
-            --------------------------------------------- */
-
-            video.addEventListener(
-                "play",
-                () => {
-
-                    slide.classList.remove(
-                        "is-paused"
-                    );
-
-                }
-            );
-
-
-            /* ---------------------------------------------
-               PLAYING
-            --------------------------------------------- */
-
-            video.addEventListener(
-                "playing",
-                () => {
-
-                    slide.classList.remove(
-                        "is-paused"
-                    );
-
-                }
-            );
-
-
-            /* ---------------------------------------------
-               PAUSE
-            --------------------------------------------- */
-
-            video.addEventListener(
-                "pause",
-                () => {
-
-                    /*
-                     * Only show the play indicator when
-                     * the user deliberately paused this reel.
-                     */
-
-                    if (
-                        slide.dataset.userPaused ===
-                        "true"
-                    ) {
-
-                        slide.classList.add(
-                            "is-paused"
-                        );
-                    }
-                }
-            );
-
-
-            /* ---------------------------------------------
-               PROGRESS
-            --------------------------------------------- */
-
-            function updateProgress() {
-
-                if (!fill) {
-                    return;
-                }
-
-
-                if (!video.duration) {
-
-                    fill.style.width =
-                        "0%";
-
-                    return;
-                }
-
-
-                const progressValue =
-                    (
-                        video.currentTime /
-                        video.duration
-                    ) * 100;
-
-
-                fill.style.width =
-                    `${progressValue}%`;
+                return;
             }
 
+            const progressValue =
+                (video.currentTime / video.duration) * 100;
 
-            video.addEventListener(
-                "timeupdate",
-                updateProgress
-            );
-
-
-            video.addEventListener(
-                "loadedmetadata",
-                updateProgress
-            );
-
-
-            video.addEventListener(
-                "seeked",
-                updateProgress
-            );
-
-
-            /* ---------------------------------------------
-               SEEK: click / tap / drag the progress bar
-
-               Works exactly like the Loop progress bar:
-               pointer down seeks, dragging scrubs, and the
-               fill follows the pointer immediately.
-            --------------------------------------------- */
-
-            if (progress) {
-
-                let dragging = false;
-
-                const seek = event => {
-
-                    const rect =
-                        progress.getBoundingClientRect();
-
-                    if (!rect.width || !video.duration) {
-                        return;
-                    }
-
-                    const fraction =
-                        Math.min(
-                            1,
-                            Math.max(
-                                0,
-                                (event.clientX - rect.left) /
-                                rect.width
-                            )
-                        );
-
-                    video.currentTime =
-                        Math.min(
-                            fraction * video.duration,
-                            Math.max(video.duration - 0.05, 0)
-                        );
-
-                    if (fill) {
-
-                        fill.style.width =
-                            `${fraction * 100}%`;
-                    }
-                };
-
-
-                progress.addEventListener(
-                    "pointerdown",
-                    event => {
-
-                        /* Never start a page swipe / play-pause */
-                        event.stopPropagation();
-
-                        dragging = true;
-
-                        progress.classList.add(
-                            "is-scrubbing"
-                        );
-
-                        try {
-                            progress.setPointerCapture(
-                                event.pointerId
-                            );
-                        } catch {}
-
-                        seek(event);
-                    }
-                );
-
-
-                progress.addEventListener(
-                    "pointermove",
-                    event => {
-
-                        if (dragging) {
-                            seek(event);
-                        }
-                    }
-                );
-
-
-                const stopDrag = () => {
-
-                    dragging = false;
-
-                    progress.classList.remove(
-                        "is-scrubbing"
-                    );
-                };
-
-
-                progress.addEventListener(
-                    "pointerup",
-                    stopDrag
-                );
-
-                progress.addEventListener(
-                    "pointercancel",
-                    stopDrag
-                );
-            }
-
+            fill.style.width = `${progressValue}%`;
         }
-    );
+
+
+        video.addEventListener("timeupdate", updateProgress);
+
+        video.addEventListener("loadedmetadata", updateProgress);
+
+        video.addEventListener("seeked", updateProgress);
+
+
+        /* SEEK: click / tap / drag the progress bar
+           (works exactly like the Loop progress bar) */
+
+        if (progress) {
+
+            let dragging = false;
+
+            const seek = event => {
+
+                const rect = progress.getBoundingClientRect();
+
+                if (!rect.width || !video.duration) {
+                    return;
+                }
+
+                const fraction =
+                    Math.min(
+                        1,
+                        Math.max(
+                            0,
+                            (event.clientX - rect.left) / rect.width
+                        )
+                    );
+
+                video.currentTime =
+                    Math.min(
+                        fraction * video.duration,
+                        Math.max(video.duration - 0.05, 0)
+                    );
+
+                if (fill) {
+                    fill.style.width = `${fraction * 100}%`;
+                }
+            };
+
+
+            progress.addEventListener("pointerdown", event => {
+
+                /* Never start a page swipe / play-pause */
+                event.stopPropagation();
+
+                dragging = true;
+
+                progress.classList.add("is-scrubbing");
+
+                try {
+                    progress.setPointerCapture(event.pointerId);
+                } catch {}
+
+                seek(event);
+            });
+
+
+            progress.addEventListener("pointermove", event => {
+
+                if (dragging) {
+                    seek(event);
+                }
+            });
+
+
+            const stopDrag = () => {
+
+                dragging = false;
+
+                progress.classList.remove("is-scrubbing");
+            };
+
+
+            progress.addEventListener("pointerup", stopDrag);
+
+            progress.addEventListener("pointercancel", stopDrag);
+        }
+    });
 
 
     /* =====================================================
        CLICK EVENTS
     ===================================================== */
 
-    track.addEventListener(
-        "click",
-        event => {
+    track.addEventListener("click", event => {
 
-            const slide =
-                event.target.closest(
-                    ".reel-slide"
-                );
+        const slide = event.target.closest(".reel-slide");
 
+        if (!slide) {
+            return;
+        }
 
-            if (!slide) {
-                return;
-            }
 
+        /* PROGRESS BAR: seeking is handled by the pointer
+           events above. A click on the bar must never also
+           play / pause the video. */
 
-            /* -----------------------------------------
-               PROGRESS BAR
+        if (event.target.closest(".reel-progress")) {
 
-               Seeking is handled by the pointer events
-               above. A click on the bar must never also
-               play / pause the video.
-            ----------------------------------------- */
+            event.stopPropagation();
 
-            if (
-                event.target.closest(
-                    ".reel-progress"
-                )
-            ) {
+            return;
+        }
 
-                event.stopPropagation();
 
-                return;
-            }
+        /* CAPTION: show more / show less (mobile + tablet) */
 
+        const captionToggle =
+            event.target.closest(".reel-caption-toggle");
 
-            /* -----------------------------------------
-               MUTE
-            ----------------------------------------- */
+        if (captionToggle) {
 
-            const muteButton =
-                event.target.closest(
-                    ".reel-mute-btn"
-                );
+            event.stopPropagation();
 
+            const info = captionToggle.closest(".reel-info-outside");
 
-            if (muteButton) {
+            if (!info) return;
 
-                event.stopPropagation();
+            const open = info.classList.toggle("is-caption-expanded");
 
+            captionToggle.hidden = false;
+            captionToggle.textContent = open ? "Show less" : "Show more";
 
-                const video =
-                    slide.querySelector(
-                        ".reel-video"
-                    );
+            captionToggle.setAttribute("aria-expanded", String(open));
 
+            return;
+        }
 
-                if (!video) {
-                    return;
-                }
 
+        /* MUTE */
 
-                /*
-                 * Mute/unmute is a shared feed-wide
-                 * setting, not an individual Reel setting.
-                 */
+        const muteButton = event.target.closest(".reel-mute-btn");
 
-                sharedMuted =
-                    !sharedMuted;
+        if (muteButton) {
 
+            event.stopPropagation();
 
-                /*
-                 * Apply the new shared setting to the
-                 * active Reel while keeping every other
-                 * Reel muted.
-                 */
-
-                applyMuteState();
-
-
-                return;
-            }
-
-
-            /* -----------------------------------------
-               FULLSCREEN
-            ----------------------------------------- */
-
-            const fullscreenButton =
-                event.target.closest(
-                    ".reel-fullscreen-btn"
-                );
-
-
-            if (fullscreenButton) {
-
-                event.stopPropagation();
-
-                toggleFullscreen(
-                    slide
-                );
-
-                return;
-            }
-
-
-            /* -----------------------------------------
-               ROTATE
-            ----------------------------------------- */
-
-            const rotateButton =
-                event.target.closest(
-                    ".reel-rotate-btn"
-                );
-
-
-            if (rotateButton) {
-
-                event.stopPropagation();
-
-                toggleRotate(
-                    slide
-                );
-
-                return;
-            }
-
-
-            /* -----------------------------------------
-               LIKE
-            ----------------------------------------- */
-
-            const likeButton =
-                event.target.closest(
-                    ".reel-like-btn"
-                );
-
-
-            if (likeButton) {
-
-                event.stopPropagation();
-
-                likeButton.classList.toggle(
-                    "is-liked"
-                );
-
-                return;
-            }
-
-
-            /* -----------------------------------------
-               SAVE
-            ----------------------------------------- */
-
-            const saveButton =
-                event.target.closest(
-                    ".reel-save-btn"
-                );
-
-
-            if (saveButton) {
-
-                event.stopPropagation();
-
-                saveButton.classList.toggle(
-                    "is-saved"
-                );
-
-                return;
-            }
-
-
-            /* -----------------------------------------
-               SHARE
-            ----------------------------------------- */
-
-            const shareButton =
-                event.target.closest(
-                    ".reel-share-btn"
-                );
-
-
-            if (shareButton) {
-
-                event.stopPropagation();
-
-                shareReel();
-
-                return;
-            }
-
-
-            /* -----------------------------------------
-               REPORT
-            ----------------------------------------- */
-
-            const reportButton =
-                event.target.closest(
-                    ".reel-report-btn"
-                );
-
-
-            if (reportButton) {
-
-                event.stopPropagation();
-
-
-                if (
-                    !reportButton.classList.contains(
-                        "is-reported"
-                    )
-                ) {
-
-                    reportButton.classList.add(
-                        "is-reported"
-                    );
-                }
-
-
-                return;
-            }
-
-
-            /* -----------------------------------------
-               VIDEO PLAY / PAUSE
-            ----------------------------------------- */
-
-            if (
-                slide !== slides[currentIndex] ||
-                !event.target.closest(
-                    ".reel-card"
-                )
-            ) {
-                return;
-            }
-
-
-            const video =
-                slide.querySelector(
-                    ".reel-video"
-                );
-
+            const video = slide.querySelector(".reel-video");
 
             if (!video) {
                 return;
             }
 
+            /* Mute/unmute is a shared feed-wide setting. */
 
-            if (video.paused) {
+            sharedMuted = !sharedMuted;
 
-                delete slide.dataset.userPaused;
+            /* Apply to the active Reel; every other Reel stays muted. */
 
+            applyMuteState();
 
-                /*
-                 * Reapply the shared mute state before
-                 * manually playing the active Reel.
-                 */
-
-                video.muted =
-                    sharedMuted;
-
-
-                video.play()
-                    .then(() => {
-
-                        slide.classList.remove(
-                            "is-paused"
-                        );
-
-                    })
-                    .catch(() => {});
-
-
-            } else {
-
-                video.pause();
-
-                slide.dataset.userPaused =
-                    "true";
-
-                slide.classList.add(
-                    "is-paused"
-                );
-            }
+            return;
         }
-    );
+
+
+        /* FULLSCREEN */
+
+        const fullscreenButton =
+            event.target.closest(".reel-fullscreen-btn");
+
+        if (fullscreenButton) {
+
+            event.stopPropagation();
+
+            toggleFullscreen(slide);
+
+            return;
+        }
+
+
+        /* ROTATE */
+
+        const rotateButton =
+            event.target.closest(".reel-rotate-btn");
+
+        if (rotateButton) {
+
+            event.stopPropagation();
+
+            toggleRotate(slide);
+
+            return;
+        }
+
+
+        /* LIKE */
+
+        const likeButton = event.target.closest(".reel-like-btn");
+
+        if (likeButton) {
+
+            event.stopPropagation();
+
+            likeButton.classList.toggle("is-liked");
+
+            return;
+        }
+
+
+        /* SAVE */
+
+        const saveButton = event.target.closest(".reel-save-btn");
+
+        if (saveButton) {
+
+            event.stopPropagation();
+
+            saveButton.classList.toggle("is-saved");
+
+            return;
+        }
+
+
+        /* SHARE */
+
+        const shareButton = event.target.closest(".reel-share-btn");
+
+        if (shareButton) {
+
+            event.stopPropagation();
+
+            shareReel();
+
+            return;
+        }
+
+
+        /* REPORT */
+
+        const reportButton = event.target.closest(".reel-report-btn");
+
+        if (reportButton) {
+
+            event.stopPropagation();
+
+            if (!reportButton.classList.contains("is-reported")) {
+
+                reportButton.classList.add("is-reported");
+            }
+
+            return;
+        }
+
+
+        /* VIDEO PLAY / PAUSE */
+
+        if (
+            slide !== slides[currentIndex] ||
+            !event.target.closest(".reel-card")
+        ) {
+            return;
+        }
+
+        const video = slide.querySelector(".reel-video");
+
+        if (!video) {
+            return;
+        }
+
+        if (video.paused) {
+
+            delete slide.dataset.userPaused;
+
+            /* Reapply the shared mute state before manual play. */
+
+            video.muted = sharedMuted;
+
+            video.play()
+                .then(() => {
+                    slide.classList.remove("is-paused");
+                })
+                .catch(() => {});
+
+        } else {
+
+            video.pause();
+
+            slide.dataset.userPaused = "true";
+
+            slide.classList.add("is-paused");
+        }
+    });
 
 
     /* =====================================================
        FULLSCREEN HELPERS
     ===================================================== */
 
-    function supportsElementFullscreen(
-        element
-    ) {
+    function supportsElementFullscreen(element) {
 
         return !!(
             element.requestFullscreen ||
@@ -2053,29 +1690,21 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    async function requestElementFullscreen(
-        element
-    ) {
+    async function requestElementFullscreen(element) {
 
         if (element.requestFullscreen) {
 
             await element.requestFullscreen();
 
-        } else if (
-            element.webkitRequestFullscreen
-        ) {
+        } else if (element.webkitRequestFullscreen) {
 
             element.webkitRequestFullscreen();
 
-        } else if (
-            element.mozRequestFullScreen
-        ) {
+        } else if (element.mozRequestFullScreen) {
 
             element.mozRequestFullScreen();
 
-        } else if (
-            element.msRequestFullscreen
-        ) {
+        } else if (element.msRequestFullscreen) {
 
             element.msRequestFullscreen();
         }
@@ -2088,21 +1717,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
             await document.exitFullscreen();
 
-        } else if (
-            document.webkitExitFullscreen
-        ) {
+        } else if (document.webkitExitFullscreen) {
 
             document.webkitExitFullscreen();
 
-        } else if (
-            document.mozCancelFullScreen
-        ) {
+        } else if (document.mozCancelFullScreen) {
 
             document.mozCancelFullScreen();
 
-        } else if (
-            document.msExitFullscreen
-        ) {
+        } else if (document.msExitFullscreen) {
 
             document.msExitFullscreen();
         }
@@ -2113,27 +1736,19 @@ document.addEventListener("DOMContentLoaded", () => {
        EXIT FALLBACK FULLSCREEN
     ===================================================== */
 
-    function exitFallbackFullscreen(
-        slide,
-        card
-    ) {
+    function exitFallbackFullscreen(slide, card) {
 
         slide.classList.remove(
             "mobile-reel-fullscreen",
             "tablet-reel-fullscreen"
         );
 
-
         document.body.classList.remove(
             "mobile-reel-fullscreen-active",
             "tablet-reel-fullscreen-active"
         );
 
-
-        updateFullscreenButton(
-            card,
-            false
-        );
+        updateFullscreenButton(card, false);
     }
 
 
@@ -2141,64 +1756,33 @@ document.addEventListener("DOMContentLoaded", () => {
        FULLSCREEN
     ===================================================== */
 
-    async function toggleFullscreen(
-        slide
-    ) {
+    async function toggleFullscreen(slide) {
 
-        const card =
-            slide.querySelector(
-                ".reel-card"
-            );
-
-
-        const video =
-            slide.querySelector(
-                ".reel-video"
-            );
-
+        const card = slide.querySelector(".reel-card");
+        const video = slide.querySelector(".reel-video");
 
         if (!card) {
             return;
         }
 
 
-        /* ---------------------------------------------
-           EXIT FALLBACK FULLSCREEN
-        --------------------------------------------- */
+        /* EXIT FALLBACK FULLSCREEN */
 
-        if (
-            isFallbackFullscreenActive(
-                slide
-            )
-        ) {
+        if (isFallbackFullscreenActive(slide)) {
 
-            exitFallbackFullscreen(
-                slide,
-                card
-            );
+            exitFallbackFullscreen(slide, card);
 
+            restoreReelAfterFullscreen(slide);
 
-            restoreReelAfterFullscreen(
-                slide
-            );
-
-
-            reapplyRotationAfterLayoutChange(
-                slide
-            );
-
+            reapplyRotationAfterLayoutChange(slide);
 
             return;
         }
 
 
-        /* ---------------------------------------------
-           EXIT REAL FULLSCREEN
-        --------------------------------------------- */
+        /* EXIT REAL FULLSCREEN */
 
-        if (
-            isRealFullscreenActive()
-        ) {
+        if (isRealFullscreenActive()) {
 
             try {
 
@@ -2206,79 +1790,41 @@ document.addEventListener("DOMContentLoaded", () => {
 
             } catch (error) {
 
-                console.log(
-                    "Unable to exit fullscreen:",
-                    error
-                );
+                console.log("Unable to exit fullscreen:", error);
             }
-
 
             return;
         }
 
 
-        /* ---------------------------------------------
-           REMEMBER CURRENT REEL
-        --------------------------------------------- */
+        /* REMEMBER CURRENT REEL */
 
-        fullscreenSlide =
-            slide;
+        fullscreenSlide = slide;
 
+        fullscreenIndex = slides.indexOf(slide);
 
-        fullscreenIndex =
-            slides.indexOf(
-                slide
-            );
+        fullscreenScrollTop = feed.scrollTop;
 
+        currentIndex = fullscreenIndex;
 
-        fullscreenScrollTop =
-            feed.scrollTop;
-
-
-        currentIndex =
-            fullscreenIndex;
-
-
-        setActiveSlide(
-            currentIndex
-        );
-
+        setActiveSlide(currentIndex);
 
         updateNavButtons();
 
 
-        /* ---------------------------------------------
-           REAL FULLSCREEN
-        --------------------------------------------- */
+        /* REAL FULLSCREEN */
 
-        if (
-            supportsElementFullscreen(
-                card
-            )
-        ) {
+        if (supportsElementFullscreen(card)) {
 
             try {
 
-                await requestElementFullscreen(
-                    card
-                );
+                await requestElementFullscreen(card);
 
+                updateFullscreenButton(card, true);
 
-                updateFullscreenButton(
-                    card,
-                    true
-                );
+                reapplyRotationAfterLayoutChange(slide);
 
-
-                reapplyRotationAfterLayoutChange(
-                    slide
-                );
-
-
-                /*
-                 * Start playback only if the user
-                 * has not deliberately paused it.
-                 */
+                /* Start playback only if the user has not deliberately paused. */
 
                 if (
                     video &&
@@ -2286,80 +1832,50 @@ document.addEventListener("DOMContentLoaded", () => {
                     !slide.dataset.userPaused
                 ) {
 
-                    video.muted =
-                        sharedMuted;
+                    video.muted = sharedMuted;
 
-                    video.play()
-                        .catch(() => {});
+                    video.play().catch(() => {});
                 }
 
             } catch (error) {
 
-                console.log(
-                    "Fullscreen unavailable:",
-                    error
-                );
+                console.log("Fullscreen unavailable:", error);
             }
-
 
             return;
         }
 
 
-        /* ---------------------------------------------
-           FALLBACK FULLSCREEN
-        --------------------------------------------- */
+        /* FALLBACK FULLSCREEN */
 
         const isMobile =
-            window.matchMedia(
-                "(max-width: 800px)"
-            ).matches;
-
+            window.matchMedia("(max-width: 800px)").matches;
 
         const isTablet =
             window.matchMedia(
                 "(min-width: 801px) and (max-width: 1150px)"
             ).matches;
 
-
         if (isMobile) {
 
-            slide.classList.add(
-                "mobile-reel-fullscreen"
-            );
+            slide.classList.add("mobile-reel-fullscreen");
 
-
-            document.body.classList.add(
-                "mobile-reel-fullscreen-active"
-            );
+            document.body.classList.add("mobile-reel-fullscreen-active");
 
         } else if (isTablet) {
 
-            slide.classList.add(
-                "tablet-reel-fullscreen"
-            );
+            slide.classList.add("tablet-reel-fullscreen");
 
-
-            document.body.classList.add(
-                "tablet-reel-fullscreen-active"
-            );
+            document.body.classList.add("tablet-reel-fullscreen-active");
 
         } else {
 
             return;
         }
 
+        updateFullscreenButton(card, true);
 
-        updateFullscreenButton(
-            card,
-            true
-        );
-
-
-        reapplyRotationAfterLayoutChange(
-            slide
-        );
-
+        reapplyRotationAfterLayoutChange(slide);
 
         if (
             video &&
@@ -2367,11 +1883,9 @@ document.addEventListener("DOMContentLoaded", () => {
             !slide.dataset.userPaused
         ) {
 
-            video.muted =
-                sharedMuted;
+            video.muted = sharedMuted;
 
-            video.play()
-                .catch(() => {});
+            video.play().catch(() => {});
         }
     }
 
@@ -2380,25 +1894,17 @@ document.addEventListener("DOMContentLoaded", () => {
        RESTORE REEL AFTER FULLSCREEN
     ===================================================== */
 
-    function restoreReelAfterFullscreen(
-        slide
-    ) {
+    function restoreReelAfterFullscreen(slide) {
 
         if (!slide) {
             return;
         }
 
-
-        const index =
-            slides.indexOf(
-                slide
-            );
-
+        const index = slides.indexOf(slide);
 
         if (index !== -1) {
 
-            currentIndex =
-                index;
+            currentIndex = index;
 
         } else if (
             fullscreenIndex !== null &&
@@ -2406,81 +1912,50 @@ document.addEventListener("DOMContentLoaded", () => {
             fullscreenIndex < slides.length
         ) {
 
-            currentIndex =
-                fullscreenIndex;
+            currentIndex = fullscreenIndex;
         }
 
-
-        setActiveSlide(
-            currentIndex
-        );
-
+        setActiveSlide(currentIndex);
 
         updateNavButtons();
 
-
-        /*
-         * Mobile browsers can take one or more
-         * frames to restore the normal viewport.
-         *
-         * Wait for the layout to return before
-         * restoring the exact reel position.
-         */
+        /* Mobile browsers can take a frame or two to restore the
+           normal viewport; wait before restoring the position. */
 
         requestAnimationFrame(() => {
 
             requestAnimationFrame(() => {
 
-                const targetSlide =
-                    slides[currentIndex];
-
+                const targetSlide = slides[currentIndex];
 
                 if (!targetSlide) {
                     return;
                 }
 
-
                 feed.scrollTo({
-                    top:
-                        targetSlide.offsetTop,
+                    top: targetSlide.offsetTop,
                     left: 0,
                     behavior: "auto"
                 });
 
-
-                /*
-                 * Force a layout recalculation.
-                 * This fixes the situation where the
-                 * information/actions appear only after
-                 * manually scrolling.
-                 */
+                /* Force a layout recalculation (fixes info/actions
+                   appearing only after manually scrolling). */
 
                 void feed.offsetHeight;
 
-
-                setActiveSlide(
-                    currentIndex
-                );
-
+                setActiveSlide(currentIndex);
 
                 updateNavButtons();
 
-
-                reapplyRotationAfterLayoutChange(
-                    targetSlide
-                );
+                reapplyRotationAfterLayoutChange(targetSlide);
 
             });
 
         });
 
+        fullscreenSlide = null;
 
-        fullscreenSlide =
-            null;
-
-
-        fullscreenIndex =
-            null;
+        fullscreenIndex = null;
     }
 
 
@@ -2488,27 +1963,18 @@ document.addEventListener("DOMContentLoaded", () => {
        FULLSCREEN BUTTON STATE
     ===================================================== */
 
-    function updateFullscreenButton(
-        card,
-        fullscreen
-    ) {
+    function updateFullscreenButton(card, fullscreen) {
 
-        const button =
-            card.querySelector(
-                ".reel-fullscreen-btn"
-            );
-
+        const button = card.querySelector(".reel-fullscreen-btn");
 
         if (!button) {
             return;
         }
 
-
         button.innerHTML =
             fullscreen
                 ? icons.exitFullscreen
                 : icons.fullscreen;
-
 
         button.setAttribute(
             "aria-label",
@@ -2531,140 +1997,82 @@ document.addEventListener("DOMContentLoaded", () => {
             document.mozFullScreenElement ||
             document.msFullscreenElement;
 
+        slides.forEach(slide => {
 
-        slides.forEach(
-            slide => {
+            const card = slide.querySelector(".reel-card");
 
-                const card =
-                    slide.querySelector(
-                        ".reel-card"
-                    );
-
-
-                if (!card) {
-                    return;
-                }
-
-
-                const isFullscreen =
-                    currentlyFullscreen ===
-                    card;
-
-
-                updateFullscreenButton(
-                    card,
-                    isFullscreen
-                );
+            if (!card) {
+                return;
             }
-        );
+
+            updateFullscreenButton(
+                card,
+                currentlyFullscreen === card
+            );
+        });
 
 
-        /* ---------------------------------------------
-           REAL FULLSCREEN HAS ENDED
-        --------------------------------------------- */
+        /* REAL FULLSCREEN HAS ENDED */
 
-        if (
-            !isRealFullscreenActive()
-        ) {
+        if (!isRealFullscreenActive()) {
 
             document.body.classList.remove(
                 "mobile-reel-fullscreen-active",
                 "tablet-reel-fullscreen-active"
             );
 
-
             if (fullscreenSlide) {
 
-                const slideToRestore =
-                    fullscreenSlide;
+                const slideToRestore = fullscreenSlide;
 
-
-                restoreReelAfterFullscreen(
-                    slideToRestore
-                );
+                restoreReelAfterFullscreen(slideToRestore);
             }
         }
     }
 
 
-    document.addEventListener(
-        "fullscreenchange",
-        handleFullscreenChange
-    );
-
-
-    document.addEventListener(
-        "webkitfullscreenchange",
-        handleFullscreenChange
-    );
-
-
-    document.addEventListener(
-        "mozfullscreenchange",
-        handleFullscreenChange
-    );
-
-
-    document.addEventListener(
-        "MSFullscreenChange",
-        handleFullscreenChange
-    );
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    document.addEventListener("mozfullscreenchange", handleFullscreenChange);
+    document.addEventListener("MSFullscreenChange", handleFullscreenChange);
 
 
     /* =====================================================
        ESCAPE KEY
     ===================================================== */
 
-    document.addEventListener(
-        "keydown",
-        event => {
+    document.addEventListener("keydown", event => {
 
-            if (event.key !== "Escape") {
-                return;
-            }
-
-
-            const fallbackFullscreenSlide =
-                document.querySelector(
-                    ".reel-slide.mobile-reel-fullscreen, " +
-                    ".reel-slide.tablet-reel-fullscreen"
-                );
-
-
-            if (fallbackFullscreenSlide) {
-
-                const card =
-                    fallbackFullscreenSlide.querySelector(
-                        ".reel-card"
-                    );
-
-
-                if (card) {
-
-                    exitFallbackFullscreen(
-                        fallbackFullscreenSlide,
-                        card
-                    );
-
-
-                    restoreReelAfterFullscreen(
-                        fallbackFullscreenSlide
-                    );
-                }
-
-
-                return;
-            }
-
-
-            if (
-                isRealFullscreenActive()
-            ) {
-
-                exitElementFullscreen();
-            }
+        if (event.key !== "Escape") {
+            return;
         }
-    );
+
+        const fallbackFullscreenSlide =
+            document.querySelector(
+                ".reel-slide.mobile-reel-fullscreen, " +
+                ".reel-slide.tablet-reel-fullscreen"
+            );
+
+        if (fallbackFullscreenSlide) {
+
+            const card =
+                fallbackFullscreenSlide.querySelector(".reel-card");
+
+            if (card) {
+
+                exitFallbackFullscreen(fallbackFullscreenSlide, card);
+
+                restoreReelAfterFullscreen(fallbackFullscreenSlide);
+            }
+
+            return;
+        }
+
+        if (isRealFullscreenActive()) {
+
+            exitElementFullscreen();
+        }
+    });
 
 
     /* =====================================================
@@ -2690,14 +2098,11 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-
         if (navigator.clipboard) {
 
             try {
 
-                await navigator.clipboard.writeText(
-                    window.location.href
-                );
+                await navigator.clipboard.writeText(window.location.href);
 
             } catch {
 
@@ -2711,34 +2116,21 @@ document.addEventListener("DOMContentLoaded", () => {
        KEYBOARD NAVIGATION
     ===================================================== */
 
-    document.addEventListener(
-        "keydown",
-        event => {
+    document.addEventListener("keydown", event => {
 
-            if (
-                event.key ===
-                "ArrowDown"
-            ) {
+        if (event.key === "ArrowDown") {
 
-                event.preventDefault();
+            event.preventDefault();
 
-                goToIndex(
-                    currentIndex + 1
-                );
+            goToIndex(currentIndex + 1);
 
-            } else if (
-                event.key ===
-                "ArrowUp"
-            ) {
+        } else if (event.key === "ArrowUp") {
 
-                event.preventDefault();
+            event.preventDefault();
 
-                goToIndex(
-                    currentIndex - 1
-                );
-            }
+            goToIndex(currentIndex - 1);
         }
-    );
+    });
 
 
     /* =====================================================
@@ -2747,45 +2139,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document
         .querySelectorAll(".nav-item")
-        .forEach(
-            item => {
+        .forEach(item => {
 
-                item.addEventListener(
-                    "click",
-                    event => {
+            item.addEventListener("click", event => {
 
-                        if (
-                            item.getAttribute("href") !==
-                            "#"
-                        ) {
-                            return;
-                        }
+                if (item.getAttribute("href") !== "#") {
+                    return;
+                }
 
+                event.preventDefault();
 
-                        event.preventDefault();
+                document
+                    .querySelectorAll(".nav-item")
+                    .forEach(nav => {
+                        nav.classList.remove("active");
+                    });
 
-
-                        document
-                            .querySelectorAll(
-                                ".nav-item"
-                            )
-                            .forEach(
-                                nav => {
-
-                                    nav.classList.remove(
-                                        "active"
-                                    );
-                                }
-                            );
-
-
-                        item.classList.add(
-                            "active"
-                        );
-                    }
-                );
-            }
-        );
+                item.classList.add("active");
+            });
+        });
 
 
     /* =====================================================
@@ -2799,5 +2171,16 @@ document.addEventListener("DOMContentLoaded", () => {
     updateNavButtons();
 
     playCurrentSlide();
+
+    refreshCaptionToggles();
+
+    refreshRotateIcons();
+
+    window.addEventListener("load", () => {
+        refreshCaptionToggles();
+        refreshRotateIcons();
+    });
+
+    window.addEventListener("resize", refreshCaptionToggles);
 
 });

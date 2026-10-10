@@ -1110,3 +1110,67 @@ body.loop-page {
     }
 
 }
+
+
+/* =========================================================
+   CAPTION
+   Landscape + mobile: full-width line under the profile row.
+   Portrait desktop/tablet: side panel, under the profile.
+========================================================= */
+
+.loop-info {
+    flex-wrap: wrap;
+    row-gap: 12px;
+}
+
+/* Creator takes the remaining width so the actions never wrap
+   onto a second line; only the caption wraps below. */
+.loop-creator {
+    flex: 1 1 0;
+}
+
+.loop-caption {
+    order: 3;
+    flex: 0 0 100%;
+    margin: 0;
+    color: #333;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 800px) {
+
+    .loop-caption {
+        font-size: 13px;
+    }
+}
+
+@media (min-width: 801px) {
+
+    .loop-featured.is-portrait .loop-info {
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        row-gap: 0;
+    }
+
+    .loop-featured.is-portrait .loop-creator {
+        flex: 0 0 auto;
+    }
+
+    .loop-featured.is-portrait .loop-caption {
+        order: 2;
+        flex: 0 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        margin-top: 12px;
+        font-size: 15px;
+    }
+
+    .loop-featured.is-portrait .loop-actions {
+        order: 3;
+        margin-top: auto;
+    }
+}
