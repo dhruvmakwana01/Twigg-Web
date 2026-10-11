@@ -6,6 +6,12 @@
 
    Desktop / tablet : slides out from behind the sidebar.
    Mobile (<=800px) : full panel above the bottom bar.
+
+   Colour variants (set by notification.js on the .nt-row and
+   its .nt-avatar):
+     .is-approved  green  + white tick      (delivery approved)
+     .is-order     violet + bag icon        (order completed)
+     .is-transfer  blue   + bank icon       (bank transfer)
 ========================================================= */
 
 /* ---------- Fallback tokens (identical to filter.css) ----------
@@ -16,6 +22,21 @@
     --fs-sidebar-width: 225px;
     --fs-panel-width: 360px;
     --fs-ease: cubic-bezier(0.22, 0.8, 0.3, 1);
+
+    /* Twigg notification palette */
+    --nt-brand-gradient: linear-gradient(135deg, #B90066, #FB0838, #F6801E);
+
+    --nt-approved-gradient: linear-gradient(135deg, #0B8F5A 0%, #17B26A 50%, #7BDB4B 100%);
+    --nt-approved-solid: #12803f;
+    --nt-approved-dot: #17B26A;
+
+    --nt-order-gradient: linear-gradient(135deg, #5B2BD9 0%, #7C4DF0 50%, #B388FF 100%);
+    --nt-order-solid: #5b2bd9;
+    --nt-order-dot: #7C4DF0;
+
+    --nt-transfer-gradient: linear-gradient(135deg, #0B5BD3 0%, #1D7CF2 50%, #3CC8F5 100%);
+    --nt-transfer-solid: #0b5bd3;
+    --nt-transfer-dot: #1D7CF2;
 }
 
 @media (min-width: 801px) and (max-width: 1150px) {
@@ -34,10 +55,25 @@
 /* The header pieces below are copied from filter.css for the same reason. */
 
 .nt-panel .fs-header {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 28px 28px 18px;
+}
+
+/* Soft Twigg gradient underline under the header */
+.nt-panel .fs-header::after {
+    content: "";
+    position: absolute;
+    left: 28px;
+    right: 28px;
+    bottom: 0;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--nt-brand-gradient);
+    opacity: 0.18;
+    pointer-events: none;
 }
 
 .nt-panel .fs-title {
@@ -165,7 +201,7 @@
 .nt-body {
     flex: 1;
 
-    padding: 0 14px 24px;
+    padding: 8px 14px 24px;
 
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -190,7 +226,7 @@
 
     width: 100%;
 
-    margin-bottom: 2px;
+    margin-bottom: 4px;
     padding: 12px 14px;
 
     border: 0;
@@ -206,11 +242,15 @@
 
     -webkit-tap-highlight-color: transparent;
 
-    transition: background 0.2s ease;
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .nt-row:hover {
     background: #f8f8f8;
+    transform: translateX(2px);
 }
 
 .nt-row:focus-visible {
@@ -218,22 +258,70 @@
     outline-offset: 2px;
 }
 
-/* Same faint blue tint the Messages page uses for unread. */
+/* Rows fade in one after another when the panel opens */
+.nt-panel.is-open .nt-row {
+    animation: nt-row-in 0.4s var(--fs-ease) both;
+}
+
+.nt-panel.is-open .nt-list > :nth-child(1) .nt-row,
+.nt-panel.is-open .nt-list > .nt-row:nth-child(1) { animation-delay: 0.04s; }
+.nt-panel.is-open .nt-list > :nth-child(2) .nt-row,
+.nt-panel.is-open .nt-list > .nt-row:nth-child(2) { animation-delay: 0.08s; }
+.nt-panel.is-open .nt-list > :nth-child(3) .nt-row,
+.nt-panel.is-open .nt-list > .nt-row:nth-child(3) { animation-delay: 0.12s; }
+.nt-panel.is-open .nt-list > :nth-child(4) .nt-row,
+.nt-panel.is-open .nt-list > .nt-row:nth-child(4) { animation-delay: 0.16s; }
+.nt-panel.is-open .nt-list > :nth-child(5) .nt-row,
+.nt-panel.is-open .nt-list > .nt-row:nth-child(5) { animation-delay: 0.2s; }
+.nt-panel.is-open .nt-list > :nth-child(n+6) .nt-row,
+.nt-panel.is-open .nt-list > .nt-row:nth-child(n+6) { animation-delay: 0.24s; }
+
+@keyframes nt-row-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Same faint blue tint the Messages page uses for unread,
+   plus a thin Twigg gradient accent bar on the left edge. */
 .nt-row.is-unread {
     background: rgba(29, 107, 240, 0.045);
+}
+
+.nt-row.is-unread::before {
+    content: "";
+    position: absolute;
+    left: 3px;
+    top: 14px;
+    bottom: 14px;
+    width: 3px;
+    border-radius: 3px;
+    background: var(--nt-brand-gradient);
+    opacity: 0.85;
+    pointer-events: none;
 }
 
 .nt-row.is-unread:hover {
     background: rgba(29, 107, 240, 0.07);
 }
 
+
+/* ---------- Avatar (default = same look as the reels creator avatar) ----------
+   Twigg gradient, white ring, soft shadow. Shows the initial
+   or an icon in white when no profile picture is uploaded. */
+
 .nt-avatar {
     position: relative;
 
     flex-shrink: 0;
 
-    width: 44px;
-    height: 44px;
+    width: 46px;
+    height: 46px;
 
     display: flex;
     align-items: center;
@@ -242,12 +330,24 @@
     overflow: hidden;
 
     border-radius: 50%;
+    border: 2px solid #ffffff;
 
-    background: #e7e7e7;
-    color: #777777;
+    background: var(--nt-brand-gradient);
+    color: #ffffff;
 
     font-size: 16px;
     font-weight: 600;
+    line-height: 1;
+
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.08),
+        0 6px 14px rgba(0, 0, 0, 0.12);
+
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nt-row:hover .nt-avatar {
+    transform: scale(1.04);
 }
 
 .nt-avatar img {
@@ -261,15 +361,190 @@
 }
 
 .nt-avatar svg {
+    position: relative;
+    z-index: 1;
+
     width: 21px;
     height: 21px;
 
     fill: none;
-    stroke: #555555;
+    stroke: #ffffff;
     stroke-width: 1.8;
     stroke-linecap: round;
     stroke-linejoin: round;
 }
+
+
+/* ---------- Soft glare shared by every coloured avatar ---------- */
+
+.nt-avatar.is-approved::before,
+.nt-avatar.is-order::before,
+.nt-avatar.is-transfer::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background: radial-gradient(circle at 28% 22%, rgba(255, 255, 255, 0.35), transparent 55%);
+    pointer-events: none;
+}
+
+
+/* ---------- Approved project avatar (green + white tick) ---------- */
+
+.nt-avatar.is-approved {
+    background: var(--nt-approved-gradient);
+
+    box-shadow:
+        0 0 0 1px rgba(11, 143, 90, 0.18),
+        0 6px 16px rgba(23, 178, 106, 0.32);
+}
+
+/* Hide any initial / icon inside; the tick replaces it */
+.nt-avatar.is-approved svg,
+.nt-avatar.is-approved img {
+    display: none;
+}
+
+.nt-avatar.is-approved::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='5.5 12.5 10 17 18.5 7.5'/></svg>");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 22px 22px;
+
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.18));
+}
+
+
+/* ---------- Order completed avatar (violet + bag icon) ---------- */
+
+.nt-avatar.is-order {
+    background: var(--nt-order-gradient);
+
+    box-shadow:
+        0 0 0 1px rgba(91, 43, 217, 0.18),
+        0 6px 16px rgba(124, 77, 240, 0.32);
+}
+
+/* ---------- Bank transfer avatar (blue + bank icon) ---------- */
+
+.nt-avatar.is-transfer {
+    background: var(--nt-transfer-gradient);
+
+    box-shadow:
+        0 0 0 1px rgba(11, 91, 211, 0.18),
+        0 6px 16px rgba(29, 124, 242, 0.32);
+}
+
+.nt-avatar.is-order svg,
+.nt-avatar.is-transfer svg {
+    width: 22px;
+    height: 22px;
+    stroke-width: 1.9;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.18));
+}
+
+
+/* ---------- Approved project row ---------- */
+
+.nt-row.is-approved {
+    background: rgba(23, 178, 106, 0.05);
+}
+
+.nt-row.is-approved:hover {
+    background: rgba(23, 178, 106, 0.09);
+}
+
+.nt-row.is-approved.is-unread {
+    background: rgba(23, 178, 106, 0.08);
+}
+
+.nt-row.is-approved.is-unread:hover {
+    background: rgba(23, 178, 106, 0.12);
+}
+
+.nt-row.is-approved.is-unread::before {
+    background: var(--nt-approved-gradient);
+}
+
+.nt-row.is-approved .nt-text strong {
+    color: var(--nt-approved-solid);
+}
+
+.nt-row.is-approved .nt-unread-dot {
+    background: var(--nt-approved-dot);
+    box-shadow: 0 0 0 3px rgba(23, 178, 106, 0.18);
+}
+
+
+/* ---------- Order completed row ---------- */
+
+.nt-row.is-order {
+    background: rgba(124, 77, 240, 0.05);
+}
+
+.nt-row.is-order:hover {
+    background: rgba(124, 77, 240, 0.09);
+}
+
+.nt-row.is-order.is-unread {
+    background: rgba(124, 77, 240, 0.08);
+}
+
+.nt-row.is-order.is-unread:hover {
+    background: rgba(124, 77, 240, 0.12);
+}
+
+.nt-row.is-order.is-unread::before {
+    background: var(--nt-order-gradient);
+}
+
+.nt-row.is-order .nt-text strong {
+    color: var(--nt-order-solid);
+}
+
+.nt-row.is-order .nt-unread-dot {
+    background: var(--nt-order-dot);
+    box-shadow: 0 0 0 3px rgba(124, 77, 240, 0.18);
+}
+
+
+/* ---------- Bank transfer row ---------- */
+
+.nt-row.is-transfer {
+    background: rgba(29, 124, 242, 0.05);
+}
+
+.nt-row.is-transfer:hover {
+    background: rgba(29, 124, 242, 0.09);
+}
+
+.nt-row.is-transfer.is-unread {
+    background: rgba(29, 124, 242, 0.08);
+}
+
+.nt-row.is-transfer.is-unread:hover {
+    background: rgba(29, 124, 242, 0.12);
+}
+
+.nt-row.is-transfer.is-unread::before {
+    background: var(--nt-transfer-gradient);
+}
+
+.nt-row.is-transfer .nt-text strong {
+    color: var(--nt-transfer-solid);
+}
+
+.nt-row.is-transfer .nt-unread-dot {
+    background: var(--nt-transfer-dot);
+    box-shadow: 0 0 0 3px rgba(29, 124, 242, 0.18);
+}
+
+
+/* ---------- Text ---------- */
 
 .nt-content {
     flex: 1;
@@ -446,6 +721,11 @@
         padding: 18px 16px 14px;
     }
 
+    .nt-panel .fs-header::after {
+        left: 16px;
+        right: 16px;
+    }
+
     .nt-panel .fs-close {
         display: none;
     }
@@ -459,11 +739,15 @@
     }
 
     .nt-body {
-        padding: 0 4px 20px;
+        padding: 6px 4px 20px;
     }
 
     .nt-row {
         padding: 12px;
+    }
+
+    .nt-row:hover {
+        transform: none;
     }
 
     .sidebar .nav-item.active .nt-nav-badge {
@@ -478,7 +762,13 @@
 
     .nt-panel,
     .nt-panel.is-open,
-    .nt-unread-dot {
+    .nt-unread-dot,
+    .nt-row,
+    .nt-avatar {
         transition: none !important;
+    }
+
+    .nt-panel.is-open .nt-row {
+        animation: none !important;
     }
 }

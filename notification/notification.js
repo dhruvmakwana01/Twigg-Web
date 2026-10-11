@@ -12,6 +12,10 @@
      add({ type, name, avatar, amount, client, read })
      markRead(id) / unreadCount() / open() / close()
 
+   Colour variants: each type in TYPES can set `variant`
+   ("approved" | "order" | "transfer"). The matching
+   .is-<variant> class is put on both the row and the avatar.
+
    State persists in localStorage, so read/unread survives
    navigation between Twigg pages (and syncs across tabs).
 ========================================================= */
@@ -27,8 +31,10 @@
         close: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
         back: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
         delivery: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
-        wallet: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 6h10M7 10h10M10 6c4 0 6 1.5 6 4s-2 4-6 4l6 5"/></svg>',
-        order: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 11H6L5 8z"/><path d="M9 8V7a3 3 0 016 0v1"/></svg>'
+        // Bank building (roof, columns, base): no currency symbol
+        bank: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3L3 9h18L12 3z"/><path d="M5 9v9M9.5 9v9M14.5 9v9M19 9v9"/><path d="M3 21h18"/></svg>',
+        // Shopping bag with a tick
+        order: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 11H6L5 8z"/><path d="M9 8V7a3 3 0 016 0v1"/><path d="M9.5 13.5l2 2 3.5-3.5"/></svg>'
     };
 
     /* ---------- Message templates ---------- */
@@ -48,6 +54,7 @@
     var TYPES = {
         delivery_approved: {
             person: false,
+            variant: "approved",
             icon: "delivery",
             text: function (n) {
                 return "Your delivery was approved by <strong>" + esc(n.client || n.name || "your client") + "</strong>.";
@@ -55,7 +62,8 @@
         },
         wallet_transfer: {
             person: false,
-            icon: "wallet",
+            variant: "transfer",
+            icon: "bank",
             text: function (n) {
                 return "<strong>" + formatAmount(n.amount) + "</strong> has been transferred to your bank account.";
             }
@@ -74,6 +82,7 @@
         },
         order_completed: {
             person: false,
+            variant: "order",
             icon: "order",
             text: function () {
                 return "Your order has been completed.";
@@ -191,7 +200,9 @@
             var initial = (n.name || "?").trim().charAt(0).toUpperCase();
             return '<span class="nt-avatar" aria-hidden="true">' + esc(initial) + "</span>";
         }
-        return '<span class="nt-avatar" aria-hidden="true">' + ICONS[def.icon] + "</span>";
+        // Coloured variant (approved / order / transfer) gets its own avatar colour.
+        // Approved draws its tick in CSS; order and transfer show their icon.
+        return '<span class="nt-avatar' + (def.variant ? " is-" + def.variant : "") + '" aria-hidden="true">' + ICONS[def.icon] + "</span>";
     }
 
     function render() {
@@ -203,7 +214,7 @@
             var unread = !n.read;
             return (
                 '<li class="nt-item">' +
-                    '<button type="button" class="nt-row' + (unread ? " is-unread" : "") + '" data-id="' + esc(n.id) + '">' +
+                    '<button type="button" class="nt-row' + (unread ? " is-unread" : "") + (def.variant ? " is-" + def.variant : "") + '" data-id="' + esc(n.id) + '">' +
                         avatarHTML(n, def) +
                         '<span class="nt-content">' +
                             '<p class="nt-text">' + def.text(n) + "</p>" +
