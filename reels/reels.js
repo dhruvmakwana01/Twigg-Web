@@ -38,6 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const feed = document.querySelector(".reels-feed");
     const track = document.querySelector(".reels-track");
+    const navControls = document.querySelector(".reel-nav-controls");
     const upButton = document.querySelector(".reel-nav-up");
     const downButton = document.querySelector(".reel-nav-down");
 
@@ -56,9 +57,43 @@ document.addEventListener("DOMContentLoaded", () => {
     const REELS_ORDER_KEY = "twigg_reels_order";
     const REELS_STATE_KEY = "twigg_reels_state";
 
-    /* Captions collapse behind "Show more" up to this width
-       (mobile AND tablet, where the info sits over the video). */
-    const COMPACT_CAPTION_QUERY = "(max-width: 1150px)";
+    const MOBILE_QUERY = "(max-width: 800px)";
+
+    /* -----------------------------------------------------
+       CARD LAYOUT SETTINGS (desktop / tablet)
+
+       OUTSIDE_SIDE_SPACE: width needed on EACH side of the
+       card for the creator info (200px + 28px gap) and the
+       action rail, plus a little breathing room.
+
+       MIN_OUTSIDE_WIDTH: the smallest card we are happy to
+       show before moving the info + actions inside the card.
+    ----------------------------------------------------- */
+
+    const OUTSIDE_SIDE_SPACE = 244;
+
+    const MIN_OUTSIDE_WIDTH = {
+        portrait: 400,
+        landscape: 640
+    };
+
+    const MAX_LANDSCAPE_WIDTH = 1280;
+    const MAX_PORTRAIT_HEIGHT = 800;
+    const MAX_COMPACT_PORTRAIT_HEIGHT = 720;
+
+    /* -----------------------------------------------------
+       UP / DOWN BUTTON PLACEMENT
+
+       NAV_BUTTON_SIZE:  the round up / down buttons (56px).
+       NAV_BUTTON_GAP:   gap kept between each button and the
+                         card when they are split above / below.
+       NAV_OVERLAP_GAP:  how close the card may get to the
+                         buttons before they count as overlapping.
+    ----------------------------------------------------- */
+
+    const NAV_BUTTON_SIZE = 56;
+    const NAV_BUTTON_GAP = 14;
+    const NAV_OVERLAP_GAP = 8;
 
     const navigationEntry =
         performance.getEntriesByType("navigation")[0];
@@ -127,21 +162,11 @@ document.addEventListener("DOMContentLoaded", () => {
             </svg>
         `,
 
-        /* MOBILE: rotate the video in place */
+        /* Rotate the video 90deg (mobile, and fullscreen everywhere) */
         rotate: `
             <svg viewBox="0 0 24 24">
                 <path d="M20 12a8 8 0 1 1-2.34-5.66"></path>
                 <path d="M20 4v5h-5"></path>
-            </svg>
-        `,
-
-        /* DESKTOP / TABLET: portrait frame → landscape frame */
-        orient: `
-            <svg viewBox="0 0 24 24">
-                <rect x="3" y="4" width="7" height="12" rx="1.6"></rect>
-                <rect x="12" y="13" width="9" height="7" rx="1.6"></rect>
-                <path d="M13 8h6.5"></path>
-                <path d="M17 5.5 19.5 8 17 10.5"></path>
             </svg>
         `,
 
@@ -172,41 +197,6 @@ document.addEventListener("DOMContentLoaded", () => {
             </svg>
         `
     };
-
-
-    /* =====================================================
-       ROTATE BUTTON ICON
-
-       Mobile (800px and below): the classic rotate icon.
-       Desktop / tablet (above 800px): the portrait →
-       landscape icon, because there the card itself turns
-       into a landscape box.
-    ===================================================== */
-
-    function getRotateIcon() {
-
-        return window.matchMedia("(max-width: 800px)").matches
-            ? icons.rotate
-            : icons.orient;
-    }
-
-
-    function refreshRotateIcons() {
-
-        const icon = getRotateIcon();
-
-        document
-            .querySelectorAll(".reel-rotate-btn")
-            .forEach(button => {
-
-                if (button.dataset.iconKind !== icon) {
-
-                    button.innerHTML = icon;
-
-                    button.dataset.iconKind = icon;
-                }
-            });
-    }
 
 
     /* =====================================================
@@ -290,6 +280,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     /* =====================================================
        CREATE REEL
+
+       .reel-stage wraps the creator info, the card and the
+       action rail. The stage has the size of the card, so
+       info / actions can sit outside it (desktop) or inside
+       it (compact) without any extra maths.
     ===================================================== */
 
     function createReel(reel) {
@@ -298,138 +293,142 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 <div class="reel-row">
 
-                    <div class="reel-info-outside">
+                    <div class="reel-stage">
 
-                        <div class="reel-creator">
+                        <div class="reel-info-outside">
 
-                            ${createAvatar(reel)}
+                            <div class="reel-creator">
 
-                            <div class="reel-service-name">
-                                ${reel.name}
+                                ${createAvatar(reel)}
+
+                                <div class="reel-service-name">
+                                    ${reel.name}
+                                </div>
+
                             </div>
 
-                        </div>
-
-                        <div class="reel-category">
-                            ${reel.category}
-                        </div>
-
-                        <div class="reel-rating">
-
-                            <div class="reel-stars">
-                                ${createStars()}
+                            <div class="reel-category">
+                                ${reel.category}
                             </div>
 
-                            <span class="reel-rating-value">
-                                ${reel.rating}
-                            </span>
+                            <div class="reel-rating">
 
-                            <span class="reel-review-count">
-                                (${reel.reviews} reviews)
-                            </span>
+                                <div class="reel-stars">
+                                    ${createStars()}
+                                </div>
+
+                                <span class="reel-rating-value">
+                                    ${reel.rating}
+                                </span>
+
+                                <span class="reel-review-count">
+                                    (${reel.reviews} reviews)
+                                </span>
+
+                            </div>
+
+                            ${createCaption(reel)}
 
                         </div>
 
-                        ${createCaption(reel)}
 
-                    </div>
+                        <div class="reel-card">
 
-
-                    <div class="reel-card">
-
-                        <video
-                            class="reel-video"
-                            muted
-                            loop
-                            playsinline
-                            preload="auto"
-                            ${reel.thumbnail ? `poster="${reel.thumbnail}"` : ""}
-                        >
-                            <source
-                                src="${reel.video}"
-                                type="video/mp4"
+                            <video
+                                class="reel-video"
+                                muted
+                                loop
+                                playsinline
+                                preload="auto"
+                                ${reel.thumbnail ? `poster="${reel.thumbnail}"` : ""}
                             >
-                        </video>
+                                <source
+                                    src="${reel.video}"
+                                    type="video/mp4"
+                                >
+                            </video>
 
 
-                        <button
-                            type="button"
-                            class="reel-mute-btn"
-                            aria-label="Unmute"
-                        >
-                            ${icons.mute}
-                        </button>
+                            <button
+                                type="button"
+                                class="reel-mute-btn"
+                                aria-label="Unmute"
+                            >
+                                ${icons.mute}
+                            </button>
 
 
-                        <button
-                            type="button"
-                            class="reel-fullscreen-btn"
-                            aria-label="Enter fullscreen"
-                        >
-                            ${icons.fullscreen}
-                        </button>
+                            <button
+                                type="button"
+                                class="reel-fullscreen-btn"
+                                aria-label="Enter fullscreen"
+                            >
+                                ${icons.fullscreen}
+                            </button>
 
 
-                        <button
-                            type="button"
-                            class="reel-rotate-btn"
-                            aria-label="Rotate video"
-                        >
-                            ${getRotateIcon()}
-                        </button>
+                            <button
+                                type="button"
+                                class="reel-rotate-btn"
+                                aria-label="Rotate video"
+                            >
+                                ${icons.rotate}
+                            </button>
 
 
-                        <div class="reel-play-indicator">
+                            <div class="reel-play-indicator">
 
-                            <svg viewBox="0 0 24 24">
-                                <path d="M8 5v14l11-7z"></path>
-                            </svg>
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z"></path>
+                                </svg>
 
-                        </div>
-
-
-                        <div class="reel-progress" aria-label="Video progress">
-                            <div class="reel-progress-track">
-                                <div class="reel-progress-fill"></div>
                             </div>
+
+
+                            <div class="reel-progress" aria-label="Video progress">
+                                <div class="reel-progress-track">
+                                    <div class="reel-progress-fill"></div>
+                                </div>
+                            </div>
+
                         </div>
 
-                    </div>
 
+                        <div class="reel-actions">
 
-                    <div class="reel-actions">
+                            <button
+                                type="button"
+                                class="reel-action-btn reel-like-btn"
+                                aria-label="Like"
+                            >
+                                ${icons.like}
+                            </button>
 
-                        <button
-                            type="button"
-                            class="reel-action-btn reel-like-btn"
-                            aria-label="Like"
-                        >
-                            ${icons.like}
-                        </button>
+                            <button
+                                type="button"
+                                class="reel-action-btn reel-save-btn"
+                                aria-label="Save"
+                            >
+                                ${icons.save}
+                            </button>
 
-                        <button
-                            type="button"
-                            class="reel-action-btn reel-save-btn"
-                            aria-label="Save"
-                        >
-                            ${icons.save}
-                        </button>
+                            <button
+                                type="button"
+                                class="reel-action-btn reel-share-btn"
+                                aria-label="Share"
+                            >
+                                ${icons.share}
+                            </button>
 
-                        <button
-                            type="button"
-                            class="reel-action-btn reel-share-btn"
-                            aria-label="Share"
-                        >
-                            ${icons.share}
-                        </button>
+                            <button
+                                type="button"
+                                class="reel-action-btn reel-report-btn"
+                                aria-label="Report"
+                            >
+                                ${icons.report}
+                            </button>
 
-                        <button
-                            type="button"
-                            class="reel-action-btn reel-report-btn"
-                            aria-label="Report"
-                        >
-                            ${icons.report}
-                        </button>
+                        </div>
 
                     </div>
 
@@ -503,15 +502,6 @@ document.addEventListener("DOMContentLoaded", () => {
             .join("");
 
 
-    /* Remember which rotate icon each button was built with */
-
-    track
-        .querySelectorAll(".reel-rotate-btn")
-        .forEach(button => {
-            button.dataset.iconKind = getRotateIcon();
-        });
-
-
     /* =====================================================
        AVATAR IMAGE FALLBACK
     ===================================================== */
@@ -546,6 +536,336 @@ document.addEventListener("DOMContentLoaded", () => {
     let fullscreenSlide = null;
     let fullscreenIndex = null;
     let fullscreenScrollTop = 0;
+
+
+    /* =====================================================
+       FULLSCREEN STATE HELPERS
+
+       .is-fullscreen            real OR fallback fullscreen
+       .is-fallback-fullscreen   fallback only (no Fullscreen API)
+    ===================================================== */
+
+    function isRealFullscreenActive() {
+
+        return !!(
+            document.fullscreenElement ||
+            document.webkitFullscreenElement ||
+            document.mozFullScreenElement ||
+            document.msFullscreenElement
+        );
+    }
+
+
+    function isFallbackFullscreenActive(slide) {
+
+        return slide.classList.contains("is-fallback-fullscreen");
+    }
+
+
+    function isSlideInFullscreen(slide) {
+
+        return slide.classList.contains("is-fullscreen");
+    }
+
+
+    function isAnyFullscreenActive() {
+
+        return (
+            isRealFullscreenActive() ||
+            !!document.querySelector(".reel-slide.is-fallback-fullscreen")
+        );
+    }
+
+
+    /* =====================================================
+       CAPTION TOGGLE VISIBILITY
+
+       The caption sits behind a Show more / Show less toggle
+       whenever the info is INSIDE the card (compact mode:
+       mobile, and desktop / tablet without enough space).
+    ===================================================== */
+
+    function updateCaptionToggle(slide) {
+
+        const caption = slide.querySelector(".reel-caption");
+        const toggle = slide.querySelector(".reel-caption-toggle");
+        const info = slide.querySelector(".reel-info-outside");
+
+        if (!caption || !toggle || !info) return;
+
+        const compact = slide.classList.contains("is-compact");
+
+        if (!compact) {
+            info.classList.remove("is-caption-expanded");
+            toggle.hidden = true;
+            toggle.textContent = "Show more";
+            toggle.setAttribute("aria-expanded", "false");
+            return;
+        }
+
+        toggle.hidden = false;
+
+        const expanded = info.classList.contains("is-caption-expanded");
+
+        toggle.textContent = expanded ? "Show less" : "Show more";
+        toggle.setAttribute("aria-expanded", String(expanded));
+    }
+
+
+    function refreshCaptionToggles() {
+
+        slides.forEach(updateCaptionToggle);
+    }
+
+
+    function collapseCaption(slide) {
+
+        const info = slide.querySelector(".reel-info-outside");
+        const toggle = slide.querySelector(".reel-caption-toggle");
+
+        if (info) info.classList.remove("is-caption-expanded");
+
+        if (toggle) {
+            toggle.textContent = "Show more";
+            toggle.setAttribute("aria-expanded", "false");
+        }
+    }
+
+
+    /* =====================================================
+       UP / DOWN BUTTON PLACEMENT
+
+       Normally the up and down buttons sit stacked together
+       at the right side of the page.
+
+       When the ACTIVE reel is a landscape card (desktop /
+       tablet) whose right edge reaches those buttons (so they
+       would sit on top of its like / save controls), the
+       controls are SPLIT: the up button goes above the card
+       and the down button below it, at the same right-side
+       position. Portrait reels (or a landscape card that does
+       not reach the buttons) use the normal stacked position.
+    ===================================================== */
+
+    function updateNavPlacement() {
+
+        if (!navControls) {
+            return;
+        }
+
+        const activeSlide =
+            slides.find(slide => slide.classList.contains("is-active"));
+
+        const stage =
+            activeSlide
+                ? activeSlide.querySelector(".reel-stage")
+                : null;
+
+        const unsplit = () => {
+
+            navControls.classList.remove("is-split");
+            navControls.style.removeProperty("--nav-card-h");
+        };
+
+        if (
+            !stage ||
+            isMobileView() ||
+            !activeSlide.classList.contains("has-landscape-card")
+        ) {
+            unsplit();
+            return;
+        }
+
+        const feedRect = feed.getBoundingClientRect();
+        const stageRect = stage.getBoundingClientRect();
+
+        const navRight =
+            parseFloat(getComputedStyle(navControls).right) || 0;
+
+        /* Left edge of the (stacked) buttons, relative to the feed. */
+
+        const navLeft =
+            feedRect.width - navRight - NAV_BUTTON_SIZE;
+
+        const cardRight =
+            (stageRect.left - feedRect.left) + stageRect.width;
+
+        const overlapping =
+            cardRight > navLeft - NAV_OVERLAP_GAP;
+
+        if (!overlapping) {
+            unsplit();
+            return;
+        }
+
+        navControls.style.setProperty(
+            "--nav-card-h",
+            `${stage.offsetHeight}px`
+        );
+
+        navControls.classList.add("is-split");
+    }
+
+
+    /* =====================================================
+       CARD LAYOUT (desktop / tablet)
+
+       - Mobile (800px and below): the card is ALWAYS a 9:16
+         portrait card (sized in CSS). Landscape videos sit
+         inside it, letterboxed. Always compact.
+
+       - Desktop / tablet: the card is 9:16 for portrait
+         videos and 16:9 for landscape videos. The creator
+         info and action rail sit OUTSIDE the card while there
+         is room; otherwise the slide switches to compact and
+         they move INSIDE the card. The decision uses the real
+         width of the Reels area, not a fixed breakpoint.
+
+       Video orientation comes from the video's own metadata.
+       The video itself is never stretched or cropped.
+    ===================================================== */
+
+    function isMobileView() {
+
+        return window.matchMedia(MOBILE_QUERY).matches;
+    }
+
+
+    function sizeCard(landscape, compact, availW, availH) {
+
+        const ratio = landscape ? 16 / 9 : 9 / 16;
+
+        let heightLimit =
+            availH * (compact ? 0.9 : 0.92);
+
+        if (landscape && compact) {
+
+            /* Leave room above and below a compact landscape card
+               for the up / down buttons when they are split. */
+
+            heightLimit =
+                Math.min(
+                    heightLimit,
+                    availH - 2 * (NAV_BUTTON_SIZE + NAV_BUTTON_GAP + 10)
+                );
+        }
+
+        if (!landscape) {
+            heightLimit =
+                Math.min(
+                    heightLimit,
+                    compact
+                        ? MAX_COMPACT_PORTRAIT_HEIGHT
+                        : MAX_PORTRAIT_HEIGHT
+                );
+        }
+
+        let widthLimit =
+            compact
+                ? availW - 32
+                : availW - 2 * OUTSIDE_SIDE_SPACE;
+
+        if (landscape) {
+            widthLimit = Math.min(widthLimit, MAX_LANDSCAPE_WIDTH);
+        }
+
+        const width = Math.max(
+            Math.min(widthLimit, heightLimit * ratio),
+            0
+        );
+
+        return {
+            width,
+            height: width / ratio
+        };
+    }
+
+
+    function layoutSlide(slide) {
+
+        const landscape = slide.dataset.orientation === "landscape";
+
+        if (isMobileView()) {
+
+            slide.classList.add("is-compact");
+            slide.classList.remove("has-landscape-card");
+
+            slide.style.removeProperty("--card-w");
+            slide.style.removeProperty("--card-h");
+
+            updateCaptionToggle(slide);
+
+            return;
+        }
+
+        const availW = feed.clientWidth;
+        const availH = feed.clientHeight;
+
+        if (!availW || !availH) {
+            return;
+        }
+
+        const outside = sizeCard(landscape, false, availW, availH);
+
+        const natural = sizeCard(landscape, false, Infinity, availH);
+
+        const minWidth =
+            Math.min(
+                landscape
+                    ? MIN_OUTSIDE_WIDTH.landscape
+                    : MIN_OUTSIDE_WIDTH.portrait,
+                natural.width
+            );
+
+        const compact = outside.width < minWidth - 0.5;
+
+        const size =
+            compact
+                ? sizeCard(landscape, true, availW, availH)
+                : outside;
+
+        slide.style.setProperty("--card-w", `${Math.floor(size.width)}px`);
+        slide.style.setProperty("--card-h", `${Math.floor(size.height)}px`);
+
+        slide.classList.toggle("is-compact", compact);
+        slide.classList.toggle("has-landscape-card", landscape);
+
+        updateCaptionToggle(slide);
+    }
+
+
+    function layoutAllSlides() {
+
+        slides.forEach(layoutSlide);
+
+        updateNavPlacement();
+    }
+
+
+    function updateOrientation(slide, video) {
+
+        if (!video.videoWidth || !video.videoHeight) {
+            return;
+        }
+
+        const orientation =
+            video.videoWidth > video.videoHeight
+                ? "landscape"
+                : "portrait";
+
+        if (slide.dataset.orientation === orientation) {
+            return;
+        }
+
+        slide.dataset.orientation = orientation;
+
+        layoutSlide(slide);
+
+        updateNavPlacement();
+    }
+
+
+    layoutAllSlides();
 
 
     /* =====================================================
@@ -706,6 +1026,10 @@ document.addEventListener("DOMContentLoaded", () => {
            only that Reel can have sound. */
 
         applyMuteState();
+
+        /* ...and that the up / down buttons suit its shape. */
+
+        updateNavPlacement();
     }
 
 
@@ -782,57 +1106,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =====================================================
-       CAPTION: SHOW MORE / SHOW LESS (MOBILE + TABLET)
-    ===================================================== */
-
-    function collapseCaption(slide) {
-
-        const info = slide.querySelector(".reel-info-outside");
-        const toggle = slide.querySelector(".reel-caption-toggle");
-
-        if (info) info.classList.remove("is-caption-expanded");
-
-        if (toggle) {
-            toggle.textContent = "Show more";
-            toggle.setAttribute("aria-expanded", "false");
-        }
-    }
-
-
-    /* Mobile + tablet: captions stay hidden until Show more is tapped. */
-
-    function refreshCaptionToggles() {
-
-        const compact =
-            window.matchMedia(COMPACT_CAPTION_QUERY).matches;
-
-        slides.forEach(slide => {
-
-            const caption = slide.querySelector(".reel-caption");
-            const toggle = slide.querySelector(".reel-caption-toggle");
-            const info = slide.querySelector(".reel-info-outside");
-
-            if (!caption || !toggle || !info) return;
-
-            if (!compact) {
-                info.classList.remove("is-caption-expanded");
-                toggle.hidden = true;
-                toggle.textContent = "Show more";
-                toggle.setAttribute("aria-expanded", "false");
-                return;
-            }
-
-            /* Always show the toggle on mobile/tablet when a caption exists. */
-            toggle.hidden = false;
-
-            const expanded = info.classList.contains("is-caption-expanded");
-            toggle.textContent = expanded ? "Show less" : "Show more";
-            toggle.setAttribute("aria-expanded", String(expanded));
-        });
-    }
-
-
-    /* =====================================================
        PLAY ACTIVE REEL
     ===================================================== */
 
@@ -882,63 +1155,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =====================================================
-       FULLSCREEN STATE HELPER
-    ===================================================== */
-
-    function isRealFullscreenActive() {
-
-        return !!(
-            document.fullscreenElement ||
-            document.webkitFullscreenElement ||
-            document.mozFullScreenElement ||
-            document.msFullscreenElement
-        );
-    }
-
-
-    function isFallbackFullscreenActive(slide) {
-
-        return (
-            slide.classList.contains("mobile-reel-fullscreen") ||
-            slide.classList.contains("tablet-reel-fullscreen")
-        );
-    }
-
-
-    function isAnyFullscreenActive() {
-
-        return (
-            isRealFullscreenActive() ||
-            !!document.querySelector(
-                ".reel-slide.mobile-reel-fullscreen, " +
-                ".reel-slide.tablet-reel-fullscreen"
-            )
-        );
-    }
-
-
-    /* =====================================================
        ROTATE FEATURE
 
-       Manual two-state toggle only:
+       Rotation only ever turns the VIDEO 90deg inside its
+       (unchanged) card. The card never changes shape.
 
-       - Mobile: the video rotates in place inside the
-         untouched 9:16 card.
+       - Mobile: available in the normal view AND fullscreen.
+       - Desktop / tablet: fullscreen only. The state resets
+         when fullscreen ends, so the normal layout is
+         restored.
 
-       - Desktop / tablet: the card itself becomes a
-         16:9 landscape box; the video stays upright.
-
-       Rotation state lives on slide.dataset.rotated and
-       is never touched by fullscreen enter/exit, resize,
-       or device orientation - only the Rotate button
-       click changes it.
+       The video box is swapped (width <-> height of the
+       card) and then rotated, so its bounding box exactly
+       matches the card. object-fit: contain keeps the whole
+       video visible with its original aspect ratio, for
+       landscape and portrait sources alike.
     ===================================================== */
-
-    function isMobileRotateView() {
-
-        return window.matchMedia("(max-width: 800px)").matches;
-    }
-
 
     function resetVideoRotation(video) {
 
@@ -955,35 +1187,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    function resetCardRotation(card, video) {
-
-        if (!card) return;
-
-        card.classList.remove("reel-card-rotated");
-
-        card.style.removeProperty("--reel-rotate-w");
-        card.style.removeProperty("--reel-rotate-h");
-
-        const slide = card.closest(".reel-slide");
-
-        if (slide) {
-
-            slide.classList.remove("reel-slide-rotated");
-
-            slide.style.removeProperty("--reel-rotate-w");
-            slide.style.removeProperty("--reel-rotate-h");
-        }
-
-        if (video) {
-            video.classList.remove("reel-video-contain");
-        }
-    }
-
-
-    /* -----------------------------------------------------
-       MOBILE: rotate the video in place
-    ----------------------------------------------------- */
-
     function rotateVideoInPlace(card, video) {
 
         const width = card.clientWidth;
@@ -994,9 +1197,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         video.classList.add("reel-video-rotated");
-
-        /* Swap the rendered box so that once rotated 90deg,
-           its bounding box exactly matches the 9:16 card. */
 
         video.style.setProperty("--reel-media-rotate-w", `${height}px`);
         video.style.setProperty("--reel-media-rotate-h", `${width}px`);
@@ -1009,118 +1209,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    /* -----------------------------------------------------
-       DESKTOP / TABLET: available width beside the card
-    ----------------------------------------------------- */
-
-    function getAvailableCardWidth(slide) {
-
-        const inFullscreen =
-            isRealFullscreenActive() ||
-            isFallbackFullscreenActive(slide);
-
-        if (inFullscreen) {
-            return window.innerWidth * 0.96;
-        }
-
-        const row = slide.querySelector(".reel-row");
-
-        if (!row) {
-            return window.innerWidth * 0.6;
-        }
-
-        const rowWidth = row.clientWidth;
-
-        /* Leave room for the info panel and action buttons. */
-
-        const reserved = 480;
-
-        return Math.max(rowWidth - reserved, 320);
-    }
-
-
-    /* -----------------------------------------------------
-       DESKTOP / TABLET: rotate the card to landscape
-    ----------------------------------------------------- */
-
-    function rotateCardToLandscape(slide, card, video) {
-
-        const inFullscreen =
-            isRealFullscreenActive() ||
-            isFallbackFullscreenActive(slide);
-
-        const wasRotated =
-            card.classList.contains("reel-card-rotated");
-
-        if (wasRotated) {
-
-            card.classList.remove("reel-card-rotated");
-
-            card.style.removeProperty("--reel-rotate-w");
-            card.style.removeProperty("--reel-rotate-h");
-
-            void card.offsetHeight;
-        }
-
-        const naturalHeight =
-            inFullscreen
-                ? window.innerHeight
-                : card.clientHeight;
-
-        if (!naturalHeight) {
-            return;
-        }
-
-        let targetHeight = naturalHeight;
-        let targetWidth = targetHeight * (16 / 9);
-
-        const availableWidth = getAvailableCardWidth(slide);
-
-        if (targetWidth > availableWidth) {
-
-            targetWidth = availableWidth;
-
-            targetHeight = targetWidth * (9 / 16);
-        }
-
-        if (inFullscreen) {
-
-            const maxHeight = window.innerHeight * 0.98;
-
-            if (targetHeight > maxHeight) {
-
-                targetHeight = maxHeight;
-
-                targetWidth = targetHeight * (16 / 9);
-            }
-        }
-
-        /* CARD ROTATION SIZE */
-
-        card.style.setProperty("--reel-rotate-w", `${targetWidth}px`);
-        card.style.setProperty("--reel-rotate-h", `${targetHeight}px`);
-
-        /* SLIDE ROTATION SIZE: the slide receives the same
-           dimensions so the outside info and action rail can
-           position themselves relative to the landscape card. */
-
-        slide.style.setProperty("--reel-rotate-w", `${targetWidth}px`);
-        slide.style.setProperty("--reel-rotate-h", `${targetHeight}px`);
-
-        slide.classList.add("reel-slide-rotated");
-
-        card.classList.add("reel-card-rotated");
-
-        if (video) {
-            video.classList.add("reel-video-contain");
-        }
-    }
-
-
-    /* -----------------------------------------------------
-       APPLY CURRENT ROTATION STATE
-    ----------------------------------------------------- */
-
     function applyRotationState(slide) {
 
         const card = slide.querySelector(".reel-card");
@@ -1130,34 +1218,21 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const rotated = slide.dataset.rotated === "true";
+        const canRotate =
+            isMobileView() ||
+            isSlideInFullscreen(slide);
 
-        if (isMobileRotateView()) {
+        const rotated =
+            slide.dataset.rotated === "true" &&
+            canRotate;
 
-            resetCardRotation(card, video);
-
-            if (rotated) {
-                rotateVideoInPlace(card, video);
-            } else {
-                resetVideoRotation(video);
-            }
-
+        if (rotated) {
+            rotateVideoInPlace(card, video);
         } else {
-
             resetVideoRotation(video);
-
-            if (rotated) {
-                rotateCardToLandscape(slide, card, video);
-            } else {
-                resetCardRotation(card, video);
-            }
         }
     }
 
-
-    /* =====================================================
-       ROTATE BUTTON STATE
-    ===================================================== */
 
     function updateRotateButton(slide, rotated) {
 
@@ -1178,15 +1253,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    /* =====================================================
-       TOGGLE ROTATE
-    ===================================================== */
-
     function toggleRotate(slide) {
 
-        const rotated = slide.dataset.rotated === "true";
-
-        const next = !rotated;
+        const next = slide.dataset.rotated !== "true";
 
         slide.dataset.rotated = String(next);
 
@@ -1196,12 +1265,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    /* =====================================================
-       REAPPLY AFTER A LAYOUT CHANGE (fullscreen enter/exit)
+    function resetRotation(slide) {
 
-       Never changes the rotation state itself,
-       only re-measures sizing.
-    ===================================================== */
+        slide.dataset.rotated = "false";
+
+        applyRotationState(slide);
+
+        updateRotateButton(slide, false);
+    }
+
+
+    /* Re-measure after a layout change (fullscreen enter / exit).
+       Never changes the rotation state itself. */
 
     function reapplyRotationAfterLayoutChange(slide) {
 
@@ -1229,8 +1304,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.addEventListener("resize", () => {
 
-        /* Swap the rotate icon when crossing the mobile breakpoint */
-        refreshRotateIcons();
+        /* Layout (compact / outside, card size, caption toggle,
+           up / down button placement) follows the real
+           available space. */
+
+        layoutAllSlides();
 
         clearTimeout(rotateResizeTimeout);
 
@@ -1239,10 +1317,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 slides.forEach(slide => {
 
-                    if (slide.dataset.rotated === "true") {
-
-                        applyRotationState(slide);
+                    if (slide.dataset.rotated !== "true") {
+                        return;
                     }
+
+                    /* Desktop / tablet outside fullscreen: no rotation. */
+
+                    if (
+                        !isMobileView() &&
+                        !isSlideInFullscreen(slide)
+                    ) {
+                        resetRotation(slide);
+                        return;
+                    }
+
+                    applyRotationState(slide);
                 });
 
             }, 150);
@@ -1320,6 +1409,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!video) {
             return;
+        }
+
+
+        /* ORIENTATION: from the video's real dimensions */
+
+        video.addEventListener(
+            "loadedmetadata",
+            () => updateOrientation(slide, video)
+        );
+
+        if (video.readyState >= 1) {
+            updateOrientation(slide, video);
         }
 
 
@@ -1496,7 +1597,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
-        /* CAPTION: show more / show less (mobile + tablet) */
+        /* CAPTION: show more / show less (compact mode) */
 
         const captionToggle =
             event.target.closest(".reel-caption-toggle");
@@ -1739,14 +1840,11 @@ document.addEventListener("DOMContentLoaded", () => {
     function exitFallbackFullscreen(slide, card) {
 
         slide.classList.remove(
-            "mobile-reel-fullscreen",
-            "tablet-reel-fullscreen"
+            "is-fallback-fullscreen",
+            "is-fullscreen"
         );
 
-        document.body.classList.remove(
-            "mobile-reel-fullscreen-active",
-            "tablet-reel-fullscreen-active"
-        );
+        document.body.classList.remove("fallback-fullscreen-active");
 
         updateFullscreenButton(card, false);
     }
@@ -1820,6 +1918,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 await requestElementFullscreen(card);
 
+                slide.classList.add("is-fullscreen");
+
                 updateFullscreenButton(card, true);
 
                 reapplyRotationAfterLayoutChange(slide);
@@ -1846,32 +1946,21 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
-        /* FALLBACK FULLSCREEN */
+        /* FALLBACK FULLSCREEN (mobile / tablet only) */
 
-        const isMobile =
-            window.matchMedia("(max-width: 800px)").matches;
+        const isMobileOrTablet =
+            window.matchMedia("(max-width: 1150px)").matches;
 
-        const isTablet =
-            window.matchMedia(
-                "(min-width: 801px) and (max-width: 1150px)"
-            ).matches;
-
-        if (isMobile) {
-
-            slide.classList.add("mobile-reel-fullscreen");
-
-            document.body.classList.add("mobile-reel-fullscreen-active");
-
-        } else if (isTablet) {
-
-            slide.classList.add("tablet-reel-fullscreen");
-
-            document.body.classList.add("tablet-reel-fullscreen-active");
-
-        } else {
-
+        if (!isMobileOrTablet) {
             return;
         }
+
+        slide.classList.add(
+            "is-fallback-fullscreen",
+            "is-fullscreen"
+        );
+
+        document.body.classList.add("fallback-fullscreen-active");
 
         updateFullscreenButton(card, true);
 
@@ -1892,12 +1981,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     /* =====================================================
        RESTORE REEL AFTER FULLSCREEN
+
+       Desktop / tablet: rotation only exists in fullscreen,
+       so it is reset here and the normal layout returns.
+       Mobile keeps its rotation state.
     ===================================================== */
 
     function restoreReelAfterFullscreen(slide) {
 
         if (!slide) {
             return;
+        }
+
+        if (!isMobileView()) {
+            resetRotation(slide);
         }
 
         const index = slides.indexOf(slide);
@@ -1931,6 +2028,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (!targetSlide) {
                     return;
                 }
+
+                layoutAllSlides();
 
                 feed.scrollTo({
                     top: targetSlide.offsetTop,
@@ -2005,21 +2104,23 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            updateFullscreenButton(
-                card,
-                currentlyFullscreen === card
-            );
+            const inFullscreen =
+                currentlyFullscreen === card ||
+                isFallbackFullscreenActive(slide);
+
+            slide.classList.toggle("is-fullscreen", inFullscreen);
+
+            updateFullscreenButton(card, currentlyFullscreen === card);
+
+            if (currentlyFullscreen === card) {
+                reapplyRotationAfterLayoutChange(slide);
+            }
         });
 
 
         /* REAL FULLSCREEN HAS ENDED */
 
         if (!isRealFullscreenActive()) {
-
-            document.body.classList.remove(
-                "mobile-reel-fullscreen-active",
-                "tablet-reel-fullscreen-active"
-            );
 
             if (fullscreenSlide) {
 
@@ -2048,10 +2149,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const fallbackFullscreenSlide =
-            document.querySelector(
-                ".reel-slide.mobile-reel-fullscreen, " +
-                ".reel-slide.tablet-reel-fullscreen"
-            );
+            document.querySelector(".reel-slide.is-fallback-fullscreen");
 
         if (fallbackFullscreenSlide) {
 
@@ -2172,15 +2270,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     playCurrentSlide();
 
+    layoutAllSlides();
+
     refreshCaptionToggles();
 
-    refreshRotateIcons();
-
     window.addEventListener("load", () => {
+        layoutAllSlides();
         refreshCaptionToggles();
-        refreshRotateIcons();
     });
-
-    window.addEventListener("resize", refreshCaptionToggles);
 
 });

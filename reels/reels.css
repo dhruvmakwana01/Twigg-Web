@@ -180,42 +180,59 @@ body {
 
 /* =========================================================
    REEL ROW
+   Simply centres the stage. Everything else (creator info,
+   action rail) is positioned relative to the stage.
 ========================================================= */
 
 .reel-row {
     position: relative;
     width: 100%;
     height: 100%;
-    max-width: 1300px;
-    padding: 0 40px;
+    padding: 0;
     margin: 0 auto;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    display: flex;
     align-items: center;
+    justify-content: center;
 }
 
 /* =========================================================
-   REEL INFORMATION
+   REEL STAGE
+
+   One wrapper around: creator info + card + action rail.
+   Its size IS the card size. reels.js sets --card-w and
+   --card-h on the slide (portrait 9:16 or landscape 16:9,
+   depending on the video, and on the space available).
+   The fallbacks below match the default portrait card.
+========================================================= */
+
+.reel-stage {
+    position: relative;
+    flex: 0 0 auto;
+    width: var(--card-w, calc(min(92vh, 800px) * 9 / 16));
+    height: var(--card-h, min(92vh, 800px));
+}
+
+/* =========================================================
+   REEL INFORMATION (outside the card, desktop default)
 ========================================================= */
 
 .reel-info-outside {
-    /* Creator avatar sizing (desktop). The avatar sits above
-       the name, so the whole block is moved down by the
-       avatar height + gap. */
+    /* Creator avatar sizing. The avatar sits above the name. */
     --reel-avatar-size: 56px;
     --reel-avatar-gap: 12px;
-    grid-column: 1;
+
+    position: absolute;
+    right: 100%;
+    bottom: calc(min(18vh, 160px) - var(--reel-avatar-size) - var(--reel-avatar-gap));
     width: 200px;
-    /* Keep the creator details clearly separated from the reel card. */
+    /* Keep the creator details clearly separated from the card. */
     margin-right: 28px;
-    justify-self: end;
-    align-self: end;
-    margin-bottom: calc((100vh - min(92vh, 800px)) / 2 + min(18vh, 160px) - var(--reel-avatar-size) - var(--reel-avatar-gap));
+    z-index: 20;
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
     transform: translateX(0);
-    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease, max-width 0.2s ease;
 }
 
 .reel-slide.is-active .reel-info-outside {
@@ -280,8 +297,8 @@ body {
 
 /* =========================================================
    CREATOR AVATAR
-   Desktop / tablet: stacked above the creator name.
-   (Mobile switches this to a horizontal row further down.)
+   Outside the card: stacked above the creator name.
+   (Compact mode switches this further down.)
 ========================================================= */
 
 .reel-creator {
@@ -329,14 +346,14 @@ body {
 
 /* =========================================================
    REEL CARD
+   Fills the stage. Portrait (9:16) or landscape (16:9) is
+   decided by reels.js through the stage size.
 ========================================================= */
 
 .reel-card {
-    grid-column: 2;
     position: relative;
-    width: auto;
-    height: min(92vh, 800px);
-    aspect-ratio: 9 / 16;
+    width: 100%;
+    height: 100%;
     overflow: hidden;
     border-radius: 0;
     background: #000000;
@@ -346,6 +363,9 @@ body {
 
 /* =========================================================
    REEL VIDEO
+   Always shown whole: object-fit: contain keeps the original
+   aspect ratio (no crop, zoom or stretch). Any spare space
+   inside the card stays black.
 ========================================================= */
 
 .reel-video {
@@ -443,6 +463,19 @@ body {
     stroke-width: 1.8;
 }
 
+/* Desktop / tablet: rotation is a FULLSCREEN-only feature.
+   (Mobile keeps it in the normal view too, see the mobile block.) */
+@media (min-width: 801px) {
+
+    .reel-rotate-btn {
+        display: none;
+    }
+
+    .reel-slide.is-fullscreen .reel-rotate-btn {
+        display: flex;
+    }
+}
+
 /* =========================================================
    PLAY INDICATOR
 ========================================================= */
@@ -530,38 +563,16 @@ body {
 /* =========================================================
    ROTATE FEATURE
 
-   Rotation is a manual, two-state toggle only.
-   - Mobile: the video rotates in place, the card
-     (9:16) never changes shape.
-   - Desktop / tablet: the card itself swaps to a
-     16:9 landscape box, the video stays upright.
+   The card is never rotated or reshaped any more. Rotation
+   only turns the VIDEO 90deg inside its card:
+   - Mobile: available in the normal view and in fullscreen.
+   - Desktop / tablet: available in fullscreen only.
 
-   --reel-rotate-w / --reel-rotate-h are computed and
-   set in JS (reels.js) right before the rotated class
-   is applied.
+   reels.js sets the swapped width / height inline (and the
+   --reel-media-rotate-w/-h variables) so the rotated video
+   still fits the card completely, with object-fit: contain.
 ========================================================= */
 
-.reel-card {
-    transition: width 0.3s ease, height 0.3s ease;
-}
-
-.reel-video {
-    transition: transform 0.3s ease;
-}
-
-/* Desktop / tablet: card rotates to landscape. */
-.reel-slide .reel-card.reel-card-rotated {
-    width: var(--reel-rotate-w, auto);
-    height: var(--reel-rotate-h, auto);
-    aspect-ratio: 16 / 9;
-}
-
-/* Desktop / tablet: video stays upright, fits without cropping. */
-.reel-video.reel-video-contain {
-    object-fit: contain;
-}
-
-/* Mobile: video rotates in place inside the untouched 9:16 card. */
 .reel-video.reel-video-rotated {
     position: absolute;
     top: 50%;
@@ -577,19 +588,19 @@ body {
 }
 
 /* =========================================================
-   REEL ACTIONS
+   REEL ACTIONS (outside the card, desktop default)
 ========================================================= */
 
 .reel-actions {
-    grid-column: 3;
-    justify-self: start;
-    align-self: end;
-    margin-bottom: calc((100vh - min(92vh, 800px)) / 2 + 20px);
+    position: absolute;
+    left: 100%;
+    bottom: 20px;
+    margin-left: 22px;
+    z-index: 20;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 30px;
-    transform: translateX(22px);
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -649,7 +660,18 @@ body {
 }
 
 /* =========================================================
-   REEL NAVIGATION
+   REEL NAVIGATION (up / down)
+
+   Normal: the two buttons are stacked together, vertically
+   centred against the right side of the page.
+
+   .is-split (set by reels.js ONLY when the active reel is a
+   landscape card that reaches the buttons and would overlap
+   its like / save controls): the up button moves above the
+   card and the down button below it, at the same right-side
+   position. --nav-card-h is the card height; the gap between
+   the two buttons becomes the card height + 14px above and
+   below. Portrait reels go back to the normal stacked state.
 ========================================================= */
 
 .reel-nav-controls {
@@ -661,6 +683,11 @@ body {
     flex-direction: column;
     gap: 14px;
     transform: translateY(-50%);
+    transition: gap 0.2s ease;
+}
+
+.reel-nav-controls.is-split {
+    gap: calc(var(--nav-card-h, 0px) + 28px);
 }
 
 .reel-nav-btn {
@@ -695,91 +722,363 @@ body {
 }
 
 /* =========================================================
-   REAL FULLSCREEN
+   COMPACT MODE  (.is-compact on the slide)
+
+   Set by reels.js whenever the creator info and action rail
+   do not fit comfortably BESIDE the card (decided from the
+   real available width, not a fixed breakpoint) and always
+   on mobile. The info block and actions then sit INSIDE the
+   card, over the video.
+
+   .has-landscape-card = desktop / tablet card is 16:9.
 ========================================================= */
 
-.reel-card:fullscreen,
-.reel-card:-webkit-full-screen {
-    position: fixed;
-    inset: 0;
-    margin: auto;
-    width: min(100vw, calc(100vh * 9 / 16));
-    height: min(100vh, calc(100vw * 16 / 9));
-    max-width: 100vw;
-    max-height: 100vh;
-    aspect-ratio: 9 / 16;
+.reel-slide.is-compact {
+    --compact-inset: 13px;
+}
+
+.reel-slide.is-compact .reel-info-outside {
+    --reel-avatar-size: 34px;
+    --reel-avatar-gap: 8px;
+
+    right: auto;
+    left: var(--compact-inset);
+    bottom: calc(var(--compact-inset) + 4px);
+    width: auto;
+    max-width: calc(100% - 2 * var(--compact-inset));
+    margin: 0;
+    color: #ffffff;
+    transform: none;
+    transform-origin: left bottom;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+.reel-slide.is-compact.is-active .reel-info-outside:hover {
+    transform: scale(1.03);
+}
+
+/* Landscape card: keep the info clear of the action rail. */
+.reel-slide.is-compact.has-landscape-card .reel-info-outside {
+    max-width: calc(100% - 2 * var(--compact-inset) - 72px);
+}
+
+/* Avatar + name on one row, name centred on the avatar. */
+.reel-slide.is-compact .reel-creator {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
+.reel-slide.is-compact .reel-avatar {
+    border: 2px solid rgba(255, 255, 255, 0.92);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+.reel-slide.is-compact .reel-service-name {
+    color: #ffffff;
+    font-size: 18px;
+}
+
+.reel-slide.is-compact .reel-category {
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 13px;
+}
+
+.reel-slide.is-compact .reel-rating {
+    margin-top: 8px;
+    gap: 6px;
+}
+
+.reel-slide.is-compact .reel-stars svg {
+    width: 15px;
+    height: 15px;
+}
+
+.reel-slide.is-compact .reel-rating-value {
+    color: #ffffff;
+    font-size: 13px;
+}
+
+.reel-slide.is-compact .reel-review-count {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 12px;
+}
+
+/* Actions over the card */
+
+.reel-slide.is-compact .reel-actions {
+    left: auto;
+    right: calc(var(--compact-inset) - 2px);
+    bottom: 105px;
+    margin: 0;
+    gap: 28px;
+}
+
+.reel-slide.is-compact .reel-action-btn {
+    color: #ffffff;
+}
+
+.reel-slide.is-compact .reel-action-btn svg {
+    width: 29px;
+    height: 29px;
+}
+
+/* Saved icon turns white so it shows on the video */
+.reel-slide.is-compact .reel-save-btn.is-saved svg {
+    fill: #ffffff;
+    stroke: #ffffff;
+}
+
+/* Landscape card is short: sit the rail low and tight. */
+.reel-slide.is-compact.has-landscape-card .reel-actions {
+    bottom: 26px;
+    gap: 18px;
+}
+
+/* Desktop / tablet compact: roomier inset, stacked avatar. */
+@media (min-width: 801px) {
+
+    .reel-slide.is-compact {
+        --compact-inset: 28px;
+    }
+
+    .reel-slide.is-compact .reel-info-outside {
+        --reel-avatar-size: 46px;
+        --reel-avatar-gap: 10px;
+    }
+
+    .reel-slide.is-compact .reel-creator {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--reel-avatar-gap);
+    }
+
+    .reel-slide.is-compact .reel-service-name {
+        font-size: 17px;
+    }
+
+    .reel-slide.is-compact .reel-category {
+        font-size: 13px;
+    }
+}
+
+/* =========================================================
+   CAPTION
+   Outside the card: full caption under the rating. No toggle.
+   Compact: hidden until "Show more" is tapped; expanded shows
+   everything on a dark gradient and the block grows upward.
+========================================================= */
+
+.reel-caption-wrap {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin-top: 12px;
+}
+
+.reel-caption {
+    color: #444444;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.45;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 8;
+    overflow: hidden;
+}
+
+.reel-caption-toggle {
+    display: none;
+}
+
+.reel-caption-toggle[hidden] {
+    display: none !important;
+}
+
+/* Landscape cards are shorter: fewer caption lines outside. */
+.reel-slide.has-landscape-card:not(.is-compact) .reel-caption {
+    -webkit-line-clamp: 4;
+}
+
+.reel-slide.is-compact .reel-caption-wrap {
+    margin-top: 8px;
+}
+
+.reel-slide.is-compact .reel-caption {
+    /* Hidden until Show more is tapped. */
+    display: none;
+    width: 100%;
+    max-width: 100%;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 13px;
+    line-height: 1.4;
+    -webkit-line-clamp: unset;
+    overflow-wrap: anywhere;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+
+.reel-slide.is-compact .reel-caption-toggle {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 2px 0;
+    border: 0;
+    background: none;
+    color: #ffffff;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.reel-slide.is-compact .reel-info-outside.is-caption-expanded::before {
+    content: "";
+    position: absolute;
+    inset: -36px -18px calc(-1 * (var(--compact-inset) + 4px)) calc(-1 * var(--compact-inset));
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.35) 70%, transparent);
+}
+
+.reel-slide.is-compact .reel-info-outside.is-caption-expanded .reel-caption {
+    display: block;
+    max-height: min(36vh, calc(var(--card-h, 100vh) * 0.4));
+    overflow-y: auto;
+    overflow-wrap: anywhere;
+    scrollbar-width: none;
+}
+
+.reel-slide.is-compact .reel-info-outside.is-caption-expanded .reel-caption::-webkit-scrollbar {
+    display: none;
+}
+
+/* =========================================================
+   FULLSCREEN  (real fullscreen AND the mobile / tablet
+   fallback)
+
+   reels.js adds .is-fullscreen to the slide in both cases.
+   The card fills the whole screen; the video is letterboxed
+   with object-fit: contain, so it is never cropped.
+   The rotate button is available here on every device.
+========================================================= */
+
+.reel-slide.is-fullscreen .reel-card {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
     border-radius: 0;
     box-shadow: none;
     background: #000000;
 }
 
-.reel-card:fullscreen::backdrop,
-.reel-card:-webkit-full-screen::backdrop {
-    background: #000000;
-}
-
-.reel-card:fullscreen .reel-video,
-.reel-card:-webkit-full-screen .reel-video {
+.reel-slide.is-fullscreen .reel-video:not(.reel-video-rotated) {
     width: 100%;
     height: 100%;
     object-fit: contain;
 }
 
-.reel-card:fullscreen .reel-video.reel-video-rotated,
-.reel-card:-webkit-full-screen .reel-video.reel-video-rotated {
+.reel-slide.is-fullscreen .reel-video.reel-video-rotated {
     width: var(--reel-media-rotate-w, 100%) !important;
     height: var(--reel-media-rotate-h, 100%) !important;
     transform: translate(-50%, -50%) rotate(90deg) !important;
     object-fit: contain !important;
 }
 
-.reel-card:fullscreen .reel-mute-btn,
-.reel-card:-webkit-full-screen .reel-mute-btn {
+.reel-slide.is-fullscreen .reel-mute-btn {
     top: 18px;
     right: 18px;
 }
 
-.reel-card:fullscreen .reel-fullscreen-btn,
-.reel-card:-webkit-full-screen .reel-fullscreen-btn {
+.reel-slide.is-fullscreen .reel-fullscreen-btn {
     top: 66px;
     right: 18px;
 }
 
-.reel-card:fullscreen .reel-rotate-btn,
-.reel-card:-webkit-full-screen .reel-rotate-btn {
+.reel-slide.is-fullscreen .reel-rotate-btn {
+    display: flex;
     top: 114px;
     right: 18px;
 }
 
-.reel-card:fullscreen .reel-progress-track,
-.reel-card:-webkit-full-screen .reel-progress-track {
+.reel-slide.is-fullscreen .reel-progress-track {
     height: 4px;
 }
 
-/* Rotated card while in real fullscreen (desktop / tablet). */
-.reel-slide .reel-card.reel-card-rotated:fullscreen,
-.reel-slide .reel-card.reel-card-rotated:-webkit-full-screen {
-    width: var(--reel-rotate-w, min(100vw, calc(100vh * 16 / 9)));
-    height: var(--reel-rotate-h, min(100vh, calc(100vw * 9 / 16)));
-    aspect-ratio: 16 / 9;
-    max-width: 100vw;
-    max-height: 100vh;
+.reel-slide.is-fullscreen .reel-info-outside,
+.reel-slide.is-fullscreen .reel-actions {
+    display: none;
+}
+
+/* ---------- Fallback fullscreen (no Fullscreen API) ---------- */
+
+body.fallback-fullscreen-active {
+    background: #000000;
+    overflow: hidden;
+}
+
+body.fallback-fullscreen-active .logo,
+body.fallback-fullscreen-active .navigation,
+body.fallback-fullscreen-active .filter-button,
+body.fallback-fullscreen-active .reel-nav-controls {
+    display: none;
+}
+
+body.fallback-fullscreen-active .sidebar {
+    width: 0;
+    height: 0;
+    min-height: 0;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    overflow: visible;
+}
+
+body.fallback-fullscreen-active .reels-feed {
+    overflow: hidden;
+}
+
+.reel-slide.is-fallback-fullscreen {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+    background: #000000;
+    z-index: 5000;
+    overflow: hidden;
+    scroll-snap-align: none;
+    scroll-snap-stop: normal;
+}
+
+.reel-slide.is-fallback-fullscreen .reel-row {
+    width: 100vw;
+    height: 100dvh;
+    max-width: none;
+    padding: 0;
+    margin: 0;
+}
+
+.reel-slide.is-fallback-fullscreen .reel-stage {
+    width: 100%;
+    height: 100%;
 }
 
 /* =========================================================
-   TABLET
-   801px - 1150px
+   TABLET  (801px - 1150px)
+   Sidebar / filter / navigation sizing only. The reel
+   layout itself is space-based (see reels.js), not
+   breakpoint-based.
 ========================================================= */
 
 @media (min-width: 801px) and (max-width: 1150px) {
 
     :root {
         --tablet-sidebar-width: 195px;
-        --tablet-reel-height: min(90vh, 720px);
-        --tablet-reel-width: calc(var(--tablet-reel-height) * 9 / 16);
     }
-
-    /* SIDEBAR */
 
     .sidebar {
         width: var(--tablet-sidebar-width);
@@ -799,6 +1098,8 @@ body {
     }
 
     .filter-button {
+        position: relative;
+        z-index: 100;
         width: 100%;
         height: 46px;
         margin-top: 34px;
@@ -843,315 +1144,8 @@ body {
         right: 0;
     }
 
-    /* REEL ROW */
-
-    .reel-row {
-        padding: 0 30px;
-    }
-
-    /* TABLET REEL CARD */
-
-    .reel-card {
-        height: var(--tablet-reel-height);
-        width: var(--tablet-reel-width);
-        aspect-ratio: 9 / 16;
-        border-radius: 0;
-    }
-
-    /* TABLET CREATOR INFO */
-
-    .reel-info-outside {
-        position: absolute !important;
-        left: calc(50% - (var(--tablet-reel-width) / 2) + 30px);
-        bottom: calc((100vh - var(--tablet-reel-height)) / 2 + 28px);
-        width: auto;
-        max-width: calc(var(--tablet-reel-width) - 60px);
-        margin: 0 !important;
-        z-index: 20;
-        grid-column: auto;
-        justify-self: auto;
-        align-self: auto;
-        color: #ffffff;
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-        transform: none;
-        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
-    }
-
-    .reel-slide.is-active .reel-info-outside {
-        opacity: 1;
-        visibility: visible;
-        pointer-events: auto;
-    }
-
-    .reel-slide.is-active .reel-info-outside:hover {
-        transform: scale(1.03);
-    }
-
-    /* TABLET INFO TEXT */
-
-    .reel-service-name {
-        color: #ffffff;
-        font-size: 17px;
-        font-weight: 600;
-    }
-
-    .reel-category {
-        color: rgba(255, 255, 255, 0.82);
-        font-size: 13px;
-    }
-
-    .reel-rating {
-        margin-top: 8px;
-        gap: 6px;
-    }
-
-    .reel-stars svg {
-        width: 15px;
-        height: 15px;
-    }
-
-    .reel-rating-value {
-        color: #ffffff;
-        font-size: 13px;
-    }
-
-    .reel-review-count {
-        color: rgba(255, 255, 255, 0.75);
-        font-size: 12px;
-    }
-
-    /* TABLET CREATOR AVATAR (info sits over the video) */
-
-    .reel-info-outside {
-        --reel-avatar-size: 46px;
-        --reel-avatar-gap: 10px;
-    }
-
-    .reel-avatar {
-        border: 2px solid rgba(255, 255, 255, 0.92);
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
-    }
-
-    /* TABLET ACTIONS */
-
-    .reel-actions {
-        position: fixed !important;
-        left: calc((100vw + var(--tablet-sidebar-width) + var(--tablet-reel-width)) / 2 + 22px) !important;
-        right: auto !important;
-        bottom: calc((100vh - var(--tablet-reel-height)) / 2 + 26px) !important;
-        margin: 0 !important;
-        width: 34px;
-        z-index: 200 !important;
-        display: flex !important;
-        flex-direction: column;
-        align-items: center;
-        gap: 25px;
-        transform: none !important;
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-    }
-
-    .reel-slide.is-active .reel-actions {
-        opacity: 1 !important;
-        visibility: visible !important;
-        pointer-events: auto !important;
-    }
-
-    /* TABLET ACTION BUTTONS */
-
-    .reel-action-btn {
-        position: relative;
-        width: 34px;
-        height: 34px;
-        padding: 0;
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
-        border: 0;
-        outline: 0;
-        background: transparent;
-        color: #222222 !important;
-        cursor: pointer;
-        text-shadow: none;
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    .reel-action-btn svg {
-        display: block;
-        width: 28px;
-        height: 28px;
-        fill: none;
-        stroke: currentColor;
-        stroke-width: 1.7;
-        transition: transform 0.15s ease;
-    }
-
-    .reel-action-btn:hover svg {
-        transform: scale(1.08);
-    }
-
-    .reel-like-btn.is-liked svg {
-        fill: #ff2d55;
-        stroke: #ff2d55;
-    }
-
-    .reel-save-btn.is-saved svg {
-        fill: #111111;
-        stroke: #111111;
-    }
-
-    .reel-report-btn.is-reported svg {
-        fill: #f5a623;
-        stroke: #f5a623;
-    }
-
-    /* TABLET NAVIGATION */
-
     .reel-nav-controls {
         right: 18px;
-    }
-
-    /* TABLET FILTER */
-
-    .filter-button {
-        position: relative;
-        z-index: 100;
-    }
-
-    /* TABLET FALLBACK FULLSCREEN */
-
-    body.tablet-reel-fullscreen-active {
-        background: #000000 !important;
-        overflow: hidden !important;
-    }
-
-    body.tablet-reel-fullscreen-active .logo {
-        display: none !important;
-    }
-
-    body.tablet-reel-fullscreen-active .sidebar {
-        width: 0 !important;
-        padding: 0 !important;
-        background: transparent !important;
-        overflow: visible !important;
-        border: 0 !important;
-    }
-
-    body.tablet-reel-fullscreen-active .navigation {
-        display: none !important;
-    }
-
-    body.tablet-reel-fullscreen-active .filter-button {
-        display: none !important;
-    }
-
-    .reel-slide.tablet-reel-fullscreen {
-        position: fixed !important;
-        inset: 0 !important;
-        width: 100vw !important;
-        height: 100dvh !important;
-        min-height: 0 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        background: #000000 !important;
-        z-index: 5000 !important;
-        overflow: hidden !important;
-        scroll-snap-align: none !important;
-        scroll-snap-stop: normal !important;
-    }
-
-    .reel-slide.tablet-reel-fullscreen .reel-row {
-        position: relative !important;
-        width: 100vw !important;
-        height: 100dvh !important;
-        max-width: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-
-    .reel-slide.tablet-reel-fullscreen .reel-card {
-        position: relative !important;
-        flex: 0 0 auto !important;
-        width: min(100vw, calc(100dvh * 9 / 16)) !important;
-        height: min(100dvh, calc(100vw * 16 / 9)) !important;
-        min-width: 0 !important;
-        min-height: 0 !important;
-        max-width: 100vw !important;
-        max-height: 100dvh !important;
-        aspect-ratio: 9 / 16 !important;
-        margin: 0 !important;
-        border-radius: 0 !important;
-        overflow: hidden !important;
-        background: #000000 !important;
-        box-shadow: none !important;
-        transform: none !important;
-    }
-
-    /* Rotated card is allowed to become landscape in fullscreen */
-    .reel-slide.tablet-reel-fullscreen .reel-card.reel-card-rotated {
-        width: var(--reel-rotate-w, min(100vw, calc(100dvh * 16 / 9))) !important;
-        height: var(--reel-rotate-h, min(100dvh, calc(100vw * 9 / 16))) !important;
-        aspect-ratio: 16 / 9 !important;
-        max-width: 100vw !important;
-        max-height: 100dvh !important;
-    }
-
-    .reel-slide.tablet-reel-fullscreen .reel-video {
-        width: 100% !important;
-        height: 100% !important;
-        object-fit: contain !important;
-        background: #000000 !important;
-    }
-
-    body.tablet-reel-fullscreen-active .reel-info-outside {
-        display: none !important;
-    }
-
-    body.tablet-reel-fullscreen-active .reel-actions {
-        display: none !important;
-    }
-
-    .reel-slide.tablet-reel-fullscreen .reel-mute-btn {
-        display: flex !important;
-        top: 16px !important;
-        right: 16px !important;
-        z-index: 20 !important;
-    }
-
-    .reel-slide.tablet-reel-fullscreen .reel-fullscreen-btn {
-        display: flex !important;
-        top: 62px !important;
-        right: 16px !important;
-        z-index: 20 !important;
-    }
-
-    .reel-slide.tablet-reel-fullscreen .reel-rotate-btn {
-        display: flex !important;
-        top: 108px !important;
-        right: 16px !important;
-        z-index: 20 !important;
-    }
-
-    .reel-slide.tablet-reel-fullscreen .reel-progress {
-        display: block !important;
-        z-index: 20 !important;
-    }
-
-    .reel-slide.tablet-reel-fullscreen .reel-progress-track {
-        height: 4px !important;
-    }
-
-    body.tablet-reel-fullscreen-active .reels-feed {
-        overflow: hidden !important;
     }
 }
 
@@ -1351,148 +1345,32 @@ body {
     /* REEL ROW */
 
     .reel-row {
-        position: relative;
         width: 100%;
         height: 100%;
         max-width: none;
         padding: 0;
         margin: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
     }
 
-    /* REEL CARD */
+    /* STAGE: ALWAYS a 9:16 portrait card on mobile, whatever the
+       video is. Landscape videos sit inside it, letterboxed
+       (object-fit: contain), never cropped or stretched. */
 
-    .reel-card {
-        position: relative;
-        flex: 0 0 auto;
+    .reel-stage {
         width: var(--mobile-reel-width);
         height: var(--mobile-reel-height);
-        min-width: 0;
-        min-height: 0;
-        aspect-ratio: 9 / 16;
         max-width: 100vw;
         max-height: var(--mobile-available-height);
-        margin: 0;
-        overflow: hidden;
-        border-radius: 0;
-        background: #000000;
+    }
+
+    .reel-card {
         box-shadow: 0 12px 35px rgba(0, 0, 0, 0.22);
     }
 
-    .reel-video {
-        width: 100%;
-        height: 100%;
-        display: block;
-        object-fit: contain;
-        object-position: center center;
-        background: #000000;
-    }
+    /* The rotate button is part of the normal mobile view. */
 
-    /* INFO OVER REEL */
-
-    .reel-info-outside {
-        position: absolute !important;
-        left: calc(var(--mobile-reel-side-space) + 13px);
-        bottom: calc(var(--mobile-reel-top-space) + 17px);
-        width: auto;
-        max-width: 58%;
-        margin: 0 !important;
-        z-index: 8;
-        grid-column: auto;
-        justify-self: auto;
-        align-self: auto;
-        color: #ffffff;
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-        transform: none;
-        transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
-    }
-
-    .reel-slide.is-active .reel-info-outside {
-        opacity: 1;
-        visibility: visible;
-        pointer-events: auto;
-    }
-
-    .reel-slide.is-active .reel-info-outside:hover {
-        transform: scale(1.04);
-    }
-
-    .reel-service-name {
-        color: #ffffff;
-        font-size: 18px;
-    }
-
-    .reel-category {
-        color: rgba(255, 255, 255, 0.78);
-    }
-
-    .reel-rating-value {
-        color: #ffffff;
-    }
-
-    .reel-review-count {
-        color: rgba(255, 255, 255, 0.72);
-    }
-
-    /* MOBILE CREATOR: [avatar] [name] — horizontal row,
-       name vertically centered on the avatar. */
-
-    .reel-info-outside {
-        --reel-avatar-size: 34px;
-    }
-
-    .reel-creator {
-        flex-direction: row;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .reel-avatar {
-        border: 2px solid rgba(255, 255, 255, 0.92);
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
-    }
-
-    /* ACTIONS OVER REEL (MOBILE) */
-
-    .reel-actions {
-        position: absolute !important;
-        right: calc(var(--mobile-reel-side-space) + 11px);
-        bottom: calc(var(--mobile-reel-top-space) + 105px) !important;
-        margin: 0 !important;
-        z-index: 8;
+    .reel-rotate-btn {
         display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 28px;
-        transform: none;
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-    }
-
-    .reel-slide.is-active .reel-actions {
-        opacity: 1;
-        visibility: visible;
-        pointer-events: auto;
-    }
-
-    .reel-action-btn {
-        color: #ffffff;
-    }
-
-    .reel-action-btn svg {
-        width: 29px;
-        height: 29px;
-    }
-
-    /* Mobile only: saved icon turns white so it shows on the video */
-    .reel-save-btn.is-saved svg {
-        fill: #ffffff;
-        stroke: #ffffff;
     }
 
     /* HIDE UP / DOWN */
@@ -1501,136 +1379,25 @@ body {
         display: none !important;
     }
 
-    /* MOBILE FALLBACK FULLSCREEN */
+    /* MOBILE FULLSCREEN CONTROL POSITIONS */
 
-    body.mobile-reel-fullscreen-active {
-        background: #000000 !important;
-        overflow: hidden !important;
+    .reel-slide.is-fullscreen .reel-mute-btn {
+        top: 14px;
+        right: 14px;
     }
 
-    body.mobile-reel-fullscreen-active .sidebar {
-        height: 0 !important;
-        min-height: 0 !important;
-        padding: 0 !important;
-        background: transparent !important;
-        border-top: 0 !important;
-        overflow: visible !important;
-        z-index: 5500 !important;
+    .reel-slide.is-fullscreen .reel-fullscreen-btn {
+        top: 60px;
+        right: 14px;
     }
 
-    body.mobile-reel-fullscreen-active .navigation {
-        display: none !important;
+    .reel-slide.is-fullscreen .reel-rotate-btn {
+        top: 106px;
+        right: 14px;
     }
 
-    body.mobile-reel-fullscreen-active .filter-button {
-        display: none !important;
-    }
-
-    .reel-slide.mobile-reel-fullscreen {
-        position: fixed !important;
-        inset: 0 !important;
-        width: 100vw !important;
-        height: 100dvh !important;
-        min-height: 0 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        background: #000000 !important;
-        z-index: 5000 !important;
-        overflow: hidden !important;
-        scroll-snap-align: none !important;
-        scroll-snap-stop: normal !important;
-    }
-
-    .reel-slide.mobile-reel-fullscreen .reel-row {
-        position: relative !important;
-        width: 100vw !important;
-        height: 100dvh !important;
-        max-width: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-
-    /* Mobile card always stays 9:16 - even rotated,
-       since only the video rotates on mobile */
-
-    .reel-slide.mobile-reel-fullscreen .reel-card {
-        position: relative !important;
-        flex: 0 0 auto !important;
-        width: min(100vw, calc(100dvh * 9 / 16)) !important;
-        height: min(100dvh, calc(100vw * 16 / 9)) !important;
-        min-width: 0 !important;
-        min-height: 0 !important;
-        max-width: 100vw !important;
-        max-height: 100dvh !important;
-        aspect-ratio: 9 / 16 !important;
-        margin: 0 !important;
-        border-radius: 0 !important;
-        overflow: hidden !important;
-        background: #000000 !important;
-        box-shadow: none !important;
-        transform: none !important;
-    }
-
-    .reel-slide.mobile-reel-fullscreen .reel-video {
-        width: 100% !important;
-        height: 100% !important;
-        object-fit: contain !important;
-        background: #000000 !important;
-    }
-
-    .reel-slide.mobile-reel-fullscreen .reel-video.reel-video-rotated {
-        width: var(--reel-media-rotate-w, 100%) !important;
-        height: var(--reel-media-rotate-h, 100%) !important;
-        transform: translate(-50%, -50%) rotate(90deg) !important;
-        object-fit: contain !important;
-    }
-
-    .reel-slide.mobile-reel-fullscreen .reel-mute-btn {
-        display: flex !important;
-        top: 14px !important;
-        right: 14px !important;
-        z-index: 20 !important;
-    }
-
-    .reel-slide.mobile-reel-fullscreen .reel-fullscreen-btn {
-        display: flex !important;
-        top: 60px !important;
-        right: 14px !important;
-        z-index: 20 !important;
-    }
-
-    .reel-slide.mobile-reel-fullscreen .reel-rotate-btn {
-        display: flex !important;
-        top: 106px !important;
-        right: 14px !important;
-        z-index: 20 !important;
-    }
-
-    .reel-slide.mobile-reel-fullscreen .reel-progress {
-        display: block !important;
-        z-index: 20 !important;
-    }
-
-    .reel-slide.mobile-reel-fullscreen .reel-progress-track {
-        height: 3px !important;
-    }
-
-    body.mobile-reel-fullscreen-active .reel-info-outside {
-        display: none !important;
-    }
-
-    body.mobile-reel-fullscreen-active .reel-actions {
-        display: none !important;
-    }
-
-    body.mobile-reel-fullscreen-active .reels-feed {
-        overflow: hidden !important;
+    .reel-slide.is-fullscreen .reel-progress-track {
+        height: 3px;
     }
 }
 
@@ -1643,11 +1410,6 @@ body {
 
     :root {
         --mobile-bar-height: 58px;
-        --mobile-available-height: calc(100dvh - var(--mobile-bar-height));
-        --mobile-reel-width: min(100vw, calc(var(--mobile-available-height) * 9 / 16));
-        --mobile-reel-height: calc(var(--mobile-reel-width) * 16 / 9);
-        --mobile-reel-side-space: calc((100vw - var(--mobile-reel-width)) / 2);
-        --mobile-reel-top-space: calc((var(--mobile-available-height) - var(--mobile-reel-height)) / 2);
     }
 
     .sidebar {
@@ -1677,44 +1439,23 @@ body {
         height: 18px !important;
     }
 
-    .reel-card {
-        width: var(--mobile-reel-width);
-        height: var(--mobile-reel-height);
-        aspect-ratio: 9 / 16;
-        border-radius: 0;
+    .reel-slide.is-compact {
+        --compact-inset: 12px;
     }
 
-    .reel-info-outside {
+    .reel-slide.is-compact .reel-info-outside {
         --reel-avatar-size: 30px;
-        left: calc(var(--mobile-reel-side-space) + 12px);
-        bottom: calc(var(--mobile-reel-top-space) + 14px);
-        max-width: 58%;
     }
 
-    .reel-actions {
-        right: calc(var(--mobile-reel-side-space) + 10px);
-        bottom: calc(var(--mobile-reel-top-space) + 95px) !important;
+    .reel-slide.is-compact .reel-actions {
+        right: 10px;
+        bottom: 95px;
         gap: 25px;
     }
 
-    .reel-action-btn svg {
+    .reel-slide.is-compact .reel-action-btn svg {
         width: 27px;
         height: 27px;
-    }
-
-    .reel-slide.mobile-reel-fullscreen .reel-mute-btn {
-        top: 14px !important;
-        right: 14px !important;
-    }
-
-    .reel-slide.mobile-reel-fullscreen .reel-fullscreen-btn {
-        top: 60px !important;
-        right: 14px !important;
-    }
-
-    .reel-slide.mobile-reel-fullscreen .reel-rotate-btn {
-        top: 106px !important;
-        right: 14px !important;
     }
 }
 
@@ -1743,246 +1484,24 @@ body {
         height: 35px !important;
     }
 
-    .reel-actions {
-        right: calc(var(--mobile-reel-side-space) + 8px);
-        bottom: calc(var(--mobile-reel-top-space) + 88px) !important;
+    .reel-slide.is-compact .reel-actions {
+        right: 8px;
+        bottom: 88px;
         gap: 22px;
     }
 
-    .reel-slide.mobile-reel-fullscreen .reel-mute-btn {
-        top: 12px !important;
-        right: 12px !important;
+    .reel-slide.is-fullscreen .reel-mute-btn {
+        top: 12px;
+        right: 12px;
     }
 
-    .reel-slide.mobile-reel-fullscreen .reel-fullscreen-btn {
-        top: 56px !important;
-        right: 12px !important;
+    .reel-slide.is-fullscreen .reel-fullscreen-btn {
+        top: 56px;
+        right: 12px;
     }
 
-    .reel-slide.mobile-reel-fullscreen .reel-rotate-btn {
-        top: 100px !important;
-        right: 12px !important;
-    }
-}
-
-/* =========================================================
-   ROTATED LANDSCAPE — OUTSIDE ELEMENT ALIGNMENT
-   Desktop / tablet only
-========================================================= */
-
-@media (min-width: 801px) {
-
-    .reel-slide.reel-slide-rotated .reel-info-outside {
-        margin-bottom: calc((100vh - var(--reel-rotate-h)) / 2 + min(18vh, 160px) - var(--reel-avatar-size) - var(--reel-avatar-gap));
-    }
-
-    .reel-slide.reel-slide-rotated .reel-actions {
-        margin-bottom: calc((100vh - var(--reel-rotate-h)) / 2 + 20px);
-    }
-}
-
-/* =========================================================
-   TABLET — LANDSCAPE CARD ALIGNMENT
-========================================================= */
-
-@media (min-width: 801px) and (max-width: 1150px) {
-
-    .reel-slide.reel-slide-rotated .reel-info-outside {
-        left: calc(50% - (var(--reel-rotate-w) / 2) + 30px) !important;
-        bottom: calc((100vh - var(--reel-rotate-h)) / 2 + 28px) !important;
-    }
-
-    .reel-slide.reel-slide-rotated .reel-actions {
-        left: calc((100vw + var(--tablet-sidebar-width) + var(--reel-rotate-w)) / 2 + 22px) !important;
-        bottom: calc((100vh - var(--reel-rotate-h)) / 2 + 26px) !important;
-    }
-}
-
-/* =========================================================
-   CAPTION
-   Desktop: full caption under the rating. No toggle.
-========================================================= */
-
-.reel-caption-wrap {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    margin-top: 12px;
-}
-
-.reel-caption {
-    color: #444444;
-    font-size: 14px;
-    font-weight: 400;
-    line-height: 1.45;
-    white-space: pre-line;
-    overflow-wrap: anywhere;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 8;
-    overflow: hidden;
-}
-
-.reel-caption-toggle {
-    display: none;
-}
-
-.reel-caption-toggle[hidden] {
-    display: none !important;
-}
-
-/* TABLET base look (the Show more / Show less behaviour is
-   defined in the "COMPACT CAPTION" block at the end of file) */
-
-@media (min-width: 801px) and (max-width: 1150px) {
-
-    .reel-caption-wrap {
-        margin-top: 8px;
-    }
-
-    .reel-caption {
-        color: rgba(255, 255, 255, 0.9);
-        font-size: 13px;
-        -webkit-line-clamp: 3;
-    }
-}
-
-/* MOBILE: caption hidden until "Show more" is tapped;
-   expanded shows everything and the block grows upward */
-
-@media (max-width: 800px) {
-
-    .reel-info-outside {
-        transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease, max-width 0.2s ease;
-    }
-
-    .reel-caption-wrap {
-        margin-top: 8px;
-    }
-
-    .reel-caption {
-        /* Captions stay hidden on mobile until Show more is tapped. */
-        display: none;
-        width: 100%;
-        max-width: 100%;
-        color: rgba(255, 255, 255, 0.92);
-        font-size: 13px;
-        line-height: 1.4;
-        -webkit-line-clamp: unset;
-        overflow-wrap: anywhere;
-        text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
-    }
-
-    .reel-caption-toggle {
-        display: inline-block;
-        margin-top: 4px;
-        padding: 2px 0;
-        border: 0;
-        background: none;
-        color: #ffffff;
-        font-size: 12.5px;
-        font-weight: 600;
-        cursor: pointer;
-        text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    .reel-info-outside {
-        max-width: calc(var(--mobile-reel-width) - 24px);
-    }
-
-    .reel-info-outside.is-caption-expanded {
-        max-width: calc(var(--mobile-reel-width) - 24px);
-    }
-
-    .reel-info-outside.is-caption-expanded::before {
-        content: "";
-        position: absolute;
-        inset: -36px -18px -14px -13px;
-        z-index: -1;
-        pointer-events: none;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.35) 70%, transparent);
-    }
-
-    .reel-info-outside.is-caption-expanded .reel-caption {
-        display: block;
-        max-height: 36vh;
-        overflow-y: auto;
-        overflow-wrap: anywhere;
-        scrollbar-width: none;
-    }
-
-    .reel-info-outside.is-caption-expanded .reel-caption::-webkit-scrollbar {
-        display: none;
-    }
-}
-
-/* =========================================================
-   COMPACT CAPTION — TABLET (801px – 1150px)
-
-   Now behaves exactly like mobile: when the name / reviews
-   sit inside the reel card, the caption is hidden and a
-   "Show more" button reveals it; "Show less" hides it again.
-   Must stay AFTER the tablet caption rules above.
-========================================================= */
-
-@media (min-width: 801px) and (max-width: 1150px) {
-
-    .reel-info-outside {
-        transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease, max-width 0.2s ease;
-    }
-
-    .reel-caption-wrap {
-        margin-top: 8px;
-    }
-
-    .reel-caption {
-        /* Hidden until Show more is tapped. */
-        display: none;
-        width: 100%;
-        max-width: 100%;
-        color: rgba(255, 255, 255, 0.92);
-        font-size: 13px;
-        line-height: 1.4;
-        -webkit-line-clamp: unset;
-        overflow-wrap: anywhere;
-        text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
-    }
-
-    .reel-caption-toggle {
-        display: inline-block;
-        margin-top: 4px;
-        padding: 2px 0;
-        border: 0;
-        background: none;
-        color: #ffffff;
-        font-size: 12.5px;
-        font-weight: 600;
-        cursor: pointer;
-        text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    /* Expanded: dark gradient behind the text, block grows upward */
-
-    .reel-info-outside.is-caption-expanded::before {
-        content: "";
-        position: absolute;
-        inset: -36px -30px -28px -30px;
-        z-index: -1;
-        pointer-events: none;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.35) 70%, transparent);
-    }
-
-    .reel-info-outside.is-caption-expanded .reel-caption {
-        display: block;
-        max-height: 36vh;
-        overflow-y: auto;
-        overflow-wrap: anywhere;
-        scrollbar-width: none;
-    }
-
-    .reel-info-outside.is-caption-expanded .reel-caption::-webkit-scrollbar {
-        display: none;
+    .reel-slide.is-fullscreen .reel-rotate-btn {
+        top: 100px;
+        right: 12px;
     }
 }
