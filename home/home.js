@@ -15,7 +15,7 @@ const REELS_STATE_KEY = "twigg_reels_state";
 
 const HOME_RATIO_KEY = "twigg_home_ratios";
 
-/* LOOP PAGE: remembers the user's mute choice for the Loop Page */
+/* Mute choice shared by the Home, Reels and Loop pages */
 const MUTE_KEY = "twigg_shared_muted";
 
 /* LOOP PAGE: where the user left off (featured card + grid order + scroll) */
@@ -57,6 +57,17 @@ if (isHomeReload) {
     sessionStorage.removeItem(MUTE_KEY);
     sessionStorage.removeItem(LOOP_STATE_KEY);
     sessionStorage.removeItem(LOOP_ENTRIES_KEY);
+}
+
+
+/* Start with the mute choice made on any other page
+   (Reels / Loop). Default: muted. */
+
+try {
+    sharedVideoMuted =
+        sessionStorage.getItem(MUTE_KEY) !== "false";
+} catch {
+    sharedVideoMuted = true;
 }
 
 
@@ -158,6 +169,62 @@ const ICONS = {
         </svg>
     `
 };
+
+
+/* =========================================================
+   MUTE HELPERS
+========================================================= */
+
+function refreshHomeMuteIcons() {
+
+    const icon =
+        sharedVideoMuted
+            ? ICONS.muted
+            : ICONS.unmuted;
+
+    document
+        .querySelectorAll(".media-card .unmute-button")
+        .forEach(button => {
+            button.innerHTML = icon;
+        });
+}
+
+
+/*
+   Plays a video. If the browser blocks playback WITH sound
+   (autoplay policy), the video falls back to muted, the
+   shared setting becomes muted and the icons are refreshed.
+*/
+
+function safeHomePlay(video) {
+
+    const promise = video.play();
+
+    if (promise && promise.catch) {
+
+        promise.catch(error => {
+
+            if (
+                error &&
+                error.name === "NotAllowedError" &&
+                !video.muted
+            ) {
+
+                video.muted = true;
+
+                sharedVideoMuted = true;
+
+                try {
+                    sessionStorage.setItem(MUTE_KEY, "true");
+                } catch { }
+
+                refreshHomeMuteIcons();
+
+                video.play().catch(() => { });
+            }
+        });
+    }
+}
 
 
 /* =========================================================
@@ -919,7 +986,7 @@ document
                         : ICONS.unmuted;
             }
 
-            video.play().catch(() => { });
+            safeHomePlay(video);
         });
 
 
@@ -956,7 +1023,7 @@ document
 
                 sharedVideoMuted = !sharedVideoMuted;
 
-                /* LOOP PAGE: remember the choice. */
+                /* Remember the choice for the Reels and Loop pages. */
 
                 try {
                     sessionStorage.setItem(
@@ -992,7 +1059,7 @@ document
                     });
 
                 if (!sharedVideoMuted) {
-                    video.play().catch(() => { });
+                    safeHomePlay(video);
                 }
             });
         }

@@ -57,6 +57,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const REELS_ORDER_KEY = "twigg_reels_order";
     const REELS_STATE_KEY = "twigg_reels_state";
 
+    /* Mute choice shared by the Home, Reels and Loop pages */
+    const MUTE_KEY = "twigg_shared_muted";
+
     const MOBILE_QUERY = "(max-width: 800px)";
 
     /* -----------------------------------------------------
@@ -109,7 +112,8 @@ document.addEventListener("DOMContentLoaded", () => {
             HOME_SCROLL_KEY,
             HOME_RATIO_KEY,
             REELS_ORDER_KEY,
-            REELS_STATE_KEY
+            REELS_STATE_KEY,
+            MUTE_KEY
         ].forEach(key => sessionStorage.removeItem(key));
     }
 
@@ -117,11 +121,31 @@ document.addEventListener("DOMContentLoaded", () => {
     /* =====================================================
        SHARED MUTE STATE
 
-       One mute setting is shared across the entire
-       Reels feed. The feed always starts muted.
+       One mute setting is shared across the entire Reels
+       feed AND across the Home and Loop pages: it starts
+       with whatever was chosen there (default: muted), and
+       toggling it here is remembered for those pages too.
+       A real refresh starts muted again.
     ===================================================== */
 
     let sharedMuted = true;
+
+    try {
+        sharedMuted =
+            sessionStorage.getItem(MUTE_KEY) !== "false";
+    } catch {
+        sharedMuted = true;
+    }
+
+
+    function setSharedMuted(value) {
+
+        sharedMuted = value;
+
+        try {
+            sessionStorage.setItem(MUTE_KEY, String(value));
+        } catch {}
+    }
 
 
     /* =====================================================
@@ -930,6 +954,52 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =====================================================
+       PLAY A VIDEO
+
+       If the browser blocks playback WITH sound (autoplay
+       policy, e.g. right after arriving from another page),
+       the video falls back to muted, the shared setting
+       becomes muted and the buttons are refreshed.
+    ===================================================== */
+
+    function playVideo(video, slide) {
+
+        const markPlaying = () => {
+
+            if (slide) {
+                slide.classList.remove("is-paused");
+            }
+        };
+
+        const promise = video.play();
+
+        if (!promise || !promise.then) {
+            return;
+        }
+
+        promise
+            .then(markPlaying)
+            .catch(error => {
+
+                if (
+                    error &&
+                    error.name === "NotAllowedError" &&
+                    !video.muted
+                ) {
+
+                    video.muted = true;
+
+                    setSharedMuted(true);
+
+                    applyMuteState();
+
+                    video.play().then(markPlaying).catch(() => {});
+                }
+            });
+    }
+
+
+    /* =====================================================
        RESTORE + SAVE REELS POSITION
     ===================================================== */
 
@@ -1127,11 +1197,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (!slide.dataset.userPaused) {
 
-                    video.play()
-                        .then(() => {
-                            slide.classList.remove("is-paused");
-                        })
-                        .catch(() => {});
+                    playVideo(video, slide);
                 }
 
                 return;
@@ -1635,9 +1701,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            /* Mute/unmute is a shared feed-wide setting. */
+            /* Mute/unmute is a shared setting (feed-wide, and
+               remembered for the Home and Loop pages too). */
 
-            sharedMuted = !sharedMuted;
+            setSharedMuted(!sharedMuted);
 
             /* Apply to the active Reel; every other Reel stays muted. */
 
@@ -1759,11 +1826,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             video.muted = sharedMuted;
 
-            video.play()
-                .then(() => {
-                    slide.classList.remove("is-paused");
-                })
-                .catch(() => {});
+            playVideo(video, slide);
 
         } else {
 
@@ -1934,7 +1997,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     video.muted = sharedMuted;
 
-                    video.play().catch(() => {});
+                    playVideo(video, slide);
                 }
 
             } catch (error) {
@@ -1974,7 +2037,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             video.muted = sharedMuted;
 
-            video.play().catch(() => {});
+            playVideo(video, slide);
         }
     }
 

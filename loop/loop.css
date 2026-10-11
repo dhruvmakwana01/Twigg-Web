@@ -189,7 +189,7 @@ body.loop-page {
 
 
 /* =========================================================
-   MEDIA CONTROLS (mute / full-screen)
+   MEDIA CONTROLS (mute / full-screen / rotate)
 ========================================================= */
 
 .loop-media-controls {
@@ -277,6 +277,55 @@ body.loop-page {
     stroke: currentColor;
 
     stroke-width: 1.8;
+
+}
+
+
+/* =========================================================
+   ROTATE BUTTON
+
+   Only available while the featured video is in fullscreen
+   (loop.js adds .is-fullscreen to .loop-media). Rotating
+   turns the VIDEO 90deg; loop.js sets the swapped width /
+   height so the whole video stays visible with its original
+   aspect ratio. Must stay AFTER the .loop-ctrl rules.
+========================================================= */
+
+.loop-rotate-btn {
+
+    display: none;
+
+}
+
+.loop-media.is-fullscreen .loop-rotate-btn {
+
+    display: flex;
+
+}
+
+.loop-rotate-btn.is-rotated {
+
+    opacity: 1;
+
+    background: rgba(0, 0, 0, 0.55);
+
+}
+
+.loop-media video.loop-video-rotated {
+
+    position: absolute;
+
+    top: 50%;
+
+    left: 50%;
+
+    max-width: none;
+
+    max-height: none;
+
+    object-fit: contain;
+
+    transform: translate(-50%, -50%) rotate(90deg);
 
 }
 

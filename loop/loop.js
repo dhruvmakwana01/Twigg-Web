@@ -29,6 +29,8 @@
     ===================================================== */
 
     const HOME_RATIO_KEY = "twigg_home_ratios";
+
+    /* Mute choice shared by the Home, Reels and Loop pages */
     const MUTE_KEY = "twigg_shared_muted";
 
     /* Latest Loop position (read by Home) */
@@ -144,6 +146,14 @@
                 <path d="M15 3v6h6"></path>
                 <path d="M9 21v-6H3"></path>
                 <path d="M15 21v-6h6"></path>
+            </svg>
+        `,
+
+        /* Rotate the video 90deg (fullscreen only) */
+        rotate: `
+            <svg viewBox="0 0 24 24">
+                <path d="M20 12a8 8 0 1 1-2.34-5.66"></path>
+                <path d="M20 4v5h-5"></path>
             </svg>
         `,
 
@@ -333,9 +343,21 @@
 
     /* =====================================================
        SHARED MUTE STATE
+
+       Shared with the Home and Reels pages. A real refresh
+       of this page starts muted again.
     ===================================================== */
 
     let sharedMuted = true;
+
+    if (isLoopReload) {
+
+        try {
+
+            sessionStorage.removeItem(MUTE_KEY);
+
+        } catch { }
+    }
 
     try {
 
@@ -360,15 +382,25 @@
     }
 
 
+    /*
+       Plays a video. If the browser blocks playback WITH sound
+       (autoplay policy) the video falls back to muted and the
+       shared setting becomes muted.
+    */
+
     function safePlay(video) {
 
         const promise = video.play();
 
         if (promise && promise.catch) {
 
-            promise.catch(() => {
+            promise.catch(error => {
 
-                if (!video.muted) {
+                if (
+                    error &&
+                    error.name === "NotAllowedError" &&
+                    !video.muted
+                ) {
 
                     video.muted = true;
 
@@ -1380,6 +1412,117 @@
     }
 
 
+    /* =====================================================
+       FULLSCREEN VIDEO ROTATION
+
+       The rotate button only exists while the featured video
+       is in fullscreen. Rotating turns the VIDEO 90deg inside
+       the fullscreen box: its width / height are swapped (the
+       box's height / width) and then rotated, so its bounding
+       box exactly matches the screen. object-fit: contain keeps
+       the whole video visible at its original aspect ratio.
+       Leaving fullscreen resets the rotation.
+    ===================================================== */
+
+    function applyFeaturedRotation() {
+
+        if (!featuredEls || !featuredEls.video) {
+            return;
+        }
+
+        const { media, video, rotateBtn } = featuredEls;
+
+        const active =
+            featuredEls.rotated &&
+            isFeaturedFullscreen();
+
+        if (active) {
+
+            const width = media.clientWidth;
+            const height = media.clientHeight;
+
+            if (!width || !height) {
+                return;
+            }
+
+            video.classList.add("loop-video-rotated");
+
+            video.style.width = `${height}px`;
+            video.style.height = `${width}px`;
+
+        } else {
+
+            video.classList.remove("loop-video-rotated");
+
+            video.style.width = "";
+            video.style.height = "";
+        }
+
+        if (rotateBtn) {
+
+            rotateBtn.classList.toggle("is-rotated", active);
+
+            rotateBtn.setAttribute(
+                "aria-label",
+                active
+                    ? "Reset rotation"
+                    : "Rotate video"
+            );
+        }
+    }
+
+
+    function toggleFeaturedRotation() {
+
+        if (
+            !featuredEls ||
+            !featuredEls.video ||
+            !isFeaturedFullscreen()
+        ) {
+            return;
+        }
+
+        featuredEls.rotated = !featuredEls.rotated;
+
+        applyFeaturedRotation();
+    }
+
+
+    /* Single place that reflects "fullscreen on / off" in the UI */
+
+    function setFeaturedFullscreenState(active) {
+
+        if (!featuredEls) {
+            return;
+        }
+
+        featuredEls.media.classList.toggle("is-fullscreen", active);
+
+        setFullscreenIcon(active);
+
+        if (!active) {
+            featuredEls.rotated = false;
+        }
+
+        applyFeaturedRotation();
+    }
+
+
+    let rotateResizeTimer = null;
+
+    window.addEventListener("resize", () => {
+
+        if (!featuredEls || !featuredEls.rotated) {
+            return;
+        }
+
+        clearTimeout(rotateResizeTimer);
+
+        rotateResizeTimer =
+            setTimeout(applyFeaturedRotation, 150);
+    });
+
+
     function exitFallbackFullscreen() {
 
         if (!featuredEls) {
@@ -1388,7 +1531,7 @@
 
         featuredEls.media.classList.remove("loop-fs-fallback");
 
-        setFullscreenIcon(false);
+        setFeaturedFullscreenState(false);
     }
 
 
@@ -1436,13 +1579,13 @@
 
                 await request.call(media);
 
-                setFullscreenIcon(true);
+                setFeaturedFullscreenState(true);
 
             } catch {
 
                 media.classList.add("loop-fs-fallback");
 
-                setFullscreenIcon(true);
+                setFeaturedFullscreenState(true);
             }
 
             return;
@@ -1461,7 +1604,7 @@
 
         media.classList.add("loop-fs-fallback");
 
-        setFullscreenIcon(true);
+        setFeaturedFullscreenState(true);
     }
 
 
@@ -1471,8 +1614,9 @@
             return;
         }
 
-        setFullscreenIcon(
-            realFullscreenElement() === featuredEls.media
+        setFeaturedFullscreenState(
+            realFullscreenElement() === featuredEls.media ||
+            featuredEls.media.classList.contains("loop-fs-fallback")
         );
     }
 
@@ -1587,6 +1731,13 @@
                         ${ICONS.fullscreen}
                     </button>
 
+                    ${isVideo ? `
+                        <button type="button" class="loop-ctrl loop-rotate-btn"
+                                aria-label="Rotate video">
+                            ${ICONS.rotate}
+                        </button>
+                    ` : ""}
+
                 </div>
 
                 ${isVideo ? `
@@ -1678,6 +1829,7 @@
 
         const muteBtn = wrap.querySelector(".loop-mute-btn");
         const fsBtn = wrap.querySelector(".loop-fs-btn");
+        const rotateBtn = wrap.querySelector(".loop-rotate-btn");
         const likeBtn = wrap.querySelector(".loop-like-btn");
         const saveBtn = wrap.querySelector(".loop-save-btn");
         const shareBtn = wrap.querySelector(".loop-share-btn");
@@ -1689,7 +1841,9 @@
             video,
             muteBtn,
             fsBtn,
+            rotateBtn,
             saveBtn,
+            rotated: false,
             observer: null
         };
 
@@ -1926,6 +2080,19 @@
                     if (!sharedMuted) {
                         safePlay(video);
                     }
+                });
+            }
+
+
+            /* Rotate (fullscreen only) */
+
+            if (rotateBtn) {
+
+                rotateBtn.addEventListener("click", event => {
+
+                    event.stopPropagation();
+
+                    toggleFeaturedRotation();
                 });
             }
 
