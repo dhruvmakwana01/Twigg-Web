@@ -1505,3 +1505,53 @@ body.fallback-fullscreen-active .reels-feed {
         right: 12px;
     }
 }
+
+/* =========================================================
+   NATIVE PULL-TO-REFRESH
+   Reels needs its own snap scroller, so the document cannot scroll
+   here. Overscroll is left on its default (chaining allowed) so the
+   browser can offer pull-to-refresh when the first reel is at the top.
+========================================================= */
+
+@media (max-width: 800px) {
+
+    html,
+    body {
+        overscroll-behavior-y: auto;
+    }
+
+    .reels-feed {
+        overscroll-behavior-y: auto;
+    }
+}
+
+
+/* =========================================================
+   DYNAMIC VIEWPORT UNITS (desktop / tablet only; mobile is
+   already driven by 100dvh / % above). vh values above remain
+   as the fallback for browsers without dvh.
+========================================================= */
+
+@supports (height: 100dvh) {
+
+    @media (min-width: 801px) {
+
+        .reel-slide {
+            height: 100dvh;
+            min-height: 100dvh;
+        }
+
+        .reel-stage {
+            width: var(--card-w, calc(min(92dvh, 800px) * 9 / 16));
+            height: var(--card-h, min(92dvh, 800px));
+        }
+
+        .reel-info-outside {
+            bottom: calc(min(18dvh, 160px) - var(--reel-avatar-size) - var(--reel-avatar-gap));
+        }
+    }
+
+    .reel-slide.is-compact .reel-info-outside.is-caption-expanded .reel-caption {
+        max-height: min(36dvh, calc(var(--card-h, 100dvh) * 0.4));
+    }
+}

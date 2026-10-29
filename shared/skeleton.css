@@ -1,0 +1,101 @@
+/* =========================================================
+   TWIGG — SHARED SKELETON LOADING  (shared/skeleton.css)
+
+   Reusable shimmer placeholder. shared/skeleton.js toggles:
+     .sk-loading  content not ready yet  -> shimmer, media hidden
+     .sk-failed   content failed / timed out -> static, no animation
+     .sk-reveal   brief fade-in when content replaces the shimmer
+   .sk-dark is an optional variant for dark surfaces (Reels).
+========================================================= */
+
+:root {
+    --sk-base: #ececec;
+    --sk-shine: #f6f6f6;
+    --sk-dark-base: #1b1b1b;
+    --sk-dark-shine: #2b2b2b;
+}
+
+/* Doubled class beats single-class backgrounds such as .media-card.
+   The 0.15s animation-delay shows a flat neutral colour first, so
+   content that loads instantly never flashes a moving shimmer. */
+
+.sk-loading.sk-loading {
+    background-color: var(--sk-base);
+    background-image: linear-gradient(100deg,
+            var(--sk-base) 30%,
+            var(--sk-shine) 50%,
+            var(--sk-base) 70%);
+    background-size: 300% 100%;
+    background-position: 0 0;
+    animation: sk-shimmer 1.6s ease-in-out 0.15s infinite;
+    pointer-events: none;
+}
+
+.sk-loading.sk-loading.sk-dark {
+    background-color: var(--sk-dark-base);
+    background-image: linear-gradient(100deg,
+            var(--sk-dark-base) 30%,
+            var(--sk-dark-shine) 50%,
+            var(--sk-dark-base) 70%);
+}
+
+@keyframes sk-shimmer {
+    from {
+        background-position: 100% 0;
+    }
+
+    to {
+        background-position: 0 0;
+    }
+}
+
+/* Real media and overlays stay hidden while the placeholder shows */
+
+.sk-loading>img,
+.sk-loading>video {
+    opacity: 0;
+}
+
+.sk-loading>*:not(img):not(video) {
+    visibility: hidden;
+}
+
+.sk-loading::before,
+.sk-loading::after {
+    opacity: 0 !important;
+}
+
+/* Failed: stop animating, never leave a shimmer running forever */
+
+.sk-failed {
+    background-image: none;
+}
+
+.sk-reveal>img,
+.sk-reveal>video,
+img.sk-reveal {
+    animation: sk-fade-in 0.28s ease both;
+}
+
+@keyframes sk-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .sk-loading.sk-loading {
+        animation: none;
+    }
+
+    .sk-reveal>img,
+    .sk-reveal>video,
+    img.sk-reveal {
+        animation: none;
+    }
+}

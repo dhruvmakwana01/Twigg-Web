@@ -503,6 +503,12 @@
 
     let pending = [];
 
+    /* Last value that was typed / inserted legitimately (emoji restriction) */
+    let lastValue = "";
+
+    /* True while an IME composition is in progress */
+    let composing = false;
+
     /*
        True while the chat should stay glued to the latest
        message. It is set when a conversation opens or a
@@ -908,8 +914,7 @@
                 <img
                     src="${src}"
                     alt=""
-                    loading="lazy"
-                    onerror="this.remove()">
+                    loading="lazy" data-sk onerror="this.remove()">
 
             </span>
 
@@ -1277,9 +1282,11 @@
 
                 .join("");
 
-        listEl.scrollTop =
+        listEl.scrollTop = previousScroll;
 
-            previousScroll;
+        if (window.TwiggSkeleton) {
+            window.TwiggSkeleton.scan(listEl);
+        }
 
         updateNavBadge();
 
@@ -1540,7 +1547,7 @@
                         src="${escapeHtml(
                             attach.src || ""
                         )}"
-                        alt="Shared photo">
+                        alt="Shared photo" data-sk>
 
                 </button>
 
@@ -1975,6 +1982,10 @@
 
         );
 
+        if (window.TwiggSkeleton) {
+            window.TwiggSkeleton.scan(chatThread);
+        }
+
         if (
 
             scroll === "bottom"
@@ -2017,9 +2028,11 @@
 
             );
 
-        chatName.textContent =
+        if (window.TwiggSkeleton) {
+            window.TwiggSkeleton.scan(chatAvatar);
+        }
 
-            c.name;
+        chatName.textContent = c.name;
 
         chatStatus.textContent =
 
@@ -2527,6 +2540,11 @@
 
     function updateComposer() {
 
+        if (!composing) {
+            lastValue = input.value;
+        }
+
+
         input.style.height =
 
             "auto";
@@ -2558,13 +2576,162 @@
 
     }
 
-    input.addEventListener(
+    /* =====================================================
+       KEYBOARD EMOJI RESTRICTION
 
-        "input",
+       Emojis may only enter the box through Twigg's own picker
+       (which writes input.value directly and never fires
+       beforeinput / input).
 
-        updateComposer
+       Best-effort, NOT guaranteed on every device:
+       1. beforeinput: typed text that contains an emoji is
+          cancelled (works wherever the event is cancelable).
+       2. input / compositionend: for keyboards that commit emoji
+          through IME composition (not cancelable), the newly
+          inserted segment is diffed against the last good value
+          and its emojis are stripped. Existing picker emojis are
+          never touched.
+       Pasted and dropped text is intentionally left alone, and
+       ordinary characters (letters, digits, (c), accents, other
+       scripts, punctuation) are never removed.
+    ===================================================== */
 
-    );
+    const EMOJI_TEST =
+        /\p{Emoji_Presentation}|\p{Extended_Pictographic}\uFE0F|[\u{1F000}-\u{1FAFF}]|\p{Regional_Indicator}|[0-9#*]\uFE0F?\u20E3/u;
+
+    const EMOJI_STRIP = new RegExp(EMOJI_TEST.source, "gu");
+
+    const EMOJI_JOINERS = /[\u200D\uFE0F\u20E3]/g;
+
+    const stripEmoji = text =>
+        text.replace(EMOJI_STRIP, "").replace(EMOJI_JOINERS, "");
+
+    const isLowSurrogate = code => code >= 0xDC00 && code <= 0xDFFF;
+
+
+    function sanitizeKeyboardInput(event) {
+
+        if (composing || (event && event.isComposing)) {
+            return false;
+        }
+
+        const type = (event && event.inputType) || "";
+
+        if (
+            type === "insertFromPaste" ||
+            type === "insertFromDrop" ||
+            type.indexOf("history") === 0
+        ) {
+            return false;
+        }
+
+        const before = lastValue;
+        const after = input.value;
+
+        if (before === after) {
+            return false;
+        }
+
+        /* Find the inserted segment: common prefix / suffix diff */
+
+        let start = 0;
+
+        const min = Math.min(before.length, after.length);
+
+        while (start < min && before[start] === after[start]) {
+            start++;
+        }
+
+        let endBefore = before.length;
+        let endAfter = after.length;
+
+        while (
+            endBefore > start &&
+            endAfter > start &&
+            before[endBefore - 1] === after[endAfter - 1]
+        ) {
+            endBefore--;
+            endAfter--;
+        }
+
+        /* Never cut a surrogate pair in half */
+
+        if (
+            start > 0 &&
+            start < after.length &&
+            isLowSurrogate(after.charCodeAt(start))
+        ) {
+            start--;
+        }
+
+        if (
+            endAfter < after.length &&
+            isLowSurrogate(after.charCodeAt(endAfter))
+        ) {
+            endAfter++;
+        }
+
+        if (endAfter <= start) {
+            return false;
+        }
+
+        const inserted = after.slice(start, endAfter);
+
+        if (!EMOJI_TEST.test(inserted)) {
+            return false;
+        }
+
+        const cleaned = stripEmoji(inserted);
+
+        input.value =
+            after.slice(0, start) +
+            cleaned +
+            after.slice(endAfter);
+
+        const caret = start + cleaned.length;
+
+        input.setSelectionRange(caret, caret);
+
+        return true;
+    }
+
+
+    input.addEventListener("beforeinput", event => {
+
+        if (!event.cancelable || !event.data) {
+            return;
+        }
+
+        if (
+            (
+                event.inputType === "insertText" ||
+                event.inputType === "insertReplacementText"
+            ) &&
+            EMOJI_TEST.test(event.data)
+        ) {
+            event.preventDefault();
+        }
+    });
+
+    input.addEventListener("compositionstart", () => {
+        composing = true;
+    });
+
+    input.addEventListener("compositionend", () => {
+
+        composing = false;
+
+        sanitizeKeyboardInput({ inputType: "insertText" });
+
+        updateComposer();
+    });
+
+    input.addEventListener("input", event => {
+
+        sanitizeKeyboardInput(event);
+
+        updateComposer();
+    });
 
     input.addEventListener(
 

@@ -1,0 +1,1507 @@
+/* =========================================================
+   RESET
+========================================================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    background: #ffffff;
+    color: #111111;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    overflow: hidden;
+}
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+.sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: 225px;
+    padding: 32px 24px;
+    background: #ffffff;
+    z-index: 1000;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.sidebar::-webkit-scrollbar {
+    display: none;
+}
+
+/* =========================================================
+   LOGO
+========================================================= */
+
+.logo {
+    width: 120px;
+    display: block;
+}
+
+.logo svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+/* =========================================================
+   FILTER BUTTON
+========================================================= */
+
+.filter-button {
+    width: 100%;
+    height: 48px;
+    margin-top: 38px;
+    padding: 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    border: 1px solid #e4e4e4;
+    border-radius: 15px;
+    background: #ffffff;
+    color: #151515;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.filter-button:hover {
+    transform: translateY(-2px);
+    border-color: #d5d5d5;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
+}
+
+.filter-button svg {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+}
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+.navigation {
+    margin-top: 38px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.nav-item {
+    height: 52px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-radius: 14px;
+    color: #222222;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 450;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nav-item:hover {
+    background: #f1f1f1;
+    transform: translateX(2px);
+}
+
+.nav-item.active {
+    background: #eeeeee;
+    font-weight: 550;
+}
+
+.nav-icon {
+    width: 25px;
+    height: 25px;
+    color: #181818;
+    stroke-width: 1.8;
+    flex-shrink: 0;
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+.main {
+    position: fixed;
+    inset: 0 0 0 225px;
+    overflow: hidden;
+}
+
+/* =========================================================
+   REELS FEED
+========================================================= */
+
+.reels-feed {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+}
+
+.reels-feed::-webkit-scrollbar {
+    display: none;
+}
+
+/* =========================================================
+   REEL SLIDE
+========================================================= */
+
+.reel-slide {
+    width: 100%;
+    height: 100vh;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    overflow: hidden;
+}
+
+/* =========================================================
+   REEL ROW
+   Simply centres the stage. Everything else (creator info,
+   action rail) is positioned relative to the stage.
+========================================================= */
+
+.reel-row {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* =========================================================
+   REEL STAGE
+
+   One wrapper around: creator info + card + action rail.
+   Its size IS the card size. reels.js sets --card-w and
+   --card-h on the slide (portrait 9:16 or landscape 16:9,
+   depending on the video, and on the space available).
+   The fallbacks below match the default portrait card.
+========================================================= */
+
+.reel-stage {
+    position: relative;
+    flex: 0 0 auto;
+    width: var(--card-w, calc(min(92vh, 800px) * 9 / 16));
+    height: var(--card-h, min(92vh, 800px));
+}
+
+/* =========================================================
+   REEL INFORMATION (outside the card, desktop default)
+========================================================= */
+
+.reel-info-outside {
+    /* Creator avatar sizing. The avatar sits above the name. */
+    --reel-avatar-size: 56px;
+    --reel-avatar-gap: 12px;
+
+    position: absolute;
+    right: 100%;
+    bottom: calc(min(18vh, 160px) - var(--reel-avatar-size) - var(--reel-avatar-gap));
+    width: 200px;
+    /* Keep the creator details clearly separated from the card. */
+    margin-right: 28px;
+    z-index: 20;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(0);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease, max-width 0.2s ease;
+}
+
+.reel-slide.is-active .reel-info-outside {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.reel-slide.is-active .reel-info-outside:hover {
+    cursor: pointer;
+    transform: translateX(-3px) scale(1.02);
+}
+
+/* =========================================================
+   REEL INFORMATION TEXT
+========================================================= */
+
+.reel-service-name {
+    color: #111111;
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.reel-category {
+    margin-top: 4px;
+    color: #777777;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.reel-rating {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px;
+}
+
+.reel-stars {
+    display: flex;
+    gap: 3px;
+}
+
+.reel-stars svg {
+    width: 16px;
+    height: 16px;
+    fill: #f5a623;
+}
+
+.reel-rating-value {
+    color: #111111;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.reel-review-count {
+    color: #888888;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* =========================================================
+   CREATOR AVATAR
+   Outside the card: stacked above the creator name.
+   (Compact mode switches this further down.)
+========================================================= */
+
+.reel-creator {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--reel-avatar-gap, 12px);
+    min-width: 0;
+}
+
+.reel-avatar {
+    position: relative;
+    flex-shrink: 0;
+    width: var(--reel-avatar-size, 56px);
+    height: var(--reel-avatar-size, 56px);
+    overflow: hidden;
+    border-radius: 50%;
+    border: 3px solid #ffffff;
+    background: linear-gradient(135deg, #B90066, #FB0838, #F6801E);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 8px 20px rgba(0, 0, 0, 0.14);
+}
+
+.reel-avatar-initial,
+.reel-avatar-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.reel-avatar-initial {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: calc(var(--reel-avatar-size, 56px) * 0.4);
+    font-weight: 600;
+    line-height: 1;
+}
+
+.reel-avatar-img {
+    display: block;
+    object-fit: cover;
+}
+
+/* =========================================================
+   REEL CARD
+   Fills the stage. Portrait (9:16) or landscape (16:9) is
+   decided by reels.js through the stage size.
+========================================================= */
+
+.reel-card {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 0;
+    background: #000000;
+    cursor: pointer;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22);
+}
+
+/* =========================================================
+   REEL VIDEO
+   Always shown whole: object-fit: contain keeps the original
+   aspect ratio (no crop, zoom or stretch). Any spare space
+   inside the card stays black.
+========================================================= */
+
+.reel-video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center center;
+    background: #000000;
+}
+
+/* =========================================================
+   CARD GRADIENTS
+========================================================= */
+
+.reel-card::before,
+.reel-card::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.reel-card::before {
+    top: 0;
+    height: 24%;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.34), rgba(0, 0, 0, 0.04) 72%, transparent);
+}
+
+.reel-card::after {
+    bottom: 0;
+    height: 30%;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.12) 65%, transparent);
+}
+
+/* =========================================================
+   VIDEO CONTROLS
+========================================================= */
+
+.reel-mute-btn,
+.reel-fullscreen-btn,
+.reel-rotate-btn {
+    position: absolute;
+    right: 14px;
+    z-index: 10;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.34);
+    color: #ffffff;
+    backdrop-filter: blur(4px);
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.reel-mute-btn {
+    top: 14px;
+}
+
+.reel-fullscreen-btn {
+    top: 60px;
+}
+
+.reel-rotate-btn {
+    top: 106px;
+}
+
+.reel-mute-btn:hover,
+.reel-fullscreen-btn:hover,
+.reel-rotate-btn:hover {
+    opacity: 1;
+    transform: scale(1.06);
+    background: rgba(0, 0, 0, 0.55);
+}
+
+.reel-rotate-btn.is-rotated {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.55);
+}
+
+.reel-mute-btn svg,
+.reel-fullscreen-btn svg,
+.reel-rotate-btn svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+}
+
+/* Desktop / tablet: rotation is a FULLSCREEN-only feature.
+   (Mobile keeps it in the normal view too, see the mobile block.) */
+@media (min-width: 801px) {
+
+    .reel-rotate-btn {
+        display: none;
+    }
+
+    .reel-slide.is-fullscreen .reel-rotate-btn {
+        display: flex;
+    }
+}
+
+/* =========================================================
+   PLAY INDICATOR
+========================================================= */
+
+.reel-play-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 70px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.48);
+    backdrop-filter: blur(5px);
+    transform: translate(-50%, -50%) scale(0.85);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    z-index: 12;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+}
+
+.reel-slide.is-paused .reel-play-indicator {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.reel-play-indicator svg {
+    width: 32px;
+    height: 32px;
+    fill: #ffffff;
+}
+
+/* =========================================================
+   PROGRESS (click / tap / drag to seek)
+   IDENTICAL treatment to the Loop progress bar
+   (.loop-progress): a 16px invisible hit area, a 3px track
+   that grows to 6px on hover / scrubbing, and the same Twigg
+   gradient fill. Playback position is updated by reels.js.
+========================================================= */
+
+.reel-progress {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 16px;
+    z-index: 15;
+    cursor: pointer;
+    touch-action: none;
+}
+
+.reel-progress-track {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.34);
+    transition: height 0.15s ease;
+}
+
+.reel-progress:hover .reel-progress-track,
+.reel-progress.is-scrubbing .reel-progress-track {
+    height: 6px;
+}
+
+.reel-progress-fill {
+    width: 0;
+    height: 100%;
+    background: linear-gradient(90deg, #B90066 0%, #E6094F 55%, #F6801E 100%);
+    border-radius: 0 3px 3px 0;
+    box-shadow: 0 0 6px rgba(251, 8, 56, 0.35);
+    transition: width 0.1s linear;
+}
+
+/* While dragging, follow the pointer with no easing */
+.reel-progress.is-scrubbing .reel-progress-fill {
+    transition: none;
+}
+
+/* =========================================================
+   ROTATE FEATURE
+
+   The card is never rotated or reshaped any more. Rotation
+   only turns the VIDEO 90deg inside its card:
+   - Mobile: available in the normal view and in fullscreen.
+   - Desktop / tablet: available in fullscreen only.
+
+   reels.js sets the swapped width / height inline (and the
+   --reel-media-rotate-w/-h variables) so the rotated video
+   still fits the card completely, with object-fit: contain.
+========================================================= */
+
+.reel-video.reel-video-rotated {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--reel-media-rotate-w, 100%);
+    height: var(--reel-media-rotate-h, 100%);
+    max-width: none;
+    max-height: none;
+    object-fit: contain;
+    object-position: center center;
+    transform: translate(-50%, -50%) rotate(90deg);
+    transition: none;
+}
+
+/* =========================================================
+   REEL ACTIONS (outside the card, desktop default)
+========================================================= */
+
+.reel-actions {
+    position: absolute;
+    left: 100%;
+    bottom: 20px;
+    margin-left: 22px;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.reel-slide.is-active .reel-actions {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.reel-action-btn {
+    width: 34px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    outline: 0;
+    background: none;
+    color: #222222;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.reel-action-btn svg {
+    width: 30px;
+    height: 30px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    transition: transform 0.15s ease;
+}
+
+.reel-action-btn:hover svg {
+    transform: scale(1.08);
+}
+
+.reel-like-btn.is-liked svg {
+    fill: #ff2d55;
+    stroke: #ff2d55;
+}
+
+.reel-save-btn.is-saved svg {
+    fill: #111111;
+    stroke: #111111;
+}
+
+.reel-report-btn.is-reported svg {
+    fill: #f5a623;
+    stroke: #f5a623;
+}
+
+.reel-report-btn.is-reported {
+    cursor: default;
+}
+
+/* =========================================================
+   REEL NAVIGATION (up / down)
+
+   Normal: the two buttons are stacked together, vertically
+   centred against the right side of the page.
+
+   .is-split (set by reels.js ONLY when the active reel is a
+   landscape card that reaches the buttons and would overlap
+   its like / save controls): the up button moves above the
+   card and the down button below it, at the same right-side
+   position. --nav-card-h is the card height; the gap between
+   the two buttons becomes the card height + 14px above and
+   below. Portrait reels go back to the normal stacked state.
+========================================================= */
+
+.reel-nav-controls {
+    position: absolute;
+    top: 50%;
+    right: 28px;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transform: translateY(-50%);
+    transition: gap 0.2s ease;
+}
+
+.reel-nav-controls.is-split {
+    gap: calc(var(--nav-card-h, 0px) + 28px);
+}
+
+.reel-nav-btn {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e4e4e4;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #151515;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.reel-nav-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.14);
+}
+
+.reel-nav-btn svg {
+    width: 26px;
+    height: 26px;
+}
+
+.reel-nav-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+    box-shadow: none;
+}
+
+/* =========================================================
+   COMPACT MODE  (.is-compact on the slide)
+
+   Set by reels.js whenever the creator info and action rail
+   do not fit comfortably BESIDE the card (decided from the
+   real available width, not a fixed breakpoint) and always
+   on mobile. The info block and actions then sit INSIDE the
+   card, over the video.
+
+   .has-landscape-card = desktop / tablet card is 16:9.
+========================================================= */
+
+.reel-slide.is-compact {
+    --compact-inset: 13px;
+}
+
+.reel-slide.is-compact .reel-info-outside {
+    --reel-avatar-size: 34px;
+    --reel-avatar-gap: 8px;
+
+    right: auto;
+    left: var(--compact-inset);
+    bottom: calc(var(--compact-inset) + 4px);
+    width: auto;
+    max-width: calc(100% - 2 * var(--compact-inset));
+    margin: 0;
+    color: #ffffff;
+    transform: none;
+    transform-origin: left bottom;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+.reel-slide.is-compact.is-active .reel-info-outside:hover {
+    transform: scale(1.03);
+}
+
+/* Landscape card: keep the info clear of the action rail. */
+.reel-slide.is-compact.has-landscape-card .reel-info-outside {
+    max-width: calc(100% - 2 * var(--compact-inset) - 72px);
+}
+
+/* Avatar + name on one row, name centred on the avatar. */
+.reel-slide.is-compact .reel-creator {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
+.reel-slide.is-compact .reel-avatar {
+    border: 2px solid rgba(255, 255, 255, 0.92);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+.reel-slide.is-compact .reel-service-name {
+    color: #ffffff;
+    font-size: 18px;
+}
+
+.reel-slide.is-compact .reel-category {
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 13px;
+}
+
+.reel-slide.is-compact .reel-rating {
+    margin-top: 8px;
+    gap: 6px;
+}
+
+.reel-slide.is-compact .reel-stars svg {
+    width: 15px;
+    height: 15px;
+}
+
+.reel-slide.is-compact .reel-rating-value {
+    color: #ffffff;
+    font-size: 13px;
+}
+
+.reel-slide.is-compact .reel-review-count {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 12px;
+}
+
+/* Actions over the card */
+
+.reel-slide.is-compact .reel-actions {
+    left: auto;
+    right: calc(var(--compact-inset) - 2px);
+    bottom: 105px;
+    margin: 0;
+    gap: 28px;
+}
+
+.reel-slide.is-compact .reel-action-btn {
+    color: #ffffff;
+}
+
+.reel-slide.is-compact .reel-action-btn svg {
+    width: 29px;
+    height: 29px;
+}
+
+/* Saved icon turns white so it shows on the video */
+.reel-slide.is-compact .reel-save-btn.is-saved svg {
+    fill: #ffffff;
+    stroke: #ffffff;
+}
+
+/* Landscape card is short: sit the rail low and tight. */
+.reel-slide.is-compact.has-landscape-card .reel-actions {
+    bottom: 26px;
+    gap: 18px;
+}
+
+/* Desktop / tablet compact: roomier inset, stacked avatar. */
+@media (min-width: 801px) {
+
+    .reel-slide.is-compact {
+        --compact-inset: 28px;
+    }
+
+    .reel-slide.is-compact .reel-info-outside {
+        --reel-avatar-size: 46px;
+        --reel-avatar-gap: 10px;
+    }
+
+    .reel-slide.is-compact .reel-creator {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--reel-avatar-gap);
+    }
+
+    .reel-slide.is-compact .reel-service-name {
+        font-size: 17px;
+    }
+
+    .reel-slide.is-compact .reel-category {
+        font-size: 13px;
+    }
+}
+
+/* =========================================================
+   CAPTION
+   Outside the card: full caption under the rating. No toggle.
+   Compact: hidden until "Show more" is tapped; expanded shows
+   everything on a dark gradient and the block grows upward.
+========================================================= */
+
+.reel-caption-wrap {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin-top: 12px;
+}
+
+.reel-caption {
+    color: #444444;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.45;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 8;
+    overflow: hidden;
+}
+
+.reel-caption-toggle {
+    display: none;
+}
+
+.reel-caption-toggle[hidden] {
+    display: none !important;
+}
+
+/* Landscape cards are shorter: fewer caption lines outside. */
+.reel-slide.has-landscape-card:not(.is-compact) .reel-caption {
+    -webkit-line-clamp: 4;
+}
+
+.reel-slide.is-compact .reel-caption-wrap {
+    margin-top: 8px;
+}
+
+.reel-slide.is-compact .reel-caption {
+    /* Hidden until Show more is tapped. */
+    display: none;
+    width: 100%;
+    max-width: 100%;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 13px;
+    line-height: 1.4;
+    -webkit-line-clamp: unset;
+    overflow-wrap: anywhere;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+
+.reel-slide.is-compact .reel-caption-toggle {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 2px 0;
+    border: 0;
+    background: none;
+    color: #ffffff;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.reel-slide.is-compact .reel-info-outside.is-caption-expanded::before {
+    content: "";
+    position: absolute;
+    inset: -36px -18px calc(-1 * (var(--compact-inset) + 4px)) calc(-1 * var(--compact-inset));
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.35) 70%, transparent);
+}
+
+.reel-slide.is-compact .reel-info-outside.is-caption-expanded .reel-caption {
+    display: block;
+    max-height: min(36vh, calc(var(--card-h, 100vh) * 0.4));
+    overflow-y: auto;
+    overflow-wrap: anywhere;
+    scrollbar-width: none;
+}
+
+.reel-slide.is-compact .reel-info-outside.is-caption-expanded .reel-caption::-webkit-scrollbar {
+    display: none;
+}
+
+/* =========================================================
+   FULLSCREEN  (real fullscreen AND the mobile / tablet
+   fallback)
+
+   reels.js adds .is-fullscreen to the slide in both cases.
+   The card fills the whole screen; the video is letterboxed
+   with object-fit: contain, so it is never cropped.
+   The rotate button is available here on every device.
+========================================================= */
+
+.reel-slide.is-fullscreen .reel-card {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+    border-radius: 0;
+    box-shadow: none;
+    background: #000000;
+}
+
+.reel-slide.is-fullscreen .reel-video:not(.reel-video-rotated) {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.reel-slide.is-fullscreen .reel-video.reel-video-rotated {
+    width: var(--reel-media-rotate-w, 100%) !important;
+    height: var(--reel-media-rotate-h, 100%) !important;
+    transform: translate(-50%, -50%) rotate(90deg) !important;
+    object-fit: contain !important;
+}
+
+.reel-slide.is-fullscreen .reel-mute-btn {
+    top: 18px;
+    right: 18px;
+}
+
+.reel-slide.is-fullscreen .reel-fullscreen-btn {
+    top: 66px;
+    right: 18px;
+}
+
+.reel-slide.is-fullscreen .reel-rotate-btn {
+    display: flex;
+    top: 114px;
+    right: 18px;
+}
+
+.reel-slide.is-fullscreen .reel-progress-track {
+    height: 4px;
+}
+
+.reel-slide.is-fullscreen .reel-info-outside,
+.reel-slide.is-fullscreen .reel-actions {
+    display: none;
+}
+
+/* ---------- Fallback fullscreen (no Fullscreen API) ---------- */
+
+body.fallback-fullscreen-active {
+    background: #000000;
+    overflow: hidden;
+}
+
+body.fallback-fullscreen-active .logo,
+body.fallback-fullscreen-active .navigation,
+body.fallback-fullscreen-active .filter-button,
+body.fallback-fullscreen-active .reel-nav-controls {
+    display: none;
+}
+
+body.fallback-fullscreen-active .sidebar {
+    width: 0;
+    height: 0;
+    min-height: 0;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    overflow: visible;
+}
+
+body.fallback-fullscreen-active .reels-feed {
+    overflow: hidden;
+}
+
+.reel-slide.is-fallback-fullscreen {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+    background: #000000;
+    z-index: 5000;
+    overflow: hidden;
+    scroll-snap-align: none;
+    scroll-snap-stop: normal;
+}
+
+.reel-slide.is-fallback-fullscreen .reel-row {
+    width: 100vw;
+    height: 100dvh;
+    max-width: none;
+    padding: 0;
+    margin: 0;
+}
+
+.reel-slide.is-fallback-fullscreen .reel-stage {
+    width: 100%;
+    height: 100%;
+}
+
+/* =========================================================
+   TABLET  (801px - 1150px)
+   Sidebar / filter / navigation sizing only. The reel
+   layout itself is space-based (see reels.js), not
+   breakpoint-based.
+========================================================= */
+
+@media (min-width: 801px) and (max-width: 1150px) {
+
+    :root {
+        --tablet-sidebar-width: 195px;
+    }
+
+    .sidebar {
+        width: var(--tablet-sidebar-width);
+        padding: 30px 22px;
+    }
+
+    .sidebar .logo {
+        width: 110px;
+        height: auto;
+        flex-shrink: 0;
+    }
+
+    .sidebar .logo svg {
+        display: block;
+        width: 100%;
+        height: auto;
+    }
+
+    .filter-button {
+        position: relative;
+        z-index: 100;
+        width: 100%;
+        height: 46px;
+        margin-top: 34px;
+        padding: 0 13px;
+        gap: 10px;
+        font-size: 12px;
+        line-height: 1;
+    }
+
+    .filter-button svg {
+        width: 21px;
+        height: 21px;
+    }
+
+    .navigation {
+        width: 100%;
+        margin-top: 34px;
+        gap: 4px;
+    }
+
+    .nav-item {
+        width: 100%;
+        height: 50px;
+        padding: 0 11px;
+        gap: 14px;
+        flex-shrink: 0;
+        font-size: 13px;
+        line-height: 1;
+    }
+
+    .nav-icon {
+        width: 24px;
+        height: 24px;
+        min-width: 24px;
+        min-height: 24px;
+        flex-shrink: 0;
+        stroke-width: 1.8;
+    }
+
+    .main {
+        left: var(--tablet-sidebar-width);
+        right: 0;
+    }
+
+    .reel-nav-controls {
+        right: 18px;
+    }
+}
+
+/* =========================================================
+   MOBILE
+   800px AND BELOW
+========================================================= */
+
+@media (max-width: 800px) {
+
+    :root {
+        --mobile-bar-height: 62px;
+        --mobile-available-height: calc(100dvh - var(--mobile-bar-height));
+        --mobile-reel-width: min(100vw, calc(var(--mobile-available-height) * 9 / 16));
+        --mobile-reel-height: calc(var(--mobile-reel-width) * 16 / 9);
+        --mobile-reel-side-space: calc((100vw - var(--mobile-reel-width)) / 2);
+        --mobile-reel-top-space: calc((var(--mobile-available-height) - var(--mobile-reel-height)) / 2);
+    }
+
+    /* BOTTOM BAR */
+
+    .sidebar {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: auto;
+        width: 100%;
+        height: var(--mobile-bar-height);
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.97);
+        border-top: 1px solid #e8e8e8;
+        z-index: 1000;
+        overflow: visible;
+    }
+
+    .logo {
+        display: none !important;
+    }
+
+    /* MOBILE FILTER */
+
+    .filter-button {
+        position: fixed !important;
+        top: calc(var(--mobile-reel-top-space) + 18px) !important;
+        left: calc(var(--mobile-reel-side-space) + 10px) !important;
+        right: auto !important;
+        bottom: auto !important;
+        width: 38px !important;
+        height: 38px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+        z-index: 3000;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.92);
+        color: #151515;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+
+    .filter-button:hover {
+        transform: none;
+    }
+
+    .filter-button span {
+        display: none !important;
+    }
+
+    .filter-button svg {
+        width: 19px !important;
+        height: 19px !important;
+    }
+
+    /* MOBILE NAVIGATION */
+
+    .navigation {
+        width: var(--mobile-reel-width);
+        height: 100%;
+        margin: 0 !important;
+        padding: 0;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0;
+    }
+
+    .nav-item {
+        width: auto;
+        height: 100%;
+        flex: 1 1 0;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        background: transparent;
+        font-size: 0;
+        transform: none;
+    }
+
+    .nav-item span {
+        display: none !important;
+    }
+
+    .nav-item:hover {
+        background: transparent;
+        transform: none;
+    }
+
+    /* MOBILE ACTIVE PAGE SHADOW */
+
+    .nav-item.active {
+        background: transparent !important;
+        box-shadow: 0 0 12px rgba(0, 0, 0, 0.16);
+        border-radius: 14px;
+    }
+
+    .nav-icon {
+        width: 23px;
+        height: 23px;
+        color: #222222;
+        stroke-width: 1.8;
+    }
+
+    .nav-item.active .nav-icon {
+        color: #111111;
+        stroke-width: 2.2;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.22));
+        transform: scale(1.05);
+    }
+
+    /* HIDE NOTIFICATION + CREATE */
+
+    .navigation .nav-item:nth-child(6),
+    .navigation .nav-item:nth-child(7) {
+        display: none !important;
+    }
+
+    /* MAIN */
+
+    .main {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: var(--mobile-bar-height);
+        width: 100%;
+        height: auto;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    /* REELS FEED */
+
+    .reels-feed {
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+        scroll-snap-type: y mandatory;
+        scroll-behavior: smooth;
+        scrollbar-width: none;
+    }
+
+    .reels-feed::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* REEL SLIDE */
+
+    .reel-slide {
+        width: 100%;
+        height: 100%;
+        min-height: 100%;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        scroll-snap-align: start;
+        scroll-snap-stop: always;
+        overflow: hidden;
+    }
+
+    /* REEL ROW */
+
+    .reel-row {
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    /* STAGE: ALWAYS a 9:16 portrait card on mobile, whatever the
+       video is. Landscape videos sit inside it, letterboxed
+       (object-fit: contain), never cropped or stretched. */
+
+    .reel-stage {
+        width: var(--mobile-reel-width);
+        height: var(--mobile-reel-height);
+        max-width: 100vw;
+        max-height: var(--mobile-available-height);
+    }
+
+    .reel-card {
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.22);
+    }
+
+    /* The rotate button is part of the normal mobile view. */
+
+    .reel-rotate-btn {
+        display: flex;
+    }
+
+    /* HIDE UP / DOWN */
+
+    .reel-nav-controls {
+        display: none !important;
+    }
+
+    /* MOBILE FULLSCREEN CONTROL POSITIONS */
+
+    .reel-slide.is-fullscreen .reel-mute-btn {
+        top: 14px;
+        right: 14px;
+    }
+
+    .reel-slide.is-fullscreen .reel-fullscreen-btn {
+        top: 60px;
+        right: 14px;
+    }
+
+    .reel-slide.is-fullscreen .reel-rotate-btn {
+        top: 106px;
+        right: 14px;
+    }
+
+    .reel-slide.is-fullscreen .reel-progress-track {
+        height: 3px;
+    }
+}
+
+/* =========================================================
+   SMALL PHONES
+   500px AND BELOW
+========================================================= */
+
+@media (max-width: 500px) {
+
+    :root {
+        --mobile-bar-height: 58px;
+    }
+
+    .sidebar {
+        height: var(--mobile-bar-height);
+    }
+
+    .sidebar .nav-item {
+        max-width: 64px;
+    }
+
+    .sidebar .nav-icon {
+        width: 22px;
+        height: 22px;
+        min-width: 22px;
+        min-height: 22px;
+    }
+
+    .filter-button {
+        top: calc(var(--mobile-reel-top-space) + 16px) !important;
+        left: calc(var(--mobile-reel-side-space) + 9px) !important;
+        width: 36px !important;
+        height: 36px !important;
+    }
+
+    .filter-button svg {
+        width: 18px !important;
+        height: 18px !important;
+    }
+
+    .reel-slide.is-compact {
+        --compact-inset: 12px;
+    }
+
+    .reel-slide.is-compact .reel-info-outside {
+        --reel-avatar-size: 30px;
+    }
+
+    .reel-slide.is-compact .reel-actions {
+        right: 10px;
+        bottom: 95px;
+        gap: 25px;
+    }
+
+    .reel-slide.is-compact .reel-action-btn svg {
+        width: 27px;
+        height: 27px;
+    }
+}
+
+/* =========================================================
+   VERY SMALL PHONES
+   380px AND BELOW
+========================================================= */
+
+@media (max-width: 380px) {
+
+    .sidebar .nav-item {
+        max-width: 58px;
+    }
+
+    .sidebar .nav-icon {
+        width: 21px;
+        height: 21px;
+        min-width: 21px;
+        min-height: 21px;
+    }
+
+    .filter-button {
+        top: calc(var(--mobile-reel-top-space) + 15px) !important;
+        left: calc(var(--mobile-reel-side-space) + 8px) !important;
+        width: 35px !important;
+        height: 35px !important;
+    }
+
+    .reel-slide.is-compact .reel-actions {
+        right: 8px;
+        bottom: 88px;
+        gap: 22px;
+    }
+
+    .reel-slide.is-fullscreen .reel-mute-btn {
+        top: 12px;
+        right: 12px;
+    }
+
+    .reel-slide.is-fullscreen .reel-fullscreen-btn {
+        top: 56px;
+        right: 12px;
+    }
+
+    .reel-slide.is-fullscreen .reel-rotate-btn {
+        top: 100px;
+        right: 12px;
+    }
+}

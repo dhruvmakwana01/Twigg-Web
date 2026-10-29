@@ -44,6 +44,42 @@
 
 
     /* =====================================================
+       TOUCH / MOBILE SETTINGS
+
+       - touch devices (no hover) autoplay by visibility
+       - on mobile (800px and below) the DOCUMENT scrolls so the
+         browser can hide / show its own toolbars; on desktop and
+         tablet the fixed .main box scrolls
+    ===================================================== */
+
+    const touchQuery = window.matchMedia("(hover: none)");
+
+    const mobileLayoutQuery = window.matchMedia("(max-width: 800px)");
+
+    const isTouchFeed = () => touchQuery.matches;
+
+    const usesDocumentScroll = () => mobileLayoutQuery.matches;
+
+    /* sufficiently visible: 60% of the card, or half the screen height */
+    const AUTOPLAY_MIN_RATIO = 0.6;
+    const AUTOPLAY_MIN_VIEWPORT_SHARE = 0.5;
+
+    /* On touch devices the featured video keeps playing while at
+       least this much of it is visible */
+    const FEATURED_MIN_VISIBLE = 0.4;
+
+    /* tap vs scroll */
+    const TAP_SLOP = 10;
+    const SCROLL_GUARD_MS = 150;
+
+    /* The page itself now scrolls on mobile, so the browser must not
+       restore its own scroll position (this file restores it). */
+    if ("scrollRestoration" in history) {
+        history.scrollRestoration = "manual";
+    }
+
+
+    /* =====================================================
        MEDIA (from the shared data source)
     ===================================================== */
 
@@ -230,6 +266,16 @@
     const savedIds = new Set();
     const likedIds = new Set();
     const reportedIds = new Set();
+
+    /* Touch autoplay of the grid videos */
+    const gridVisible = new Map();
+    let activeGridCard = null;
+    let gridObserver = null;
+    let gridEvaluateTimer = null;
+
+    /* tap vs scroll */
+    let lastScrollAt = 0;
+    let tapState = null;
 
 
     /* =====================================================
@@ -506,9 +552,39 @@
     }
 
 
+    /*
+       SCROLL HELPERS
+
+       Mobile (800px and below): the document scrolls.
+       Desktop / tablet: the fixed .main box scrolls.
+    */
+
+    function getScrollTop() {
+
+        return usesDocumentScroll()
+            ? window.scrollY
+            : mainEl.scrollTop;
+    }
+
+
     /* Jump instantly to a scroll position (no animation). */
 
     function jumpScroll(y) {
+
+        if (usesDocumentScroll()) {
+
+            const root = document.documentElement;
+
+            const previousRoot = root.style.scrollBehavior;
+
+            root.style.scrollBehavior = "auto";
+
+            window.scrollTo(0, y);
+
+            root.style.scrollBehavior = previousRoot;
+
+            return;
+        }
 
         const previous = mainEl.style.scrollBehavior;
 
@@ -580,6 +656,84 @@
 
 
     /* =====================================================
+       TAP vs SCROLL (touch)
+
+       A card only opens / a video only pauses for an
+       intentional tap. A touch is NOT a tap when the finger
+       moved, the browser cancelled the pointer (it started
+       scrolling), or the page was still scrolling when the
+       finger landed / lifted. Mouse clicks are never filtered.
+    ===================================================== */
+
+    document.addEventListener(
+        "pointerdown",
+        event => {
+
+            tapState =
+                event.pointerType === "mouse"
+                    ? null
+                    : {
+                        x: event.clientX,
+                        y: event.clientY,
+                        moved: false,
+                        duringScroll:
+                            Date.now() - lastScrollAt < SCROLL_GUARD_MS
+                    };
+        },
+        { passive: true, capture: true }
+    );
+
+
+    document.addEventListener(
+        "pointermove",
+        event => {
+
+            if (
+                tapState &&
+                !tapState.moved &&
+                Math.hypot(
+                    event.clientX - tapState.x,
+                    event.clientY - tapState.y
+                ) > TAP_SLOP
+            ) {
+                tapState.moved = true;
+            }
+        },
+        { passive: true, capture: true }
+    );
+
+
+    document.addEventListener(
+        "pointercancel",
+        () => {
+
+            if (tapState) {
+                tapState.moved = true;
+            }
+        },
+        { passive: true, capture: true }
+    );
+
+
+    function isAccidentalTap() {
+
+        const state = tapState;
+
+        tapState = null;
+
+        if (!state) {
+            return false;
+        }
+
+        return (
+            state.moved ||
+            state.duringScroll ||
+            Date.now() - lastScrollAt < SCROLL_GUARD_MS
+        );
+    }
+
+
+    /* =====================================================
        LOOP POSITION: SAVE / READ / CLEAR
 
        Saved: featured card, the exact grid order, and the
@@ -618,7 +772,7 @@
             gridOrder:
                 Array.from(gridEl.children)
                     .map(card => Number(card.dataset.cardId)),
-            scrollTop: mainEl.scrollTop
+            scrollTop: getScrollTop()
         };
 
         try {
@@ -720,7 +874,7 @@
         }
 
         const reached = () =>
-            Math.abs(mainEl.scrollTop - y) <= 2;
+            Math.abs(getScrollTop() - y) <= 2;
 
         jumpScroll(y);
 
@@ -917,66 +1071,6 @@
     }
 
 
-    function makePoster(video) {
-
-        if (
-            !video.videoWidth ||
-            !video.videoHeight ||
-            video.poster
-        ) {
-            return;
-        }
-
-        try {
-
-            const canvas = document.createElement("canvas");
-
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-
-            const context = canvas.getContext("2d");
-
-            if (!context) {
-                return;
-            }
-
-            const capture = () => {
-
-                try {
-
-                    context.drawImage(
-                        video,
-                        0,
-                        0,
-                        video.videoWidth,
-                        video.videoHeight
-                    );
-
-                    video.poster =
-                        canvas.toDataURL("image/jpeg", 0.88);
-
-                } catch {
-                    /* Canvas extraction can be blocked. */
-                }
-            };
-
-            if (Math.abs(video.currentTime) < 0.01) {
-
-                capture();
-
-                return;
-            }
-
-            video.addEventListener("seeked", capture, { once: true });
-
-            video.currentTime = 0;
-
-        } catch {
-            /* Thumbnail generation is optional. */
-        }
-    }
-
-
     function bindVideoRatio(card, id, video) {
 
         const update = () => {
@@ -990,25 +1084,240 @@
 
         video.addEventListener("loadedmetadata", update);
 
-        video.addEventListener(
-            "loadeddata",
-            () => {
-                update();
-                makePoster(video);
-            },
-            { once: true }
-        );
-
         if (video.readyState >= 1) {
             update();
         }
 
-        if (video.readyState >= 2) {
-            update();
-            makePoster(video);
-        }
+        /* Poster from the SHARED thumbnail pipeline (media-data.js):
+           same cached frame Home uses, no per-page generation. */
+
+        const posterReady =
+            Media.applyPoster(
+                video,
+                id,
+                ratio => {
+                    card.style.setProperty("--media-ratio", String(ratio));
+                    rememberRatio(id, ratio);
+                }
+            );
 
         video.load();
+
+        return posterReady;
+    }
+
+
+    /* =====================================================
+       TOUCH AUTOPLAY OF THE GRID VIDEOS
+
+       On touch devices a grid video starts when it is
+       sufficiently visible and stops when it leaves the
+       screen. Only ONE video plays at a time: the
+       sufficiently-visible grid card closest to the middle of
+       the screen. While the featured video is on screen and
+       playing it has priority, so the grid stays still.
+       Playback is muted unless the shared mute setting says
+       otherwise (safePlay falls back to muted if the browser
+       blocks sound).
+    ===================================================== */
+
+    function featuredIsPlaying() {
+
+        return !!(
+            featuredEls &&
+            featuredEls.video &&
+            featuredEls.showing &&
+            featuredEls.wrap.dataset.userPaused !== "true"
+        );
+    }
+
+
+    function startGridCard(card) {
+
+        const video = card.querySelector("video");
+
+        if (!video) {
+            return;
+        }
+
+        const indicator = card.querySelector(".video-indicator");
+
+        if (indicator) {
+            indicator.classList.add("hidden");
+        }
+
+        video.muted = sharedMuted;
+
+        safePlay(video);
+    }
+
+
+    function stopGridCard(card) {
+
+        const video = card.querySelector("video");
+
+        if (!video) {
+            return;
+        }
+
+        const indicator = card.querySelector(".video-indicator");
+
+        if (indicator) {
+            indicator.classList.remove("hidden");
+        }
+
+        video.pause();
+
+        video.muted = true;
+
+        try {
+            video.currentTime = 0;
+        } catch { }
+    }
+
+
+    function releaseGridAutoplay() {
+
+        if (activeGridCard) {
+
+            stopGridCard(activeGridCard);
+
+            activeGridCard = null;
+        }
+    }
+
+
+    function evaluateGridAutoplay() {
+
+        if (
+            !isTouchFeed() ||
+            document.visibilityState === "hidden" ||
+            featuredIsPlaying()
+        ) {
+            releaseGridAutoplay();
+            return;
+        }
+
+        const middle = window.innerHeight / 2;
+
+        let best = null;
+        let bestDistance = Infinity;
+
+        gridVisible.forEach((_, card) => {
+
+            if (!card.isConnected) {
+                return;
+            }
+
+            const rect = card.getBoundingClientRect();
+
+            const distance =
+                Math.abs(rect.top + rect.height / 2 - middle);
+
+            if (distance < bestDistance) {
+                best = card;
+                bestDistance = distance;
+            }
+        });
+
+        if (best === activeGridCard) {
+            return;
+        }
+
+        if (activeGridCard) {
+            stopGridCard(activeGridCard);
+        }
+
+        activeGridCard = best;
+
+        if (best) {
+            startGridCard(best);
+        }
+    }
+
+
+    function observeGridCard(card) {
+
+        if (!("IntersectionObserver" in window)) {
+            return;
+        }
+
+        if (!gridObserver) {
+
+            /*
+               root: null (the viewport). Intersection is still
+               clipped by any scrolling ancestor, so this works for
+               the mobile document scroll and the desktop / tablet
+               .main scroll alike.
+            */
+
+            gridObserver =
+                new IntersectionObserver(
+                    observed => {
+
+                        observed.forEach(entry => {
+
+                            const enough =
+                                entry.isIntersecting &&
+                                (
+                                    entry.intersectionRatio >= AUTOPLAY_MIN_RATIO ||
+                                    entry.intersectionRect.height >=
+                                        window.innerHeight * AUTOPLAY_MIN_VIEWPORT_SHARE
+                                );
+
+                            if (enough) {
+                                gridVisible.set(entry.target, true);
+                            } else {
+                                gridVisible.delete(entry.target);
+                            }
+                        });
+
+                        evaluateGridAutoplay();
+                    },
+                    {
+                        root: null,
+                        threshold: [0, 0.25, 0.5, 0.6, 0.75, 1]
+                    }
+                );
+        }
+
+        gridObserver.observe(card);
+    }
+
+
+    /* Re-pick the most central video shortly after scrolling stops,
+       and remember the time of the latest scroll for tap vs scroll */
+
+    window.addEventListener(
+        "scroll",
+        () => {
+
+            lastScrollAt = Date.now();
+
+            if (!isTouchFeed()) {
+                return;
+            }
+
+            clearTimeout(gridEvaluateTimer);
+
+            gridEvaluateTimer =
+                setTimeout(evaluateGridAutoplay, 120);
+        },
+        {
+            passive: true,
+            capture: true
+        }
+    );
+
+
+    document.addEventListener("visibilitychange", () => {
+
+        evaluateGridAutoplay();
+    });
+
+
+    if (touchQuery.addEventListener) {
+        touchQuery.addEventListener("change", evaluateGridAutoplay);
     }
 
 
@@ -1052,7 +1361,15 @@
         }
 
 
+        /* Hover playback is for mouse devices only. Touch devices
+           get emulated mouse events after a tap; those are ignored
+           (touch playback is the visibility-based autoplay above). */
+
         card.addEventListener("mouseenter", () => {
+
+            if (isTouchFeed()) {
+                return;
+            }
 
             indicator.classList.add("hidden");
 
@@ -1078,6 +1395,10 @@
 
         card.addEventListener("mouseleave", () => {
 
+            if (isTouchFeed()) {
+                return;
+            }
+
             indicator.classList.remove("hidden");
 
             if (hoveredVideo === video) {
@@ -1101,6 +1422,38 @@
                 event.stopPropagation();
 
                 setSharedMuted(!sharedMuted);
+
+                if (isTouchFeed()) {
+
+                    /* Only the auto-playing video may have sound.
+                       A button on another card must not start a
+                       second video. */
+
+                    const activeVideo =
+                        activeGridCard
+                            ? activeGridCard.querySelector("video")
+                            : null;
+
+                    gridEl
+                        .querySelectorAll("video")
+                        .forEach(other => {
+                            other.muted =
+                                sharedMuted ||
+                                other !== activeVideo;
+                        });
+
+                    if (featuredEls && featuredEls.video) {
+                        featuredEls.video.muted = sharedMuted;
+                    }
+
+                    refreshMuteUI();
+
+                    if (!sharedMuted && activeVideo) {
+                        safePlay(activeVideo);
+                    }
+
+                    return;
+                }
 
                 video.muted = sharedMuted;
 
@@ -1167,6 +1520,11 @@
         const item = getItem(id);
         const isVideo = item.type === "video";
 
+        /* Touch devices only fetch video metadata (+ first frame)
+           up front; the full video loads when it autoplays. */
+
+        const light = lazy || isTouchFeed();
+
         const card = document.createElement("article");
 
         card.className = "media-card";
@@ -1198,7 +1556,7 @@
             media.setAttribute("loop", "");
             media.setAttribute("playsinline", "");
 
-            media.preload = lazy ? "metadata" : "auto";
+            media.preload = light ? "metadata" : "auto";
 
             if (item.thumbnail) {
                 media.poster = item.thumbnail;
@@ -1206,7 +1564,7 @@
 
             const source = document.createElement("source");
 
-            source.src = item.src + (lazy ? "#t=0.001" : "");
+            source.src = item.src + (light ? "#t=0.001" : "");
 
             source.type = "video/mp4";
 
@@ -1260,13 +1618,23 @@
 
         if (isVideo) {
 
-            bindVideoRatio(card, id, media);
+            const posterReady = bindVideoRatio(card, id, media);
+
+            if (window.TwiggSkeleton) {
+                window.TwiggSkeleton.watchVideo(card, media, posterReady);
+            }
 
             bindGridVideo(card, media, muteButton);
+
+            observeGridCard(card);
 
         } else {
 
             bindImageRatio(card, id, media);
+
+            if (window.TwiggSkeleton) {
+                window.TwiggSkeleton.watchImage(card, media);
+            }
         }
 
 
@@ -1301,6 +1669,12 @@
         /* ---------- click: becomes featured ---------- */
 
         card.addEventListener("click", () => {
+
+            /* A touch that was really a scroll gesture is not a tap */
+
+            if (isAccidentalTap()) {
+                return;
+            }
 
             setFeatured(id, { push: true });
         });
@@ -1844,8 +2218,15 @@
             rotateBtn,
             saveBtn,
             rotated: false,
-            observer: null
+            observer: null,
+            showing: false
         };
+
+        const els = featuredEls;
+
+        if (image && window.TwiggSkeleton) {
+            window.TwiggSkeleton.watchImage(media, image);
+        }
 
 
         /* ---------- original aspect ratio ---------- */
@@ -1904,6 +2285,12 @@
         /* ---------- video behaviour ---------- */
 
         if (video) {
+
+            const featuredPoster = Media.applyPoster(video, id, null);
+
+            if (window.TwiggSkeleton) {
+                window.TwiggSkeleton.watchVideo(media, video, featuredPoster);
+            }
 
             const fill = wrap.querySelector(".loop-progress-fill");
 
@@ -1975,6 +2362,12 @@
                     return;
                 }
 
+                /* A light touch while scrolling must not pause the video */
+
+                if (isAccidentalTap()) {
+                    return;
+                }
+
                 if (video.paused) {
 
                     delete wrap.dataset.userPaused;
@@ -1991,6 +2384,11 @@
 
                     media.classList.add("is-paused");
                 }
+
+                /* The featured video's state decides whether the
+                   grid may autoplay on touch devices */
+
+                evaluateGridAutoplay();
             });
 
 
@@ -2097,7 +2495,15 @@
             }
 
 
-            /* Pause when scrolled out of view */
+            /* Pause when scrolled out of view.
+
+               root: null = the viewport (works for the mobile
+               document scroll and the desktop .main scroll).
+               Mouse devices: playing while ANY part is visible,
+               exactly as before. Touch devices: the featured
+               video plays while at least FEATURED_MIN_VISIBLE of
+               it is on screen, and it hands over to the grid
+               videos afterwards (one video at a time). */
 
             if ("IntersectionObserver" in window) {
 
@@ -2105,16 +2511,29 @@
                     new IntersectionObserver(
                         observed => {
 
-                            const entry = observed[0];
+                            const entry = observed[observed.length - 1];
 
                             if (
                                 !entry ||
+                                featuredEls !== els ||
                                 isFeaturedFullscreen()
                             ) {
                                 return;
                             }
 
-                            if (entry.isIntersecting) {
+                            const touch = isTouchFeed();
+
+                            const showing =
+                                touch
+                                    ? (
+                                        entry.isIntersecting &&
+                                        entry.intersectionRatio >= FEATURED_MIN_VISIBLE
+                                    )
+                                    : entry.isIntersecting;
+
+                            els.showing = showing;
+
+                            if (showing) {
 
                                 if (
                                     wrap.dataset.userPaused !== "true" &&
@@ -2133,10 +2552,12 @@
 
                                 video.pause();
                             }
+
+                            evaluateGridAutoplay();
                         },
                         {
-                            root: mainEl,
-                            threshold: 0.2
+                            root: null,
+                            threshold: [0, 0.2, 0.4, 0.6, 0.8, 1]
                         }
                     );
 
@@ -2229,6 +2650,10 @@
         featuredId = id;
 
         hoveredVideo = null;
+
+        /* The previous page's auto-playing grid video stops */
+
+        releaseGridAutoplay();
 
         renderFeatured(id);
 
@@ -2376,7 +2801,10 @@
 
     let loopScrollTimer = null;
 
-    mainEl.addEventListener(
+    /* A capture listener on window sees the scroll of the document
+       (mobile) AND of the .main box (desktop / tablet). */
+
+    window.addEventListener(
         "scroll",
         () => {
 
@@ -2384,7 +2812,7 @@
 
             loopScrollTimer = setTimeout(saveLoopState, 50);
         },
-        { passive: true }
+        { passive: true, capture: true }
     );
 
 

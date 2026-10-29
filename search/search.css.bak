@@ -1,0 +1,1259 @@
+/* =========================================================
+   RESET
+========================================================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    background: #fff;
+    color: #111;
+
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+.sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+
+    width: 225px;
+
+    padding: 32px 24px;
+
+    background: #fff;
+
+    z-index: 1000;
+
+    overflow-y: auto;
+
+    scrollbar-width: none;
+}
+
+.sidebar::-webkit-scrollbar {
+    display: none;
+}
+
+
+/* =========================================================
+   LOGO
+========================================================= */
+
+.logo {
+    display: block;
+
+    width: 120px;
+    height: auto;
+}
+
+.logo svg {
+    display: block;
+
+    width: 100%;
+    height: auto;
+}
+
+
+/* =========================================================
+   FILTER & SORT
+========================================================= */
+
+.filter-button {
+    display: flex;
+    align-items: center;
+
+    gap: 11px;
+
+    width: 100%;
+    height: 48px;
+
+    margin-top: 38px;
+
+    padding: 0 14px;
+
+    border: 1px solid #e4e4e4;
+    border-radius: 15px;
+
+    background: #fff;
+    color: #151515;
+
+    font-size: 13px;
+    font-weight: 500;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 6px 18px rgba(0, 0, 0, 0.06);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.filter-button:hover {
+    transform: translateY(-2px);
+
+    border-color: #d5d5d5;
+
+    box-shadow:
+        0 10px 24px rgba(0, 0, 0, 0.1);
+}
+
+.filter-button svg {
+    width: 22px;
+    height: 22px;
+
+    flex-shrink: 0;
+
+    fill: currentColor;
+}
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+.navigation {
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+
+    margin-top: 38px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+
+    gap: 16px;
+
+    height: 52px;
+
+    padding: 0 12px;
+
+    border-radius: 14px;
+
+    color: #222;
+
+    text-decoration: none;
+
+    font-size: 14px;
+    font-weight: 450;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.nav-item:hover {
+    background: #f1f1f1;
+
+    transform: translateX(2px);
+}
+
+.nav-item.active {
+    background: #eee;
+
+    font-weight: 550;
+}
+
+.nav-icon {
+    width: 25px;
+    height: 25px;
+
+    color: #181818;
+
+    stroke-width: 1.8;
+
+    flex-shrink: 0;
+
+    transition:
+        transform 0.2s ease,
+        filter 0.2s ease;
+}
+
+.nav-item.active .nav-icon {
+    color: #111;
+
+    stroke-width: 2.2;
+
+    filter:
+        drop-shadow(
+            0 2px 4px
+            rgba(0, 0, 0, 0.22)
+        );
+
+    transform: scale(1.05);
+}
+
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+.main {
+    position: fixed;
+
+    inset: 0 0 0 225px;
+
+    padding:
+        32px
+        42px
+        70px;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+
+/* =========================================================
+   MOBILE ONLY ELEMENTS
+========================================================= */
+
+.mobile-topbar {
+    display: none;
+}
+
+
+/* =========================================================
+   SEARCH PAGE
+
+   ONE content column. The heading, the search bar, every
+   section and every grid share the same left edge and the
+   same width, so nothing looks "half" or off-balance.
+========================================================= */
+
+.search-page {
+    width: 100%;
+    max-width: 1100px;
+
+    margin: 0 auto;
+}
+
+
+/* =========================================================
+   SEARCH HEADING
+========================================================= */
+
+.search-page > h1 {
+    margin: 0;
+
+    font-size: 32px;
+    line-height: 1.15;
+
+    font-weight: 600;
+
+    letter-spacing: -0.7px;
+}
+
+
+/* =========================================================
+   SEARCH BAR  (full width of the content column)
+========================================================= */
+
+.search-box {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+
+    width: 100%;
+
+    height: 56px;
+
+    margin-top: 22px;
+
+    border: 1px solid #e2e2e2;
+    border-radius: 18px;
+
+    background: #fff;
+
+    box-shadow:
+        0 6px 20px rgba(0, 0, 0, 0.05);
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.search-box:hover {
+    border-color: #d2d2d2;
+}
+
+.search-box:focus-within {
+    border-color: #bdbdbd;
+
+    box-shadow:
+        0 10px 28px rgba(0, 0, 0, 0.09);
+}
+
+.search-icon {
+    width: 22px;
+    height: 22px;
+
+    margin-left: 20px;
+
+    color: #777;
+
+    flex-shrink: 0;
+
+    stroke-width: 1.8;
+}
+
+.search-box input {
+    width: 100%;
+    height: 100%;
+
+    padding:
+        0
+        52px
+        0
+        14px;
+
+    border: none;
+    outline: none;
+
+    background: transparent;
+
+    color: #111;
+
+    font-size: 15px;
+}
+
+.search-box input::placeholder {
+    color: #999;
+}
+
+.clear-search {
+    position: absolute;
+
+    right: 14px;
+
+    width: 30px;
+    height: 30px;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 50%;
+
+    background: #f0f0f0;
+
+    color: #555;
+
+    font-size: 21px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition: background 0.2s ease;
+}
+
+.clear-search:hover {
+    background: #e4e4e4;
+}
+
+.clear-search.visible {
+    display: flex;
+}
+
+
+/* =========================================================
+   SEARCH SECTIONS
+========================================================= */
+
+.search-section {
+    margin-top: 44px;
+}
+
+.search-section h2 {
+    margin-bottom: 18px;
+
+    font-size: 19px;
+    font-weight: 600;
+
+    letter-spacing: -0.2px;
+}
+
+
+/* =========================================================
+   POPULAR SEARCHES
+========================================================= */
+
+.popular-searches {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 10px;
+}
+
+.popular-search {
+    display: inline-flex;
+    align-items: center;
+
+    min-height: 38px;
+
+    padding:
+        0
+        16px;
+
+    border: 1px solid #e1e1e1;
+    border-radius: 20px;
+
+    background: #fff;
+
+    color: #333;
+
+    font-size: 13px;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.popular-search:hover {
+    background: #f4f4f4;
+
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   CATEGORY GRID
+========================================================= */
+
+.category-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fill,
+            minmax(145px, 1fr)
+        );
+
+    gap: 18px;
+}
+
+.category-card {
+    position: relative;
+
+    aspect-ratio: 1 / 1;
+
+    overflow: hidden;
+
+    border-radius: 17px;
+
+    background: #eee;
+
+    cursor: pointer;
+}
+
+.category-card img {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+
+    transition:
+        transform 0.3s ease;
+}
+
+.category-card:hover img {
+    transform: scale(1.05);
+}
+
+.category-card::after {
+    content: "";
+
+    position: absolute;
+
+    inset: 0;
+
+    background:
+        linear-gradient(
+            to top,
+            rgba(0, 0, 0, 0.72),
+            rgba(0, 0, 0, 0.05) 60%
+        );
+}
+
+.category-card-name {
+    position: absolute;
+
+    left: 13px;
+    right: 13px;
+    bottom: 12px;
+
+    z-index: 2;
+
+    color: #fff;
+
+    font-size: 13px;
+    font-weight: 550;
+
+    line-height: 1.25;
+}
+
+
+/* =========================================================
+   CREATOR GRID
+========================================================= */
+
+.creator-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fill,
+            minmax(220px, 1fr)
+        );
+
+    gap: 14px;
+}
+
+.creator-card {
+    display: flex;
+    align-items: center;
+
+    gap: 13px;
+
+    padding: 13px;
+
+    border: 1px solid #e7e7e7;
+    border-radius: 15px;
+
+    background: #fff;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.creator-card:hover {
+    background: #fafafa;
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+.creator-card img {
+    width: 48px;
+    height: 48px;
+
+    border-radius: 50%;
+
+    object-fit: cover;
+
+    flex-shrink: 0;
+}
+
+.creator-info {
+    min-width: 0;
+}
+
+.creator-name {
+    font-size: 14px;
+    font-weight: 600;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.creator-role {
+    margin-top: 3px;
+
+    color: #888;
+
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   RECENT SEARCHES  (same width as the search bar)
+========================================================= */
+
+.recent-searches {
+    display: flex;
+    flex-direction: column;
+
+    gap: 2px;
+}
+
+.section-heading-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    width: 100%;
+}
+
+.section-heading-row h2 {
+    margin-bottom: 18px;
+}
+
+.clear-recent {
+    margin-left: auto;
+    margin-bottom: 18px;
+
+    padding: 4px 0;
+
+    border: none;
+
+    background: transparent;
+
+    color: #777;
+
+    font-size: 12px;
+
+    cursor: pointer;
+}
+
+.clear-recent:hover {
+    color: #111;
+}
+
+.recent-search {
+    display: flex;
+    align-items: center;
+
+    width: 100%;
+
+    min-height: 42px;
+
+    padding: 0 4px 0 2px;
+
+    border: none;
+    border-radius: 0;
+
+    background: transparent;
+
+    color: #333;
+
+    font-size: 14px;
+
+    cursor: pointer;
+
+    transition:
+        color 0.2s ease;
+}
+
+.recent-search span {
+    flex: 1;
+
+    min-width: 0;
+
+    overflow: hidden;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+}
+
+.recent-search span:hover {
+    color: #111;
+}
+
+.remove-recent {
+    width: 28px;
+    height: 28px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    margin-left: auto;
+
+    padding: 0;
+
+    border: none;
+    border-radius: 50%;
+
+    background: transparent;
+
+    color: #888;
+
+    font-size: 19px;
+    font-weight: 400;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+.remove-recent:hover {
+    background: #f1f1f1;
+
+    color: #111;
+}
+
+
+/* =========================================================
+   NO RESULTS
+========================================================= */
+
+.no-results {
+    padding:
+        70px
+        20px;
+
+    text-align: center;
+}
+
+.no-results h2 {
+    margin-bottom: 8px;
+
+    font-size: 20px;
+}
+
+.no-results p {
+    color: #888;
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   UTILITY
+========================================================= */
+
+.hidden {
+    display: none !important;
+}
+
+
+/* =========================================================
+   TABLET
+   801px – 1150px
+========================================================= */
+
+@media (min-width: 801px) and (max-width: 1150px) {
+
+    .sidebar {
+        width: 195px;
+
+        padding:
+            30px
+            22px;
+    }
+
+    .main {
+        inset:
+            0
+            0
+            0
+            195px;
+
+        padding:
+            30px
+            30px
+            60px;
+    }
+
+    .search-page > h1 {
+        font-size: 29px;
+    }
+
+    .search-box {
+        height: 54px;
+
+        margin-top: 20px;
+
+        border-radius: 17px;
+    }
+
+    .search-section {
+        margin-top: 40px;
+    }
+
+    .category-grid {
+        grid-template-columns:
+            repeat(
+                auto-fill,
+                minmax(120px, 1fr)
+            );
+
+        gap: 14px;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+   800px AND BELOW
+========================================================= */
+
+@media (max-width: 800px) {
+
+    :root {
+        --mobile-bar-height: 62px;
+
+        --mobile-nav-width:
+            min(
+                100vw,
+                calc(
+                    (
+                        100dvh -
+                        var(--mobile-bar-height)
+                    ) * 9 / 16
+                )
+            );
+    }
+
+
+    /* -----------------------------------------------------
+       SIDEBAR → BOTTOM BAR
+    ----------------------------------------------------- */
+
+    .sidebar {
+        position: fixed;
+
+        top: auto;
+        left: 0;
+        right: 0;
+        bottom: 0;
+
+        width: 100%;
+        height: var(--mobile-bar-height);
+
+        padding: 0;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        overflow: visible;
+
+        border-top: 1px solid #e8e8e8;
+
+        z-index: 1000;
+    }
+
+
+    /* -----------------------------------------------------
+       SIDEBAR LOGO HIDDEN
+    ----------------------------------------------------- */
+
+    .sidebar .logo {
+        display: none !important;
+    }
+
+
+    /* -----------------------------------------------------
+       FILTER HIDDEN
+    ----------------------------------------------------- */
+
+    .sidebar .filter-button {
+        display: none !important;
+    }
+
+
+    /* -----------------------------------------------------
+       MOBILE NAVIGATION
+    ----------------------------------------------------- */
+
+    .sidebar .navigation {
+        width: var(--mobile-nav-width);
+        height: 100%;
+
+        margin: 0 !important;
+        padding: 0;
+
+        display: flex;
+        flex-direction: row;
+
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 0;
+    }
+
+    .sidebar .nav-item {
+        width: auto;
+        height: 100%;
+
+        padding: 0;
+        margin: 0;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        flex: 1 1 0;
+
+        gap: 0;
+
+        border-radius: 14px;
+
+        font-size: 0;
+        line-height: 1;
+
+        transform: none;
+    }
+
+    .sidebar .nav-item span {
+        display: none !important;
+    }
+
+    .sidebar .nav-item:hover {
+        transform: none;
+
+        background: transparent;
+    }
+
+    .sidebar .nav-icon {
+        width: 23px;
+        height: 23px;
+
+        min-width: 23px;
+        min-height: 23px;
+
+        flex-shrink: 0;
+
+        stroke-width: 1.8;
+    }
+
+
+    /* -----------------------------------------------------
+       ACTIVE SEARCH
+    ----------------------------------------------------- */
+
+    .sidebar .nav-item.active {
+        background: transparent !important;
+
+        box-shadow:
+            0 0 12px rgba(0, 0, 0, 0.16);
+    }
+
+
+    /* -----------------------------------------------------
+       HIDE NOTIFICATION + CREATE
+    ----------------------------------------------------- */
+
+    .sidebar .navigation .nav-item:nth-child(6),
+    .sidebar .navigation .nav-item:nth-child(7) {
+        display: none !important;
+    }
+
+
+    /* -----------------------------------------------------
+       MAIN
+    ----------------------------------------------------- */
+
+    .main {
+        position: fixed;
+
+        top: 0;
+        left: 0;
+        right: 0;
+
+        bottom: var(--mobile-bar-height);
+
+        width: 100%;
+
+        padding:
+            20px
+            14px
+            40px;
+
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+
+    /* -----------------------------------------------------
+       MOBILE TOP BAR
+    ----------------------------------------------------- */
+
+    .mobile-topbar {
+        display: flex;
+
+        align-items: center;
+        justify-content: space-between;
+
+        width: 100%;
+
+        margin-bottom: 18px;
+    }
+
+    .mobile-topbar-logo {
+        display: block;
+
+        width: 96px;
+        height: auto;
+
+        flex-shrink: 0;
+    }
+
+    .mobile-topbar-logo svg {
+        display: block;
+
+        width: 100%;
+        height: auto;
+    }
+
+    .mobile-topbar-actions {
+        display: flex;
+
+        align-items: center;
+
+        gap: 6px;
+
+        flex-shrink: 0;
+    }
+
+    .mobile-topbar-icon {
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        width: 40px;
+        height: 40px;
+
+        border-radius: 50%;
+
+        color: #222;
+
+        text-decoration: none;
+
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .mobile-topbar-icon svg {
+        width: 23px;
+        height: 23px;
+
+        fill: none;
+
+        stroke: currentColor;
+
+        stroke-width: 1.8;
+    }
+
+
+    /* -----------------------------------------------------
+       SEARCH
+    ----------------------------------------------------- */
+
+    .search-page {
+        width: 100%;
+
+        margin: 0;
+    }
+
+    .search-page > h1 {
+        font-size: 27px;
+
+        letter-spacing: -0.5px;
+    }
+
+    .search-box {
+        height: 52px;
+
+        margin-top: 16px;
+
+        border-radius: 15px;
+    }
+
+    .search-section {
+        margin-top: 34px;
+    }
+
+    .category-grid {
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+
+        gap: 10px;
+    }
+
+    .category-card {
+        border-radius: 14px;
+    }
+
+    .category-card-name {
+        left: 10px;
+        right: 10px;
+        bottom: 9px;
+
+        font-size: 11px;
+    }
+
+    .creator-grid {
+        grid-template-columns: 1fr;
+
+        gap: 9px;
+    }
+
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+   500px AND BELOW
+========================================================= */
+
+@media (max-width: 500px) {
+
+    :root {
+        --mobile-bar-height: 58px;
+    }
+
+    .sidebar {
+        height: var(--mobile-bar-height);
+    }
+
+    .sidebar .nav-item {
+        max-width: 64px;
+    }
+
+    .sidebar .nav-icon {
+        width: 22px;
+        height: 22px;
+
+        min-width: 22px;
+        min-height: 22px;
+    }
+
+
+    /* EXACT HOME MOBILE TOP BAR SIZING */
+
+    .mobile-topbar-logo {
+        width: 84px;
+    }
+
+    .mobile-topbar-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .mobile-topbar-icon svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .main {
+        padding:
+            16px
+            10px
+            35px;
+    }
+
+    .search-page > h1 {
+        font-size: 25px;
+    }
+
+    .search-box {
+        height: 50px;
+    }
+
+    .search-icon {
+        margin-left: 15px;
+
+        width: 21px;
+        height: 21px;
+    }
+
+    .search-box input {
+        font-size: 14px;
+
+        padding-left: 11px;
+    }
+
+    .search-section h2 {
+        font-size: 17px;
+    }
+
+    .popular-search {
+        min-height: 35px;
+
+        padding: 0 13px;
+
+        font-size: 12px;
+    }
+
+    .category-grid {
+        gap: 9px;
+    }
+
+}
+
+
+/* =========================================================
+   VERY SMALL PHONES
+   380px AND BELOW
+========================================================= */
+
+@media (max-width: 380px) {
+
+    .sidebar .nav-item {
+        max-width: 58px;
+    }
+
+    .sidebar .nav-icon {
+        width: 21px;
+        height: 21px;
+
+        min-width: 21px;
+        min-height: 21px;
+    }
+
+    .mobile-topbar-logo {
+        width: 84px;
+    }
+
+    .search-page > h1 {
+        font-size: 23px;
+    }
+
+    .search-box {
+        height: 48px;
+    }
+
+}

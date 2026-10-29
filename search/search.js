@@ -314,9 +314,7 @@ function createCategoryCard(category) {
 
         <img
             src="${category.image}"
-            alt="${category.name}"
-            loading="lazy"
-        >
+            alt="${category.name}" loading="lazy" data-sk>
 
         <div class="category-card-name">
             ${category.name}
@@ -347,6 +345,10 @@ function createCategoryCard(category) {
 
         }
     );
+
+    if (window.TwiggSkeleton) {
+        window.TwiggSkeleton.scan(card);
+    }
 
     return card;
 
@@ -511,9 +513,7 @@ function createCreatorCard(creator) {
 
         <img
             src="${creator.image}"
-            alt="${creator.name}"
-            loading="lazy"
-        >
+            alt="${creator.name}" loading="lazy" data-sk="self">
 
         <div class="creator-info">
 
@@ -528,6 +528,10 @@ function createCreatorCard(creator) {
         </div>
 
     `;
+
+    if (window.TwiggSkeleton) {
+        window.TwiggSkeleton.scan(card);
+    }
 
     return card;
 

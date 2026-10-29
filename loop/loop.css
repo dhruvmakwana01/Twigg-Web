@@ -1223,3 +1223,44 @@ body.loop-page {
         margin-top: auto;
     }
 }
+
+/* =========================================================
+   DYNAMIC VIEWPORT UNITS
+   vh declarations above stay as the fallback; browsers with dvh
+   follow the visible viewport as the address bar shows / hides.
+========================================================= */
+
+@supports (height: 100dvh) {
+
+    body.loop-page {
+        --loop-max-h: 84dvh;
+    }
+
+    @media (min-width: 801px) and (max-width: 1150px) {
+
+        body.loop-page {
+            --loop-max-h: 76dvh;
+        }
+    }
+
+    @media (max-width: 800px) {
+
+        body.loop-page {
+            --loop-max-h: 80dvh;
+        }
+    }
+
+    @media (min-width: 801px) {
+
+        .loop-featured.is-portrait {
+            --loop-portrait-max-h: 90dvh;
+        }
+    }
+
+    @media (min-width: 801px) and (max-width: 1150px) {
+
+        .loop-featured.is-portrait {
+            --loop-portrait-max-h: 82dvh;
+        }
+    }
+}

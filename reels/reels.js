@@ -561,12 +561,17 @@ document.addEventListener("DOMContentLoaded", () => {
     let fullscreenIndex = null;
     let fullscreenScrollTop = 0;
 
+    /* The slide whose video is in the device's NATIVE video
+       fullscreen player (iPhone Safari), if any. */
+    let nativeFullscreenSlide = null;
+
 
     /* =====================================================
        FULLSCREEN STATE HELPERS
 
        .is-fullscreen            real OR fallback fullscreen
        .is-fallback-fullscreen   fallback only (no Fullscreen API)
+       nativeFullscreenSlide     native video player (webkit)
     ===================================================== */
 
     function isRealFullscreenActive() {
@@ -596,6 +601,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         return (
             isRealFullscreenActive() ||
+            nativeFullscreenSlide !== null ||
             !!document.querySelector(".reel-slide.is-fallback-fullscreen")
         );
     }
@@ -752,6 +758,12 @@ document.addEventListener("DOMContentLoaded", () => {
     function isMobileView() {
 
         return window.matchMedia(MOBILE_QUERY).matches;
+    }
+
+
+    function isMobileOrTabletView() {
+
+        return window.matchMedia("(max-width: 1150px)").matches;
     }
 
 
@@ -1408,14 +1420,16 @@ document.addEventListener("DOMContentLoaded", () => {
        OBSERVE VISIBLE REEL
     ===================================================== */
 
+    /* True while a programmatic scroll-to-top runs, so the observer does not
+       activate every slide it passes. */
+    let suppressObserver = false;
+
     const observer =
         new IntersectionObserver(
             entries => {
 
-                /* Never let the observer change the active
-                   reel while fullscreen is active. */
-
-                if (isAnyFullscreenActive()) {
+                /* Never let the observer change the active reel while fullscreen is active. */
+                if (isAnyFullscreenActive() || suppressObserver) {
                     return;
                 }
 
@@ -1478,6 +1492,16 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
+        /* SKELETON: dark shimmer until the video has a frame */
+
+        const skeletonCard = slide.querySelector(".reel-card");
+
+        if (skeletonCard && window.TwiggSkeleton) {
+            skeletonCard.classList.add("sk-dark");
+            window.TwiggSkeleton.watchVideo(skeletonCard, video, null);
+        }
+
+
         /* ORIENTATION: from the video's real dimensions */
 
         video.addEventListener(
@@ -1488,6 +1512,23 @@ document.addEventListener("DOMContentLoaded", () => {
         if (video.readyState >= 1) {
             updateOrientation(slide, video);
         }
+
+
+        /* NATIVE VIDEO FULLSCREEN (iPhone Safari)
+
+           When the page cannot fullscreen an element, the video is
+           handed to the device's own fullscreen player. These
+           events tell us when it opens and closes. */
+
+        video.addEventListener("webkitbeginfullscreen", () => {
+
+            nativeFullscreenSlide = slide;
+        });
+
+        video.addEventListener("webkitendfullscreen", () => {
+
+            handleNativeFullscreenEnd(slide, video);
+        });
 
 
         /* FIRST FRAME: keep non-active videos at their beginning. */
@@ -1914,7 +1955,119 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =====================================================
+       ENTER FALLBACK FULLSCREEN (last resort)
+
+       A CSS full-viewport mode. It can only fill the browser
+       viewport (browser toolbars may stay visible); it is used
+       only when neither element fullscreen nor the device's
+       native video fullscreen is available.
+    ===================================================== */
+
+    function enterFallbackFullscreen(slide, card, video) {
+
+        slide.classList.add(
+            "is-fallback-fullscreen",
+            "is-fullscreen"
+        );
+
+        document.body.classList.add("fallback-fullscreen-active");
+
+        updateFullscreenButton(card, true);
+
+        reapplyRotationAfterLayoutChange(slide);
+
+        if (
+            video &&
+            video.paused &&
+            !slide.dataset.userPaused
+        ) {
+
+            video.muted = sharedMuted;
+
+            playVideo(video, slide);
+        }
+    }
+
+
+    /* =====================================================
+       NATIVE VIDEO FULLSCREEN (iPhone Safari)
+
+       iPhone Safari cannot fullscreen an arbitrary element, only
+       a <video>, through the device's own player. This is the
+       same route Loop uses (video.webkitEnterFullscreen()), and
+       it fills the real device screen with the correct aspect
+       ratio. The native player has its own close / seek / volume
+       controls and rotates with the device, so the custom rotate
+       button is not needed there.
+    ===================================================== */
+
+    function tryNativeVideoFullscreen(slide, video) {
+
+        if (
+            !video ||
+            typeof video.webkitEnterFullscreen !== "function"
+        ) {
+            return false;
+        }
+
+        try {
+
+            nativeFullscreenSlide = slide;
+
+            video.muted = sharedMuted;
+
+            video.webkitEnterFullscreen();
+
+            return true;
+
+        } catch (error) {
+
+            nativeFullscreenSlide = null;
+
+            console.log("Native video fullscreen unavailable:", error);
+
+            return false;
+        }
+    }
+
+
+    function handleNativeFullscreenEnd(slide, video) {
+
+        nativeFullscreenSlide = null;
+
+        /* The native player has its own volume control: keep the
+           shared mute setting in step with what the user chose. */
+
+        if (
+            slides.indexOf(slide) === currentIndex &&
+            video.muted !== sharedMuted
+        ) {
+            setSharedMuted(video.muted);
+        }
+
+        restoreReelAfterFullscreen(slide);
+
+        applyMuteState();
+
+        /* Some browsers pause the video when the player closes. */
+
+        if (!slide.dataset.userPaused) {
+
+            video.muted = sharedMuted;
+
+            playVideo(video, slide);
+        }
+    }
+
+
+    /* =====================================================
        FULLSCREEN
+
+       Order (same as Loop):
+       1. element fullscreen on the card (real device
+          fullscreen where the browser allows it)
+       2. the video's native fullscreen player (iPhone Safari)
+       3. CSS fallback (mobile / tablet only)
     ===================================================== */
 
     async function toggleFullscreen(slide) {
@@ -1958,6 +2111,22 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
+        /* EXIT NATIVE VIDEO FULLSCREEN */
+
+        if (nativeFullscreenSlide === slide) {
+
+            try {
+
+                if (video && video.webkitExitFullscreen) {
+                    video.webkitExitFullscreen();
+                }
+
+            } catch { }
+
+            return;
+        }
+
+
         /* REMEMBER CURRENT REEL */
 
         fullscreenSlide = slide;
@@ -1973,7 +2142,7 @@ document.addEventListener("DOMContentLoaded", () => {
         updateNavButtons();
 
 
-        /* REAL FULLSCREEN */
+        /* 1. REAL FULLSCREEN (element) */
 
         if (supportsElementFullscreen(card)) {
 
@@ -2000,45 +2169,40 @@ document.addEventListener("DOMContentLoaded", () => {
                     playVideo(video, slide);
                 }
 
+                return;
+
             } catch (error) {
+
+                /* Fall through to the other routes, like Loop does. */
 
                 console.log("Fullscreen unavailable:", error);
             }
+        }
+
+
+        /* Desktop: no further routes. */
+
+        if (!isMobileOrTabletView()) {
+
+            fullscreenSlide = null;
+
+            fullscreenIndex = null;
 
             return;
         }
 
 
-        /* FALLBACK FULLSCREEN (mobile / tablet only) */
+        /* 2. NATIVE VIDEO FULLSCREEN (iPhone Safari) */
 
-        const isMobileOrTablet =
-            window.matchMedia("(max-width: 1150px)").matches;
+        if (tryNativeVideoFullscreen(slide, video)) {
 
-        if (!isMobileOrTablet) {
             return;
         }
 
-        slide.classList.add(
-            "is-fallback-fullscreen",
-            "is-fullscreen"
-        );
 
-        document.body.classList.add("fallback-fullscreen-active");
+        /* 3. FALLBACK FULLSCREEN (mobile / tablet only) */
 
-        updateFullscreenButton(card, true);
-
-        reapplyRotationAfterLayoutChange(slide);
-
-        if (
-            video &&
-            video.paused &&
-            !slide.dataset.userPaused
-        ) {
-
-            video.muted = sharedMuted;
-
-            playVideo(video, slide);
-        }
+        enterFallbackFullscreen(slide, card, video);
     }
 
 
@@ -2298,25 +2462,103 @@ document.addEventListener("DOMContentLoaded", () => {
        SIDEBAR NAVIGATION
     ===================================================== */
 
+
+    /* Smoothly return to the first reel without a reload, without
+       rebuilding the feed and without activating (and downloading /
+       playing) every reel it scrolls past. */
+
+    function scrollReelsToTop() {
+
+        if (isAnyFullscreenActive()) {
+            return;
+        }
+
+        if (currentIndex === 0 && feed.scrollTop <= 1) {
+            return;
+        }
+
+        suppressObserver = true;
+
+        let timer = null;
+
+        const release = () => {
+            suppressObserver = false;
+            feed.removeEventListener("scroll", onScroll);
+            clearTimeout(timer);
+        };
+
+        const onScroll = () => {
+            clearTimeout(timer);
+            timer = setTimeout(release, 160);
+        };
+
+        feed.addEventListener("scroll", onScroll, { passive: true });
+
+        /* Safety: release even if no scroll event ever arrives */
+        timer = setTimeout(release, 400);
+
+        currentIndex = 0;
+
+        setActiveSlide(0);
+
+        updateNavButtons();
+
+        playCurrentSlide();
+
+        feed.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+
+    function isCurrentPageLink(item) {
+
+        const href = item.getAttribute("href");
+
+        if (!href || href === "#") {
+            return false;
+        }
+
+        try {
+            return new URL(item.href, location.href).pathname === location.pathname;
+        } catch {
+            return false;
+        }
+    }
+
+
     document
         .querySelectorAll(".nav-item")
         .forEach(item => {
 
             item.addEventListener("click", event => {
 
-                if (item.getAttribute("href") !== "#") {
+                const href = item.getAttribute("href");
+
+                /* Placeholder links: nothing to open */
+
+                if (!href || href === "#") {
+                    event.preventDefault();
                     return;
                 }
 
-                event.preventDefault();
+                if (
+                    event.ctrlKey ||
+                    event.metaKey ||
+                    event.shiftKey ||
+                    event.altKey ||
+                    event.button > 0
+                ) {
+                    return;
+                }
 
-                document
-                    .querySelectorAll(".nav-item")
-                    .forEach(nav => {
-                        nav.classList.remove("active");
-                    });
+                /* Active Reels icon: scroll to the top, do not reload */
 
-                item.classList.add("active");
+                if (isCurrentPageLink(item)) {
+                    event.preventDefault();
+                    scrollReelsToTop();
+                }
+
+                /* Other pages navigate normally; the Reels position was
+                   already saved by the click listener further up. */
             });
         });
 

@@ -33,6 +33,13 @@ body {
     height: 100%;
 }
 
+/*
+   The font stack ends with the platform emoji fonts so that
+   emojis typed with the device keyboard / OS emoji picker (and
+   multi-code-point emojis: skin tones, ZWJ families, flags) are
+   always drawn with a colour emoji font.
+*/
+
 body {
     background: #fff;
     color: var(--ink);
@@ -43,6 +50,10 @@ body {
         Roboto,
         Helvetica,
         Arial,
+        "Apple Color Emoji",
+        "Segoe UI Emoji",
+        "Segoe UI Symbol",
+        "Noto Color Emoji",
         sans-serif;
     overflow: hidden;
 }
@@ -923,6 +934,13 @@ button {
     cursor: default;
 }
 
+/*
+   FIX: .media-viewer-content has pointer-events: none (so clicks
+   next to the image reach the backdrop and close the viewer).
+   pointer-events is INHERITED, so the close button, which lives
+   inside that element, was also unclickable. It must opt back in.
+*/
+
 .media-viewer-close {
     position: absolute;
     top: 22px;
@@ -939,6 +957,8 @@ button {
     color: #fff;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    pointer-events: auto;
+    touch-action: manipulation;
     transition:
         background 0.18s ease,
         transform 0.18s ease;
@@ -953,6 +973,7 @@ button {
     width: 22px;
     height: 22px;
     stroke-width: 1.8;
+    pointer-events: none;
 }
 
 /* ---------- META + RECEIPTS ---------- */
@@ -1771,4 +1792,42 @@ button {
         transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
     }
+}
+
+/* =========================================================
+   DYNAMIC VIEWPORT UNITS (vh above remains the fallback)
+========================================================= */
+
+@supports (height: 100dvh) {
+
+    .media-viewer-image {
+        max-height: 92dvh;
+    }
+
+    @media (max-width: 800px) {
+
+        .media-viewer-image {
+            max-height: 88dvh;
+        }
+    }
+}
+
+
+/* =========================================================
+   SKELETON — message specific sizing (shimmer is in
+   ../shared/skeleton.css)
+========================================================= */
+
+/* Reserve space for a chat photo that has not loaded yet, so the
+   thread does not jump when the image arrives. */
+
+.media-open-button.sk-loading {
+    aspect-ratio: 4 / 3;
+    min-height: 140px;
+}
+
+/* Hide the initial letter while the avatar photo loads */
+
+.avatar.sk-loading {
+    color: transparent;
 }

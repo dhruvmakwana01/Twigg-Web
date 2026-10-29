@@ -388,7 +388,302 @@
     }
 
 
+        /* =====================================================
+       VIDEO THUMBNAILS (shared by Home, Loop, ...)
+
+       One place that turns a video into a poster image:
+       - uses item.thumbnail when the data provides one
+       - otherwise decodes ONE frame (a detached <video>, seek to
+         ~0.1s, drawn to a downscaled canvas) and caches it in
+         memory + sessionStorage, so every card / page that shows
+         the same video reuses it (no repeated processing)
+       - max 3 generations at a time, duplicate requests share one
+         promise, failures are remembered for the session
+       - never throws: resolves null so the card keeps working
+
+       TwiggMedia.applyPoster(video, itemOrId, onRatio) -> Promise<boolean>
+       TwiggMedia.getThumbnail(itemOrId)               -> Promise<{url, ratio}|null>
+       TwiggMedia.cachedPoster(itemOrId)               -> {url, ratio}|null (sync)
+    ===================================================== */
+
+    const POSTER_KEY = "twigg_posters_v1";
+    const POSTER_MAX_SIDE = 520;
+    const POSTER_TIMEOUT = 10000;
+    const POSTER_CONCURRENCY = 3;
+
+    let posterStore = null;
+    const posterFailed = new Set();
+    const posterInflight = new Map();
+    const posterQueue = [];
+    let posterActive = 0;
+    let posterSaveTimer = null;
+
+
+    function posters() {
+
+        if (!posterStore) {
+
+            try {
+                posterStore =
+                    JSON.parse(sessionStorage.getItem(POSTER_KEY) || "{}") || {};
+            } catch {
+                posterStore = {};
+            }
+        }
+
+        return posterStore;
+    }
+
+
+    function persistPosters() {
+
+        clearTimeout(posterSaveTimer);
+
+        posterSaveTimer =
+            setTimeout(() => {
+                try {
+                    sessionStorage.setItem(
+                        POSTER_KEY,
+                        JSON.stringify(posterStore)
+                    );
+                } catch { }
+            }, 400);
+    }
+
+
+    function resolveItem(value) {
+
+        return (value && typeof value === "object")
+            ? value
+            : (byId.get(value) || null);
+    }
+
+
+    function cachedPoster(value) {
+
+        const item = resolveItem(value);
+
+        if (!item || item.type !== "video") {
+            return null;
+        }
+
+        if (item.thumbnail) {
+            return { url: item.thumbnail, ratio: null };
+        }
+
+        const entry = posters()[item.id];
+
+        return (entry && entry.u && entry.s === item.src)
+            ? { url: entry.u, ratio: entry.r || null }
+            : null;
+    }
+
+
+    function generatePoster(item) {
+
+        return new Promise(resolve => {
+
+            const video = document.createElement("video");
+
+            video.muted = true;
+            video.playsInline = true;
+            video.preload = "metadata";
+
+            video.setAttribute("muted", "");
+            video.setAttribute("playsinline", "");
+
+            let settled = false;
+
+            const finish = result => {
+
+                if (settled) {
+                    return;
+                }
+
+                settled = true;
+
+                clearTimeout(timer);
+
+                video.removeAttribute("src");
+
+                try { video.load(); } catch { }
+
+                resolve(result);
+            };
+
+            const timer = setTimeout(() => finish(null), POSTER_TIMEOUT);
+
+            video.addEventListener("error", () => finish(null));
+
+            video.addEventListener("loadedmetadata", () => {
+
+                if (!video.videoWidth || !video.videoHeight) {
+                    finish(null);
+                    return;
+                }
+
+                const duration =
+                    Number.isFinite(video.duration) && video.duration > 0
+                        ? video.duration
+                        : 0.2;
+
+                try {
+                    video.currentTime = Math.min(0.1, duration / 2);
+                } catch {
+                    finish(null);
+                }
+            });
+
+            video.addEventListener("seeked", () => {
+
+                try {
+
+                    const width = video.videoWidth;
+                    const height = video.videoHeight;
+
+                    const scale =
+                        Math.min(1, POSTER_MAX_SIDE / Math.max(width, height));
+
+                    const canvas = document.createElement("canvas");
+
+                    canvas.width = Math.max(1, Math.round(width * scale));
+                    canvas.height = Math.max(1, Math.round(height * scale));
+
+                    canvas.getContext("2d").drawImage(
+                        video,
+                        0,
+                        0,
+                        canvas.width,
+                        canvas.height
+                    );
+
+                    /* Throws if the video is cross-origin (tainted canvas) */
+
+                    finish({
+                        url: canvas.toDataURL("image/jpeg", 0.82),
+                        ratio: width / height
+                    });
+
+                } catch {
+                    finish(null);
+                }
+            });
+
+            video.src = item.src;
+        });
+    }
+
+
+    function pumpPosters() {
+
+        while (posterActive < POSTER_CONCURRENCY && posterQueue.length) {
+
+            const job = posterQueue.shift();
+
+            posterActive++;
+
+            generatePoster(job.item).then(result => {
+
+                posterActive--;
+
+                if (result) {
+
+                    posters()[job.item.id] = {
+                        u: result.url,
+                        r: result.ratio,
+                        s: job.item.src
+                    };
+
+                    persistPosters();
+
+                } else {
+
+                    posterFailed.add(job.item.id);
+                }
+
+                posterInflight.delete(job.item.id);
+
+                job.resolve(result);
+
+                pumpPosters();
+            });
+        }
+    }
+
+
+    function getThumbnail(value) {
+
+        const item = resolveItem(value);
+
+        if (!item || item.type !== "video") {
+            return Promise.resolve(null);
+        }
+
+        const cached = cachedPoster(item);
+
+        if (cached) {
+            return Promise.resolve(cached);
+        }
+
+        if (posterFailed.has(item.id)) {
+            return Promise.resolve(null);
+        }
+
+        if (posterInflight.has(item.id)) {
+            return posterInflight.get(item.id);
+        }
+
+        const promise =
+            new Promise(resolve => {
+                posterQueue.push({ item, resolve });
+            });
+
+        posterInflight.set(item.id, promise);
+
+        pumpPosters();
+
+        return promise;
+    }
+
+
+    function applyPoster(video, value, onRatio) {
+
+        const item = resolveItem(value);
+
+        if (!video || !item || item.type !== "video") {
+            return Promise.resolve(false);
+        }
+
+        const apply = thumb => {
+
+            if (!video.poster) {
+                video.poster = thumb.url;
+            }
+
+            if (thumb.ratio && onRatio) {
+                onRatio(thumb.ratio);
+            }
+
+            return true;
+        };
+
+        const cached = cachedPoster(item);
+
+        if (cached) {
+            return Promise.resolve(apply(cached));
+        }
+
+        return getThumbnail(item).then(thumb => thumb ? apply(thumb) : false);
+    }
+
+
     window.TwiggMedia = {
+
+        applyPoster,
+
+        getThumbnail,
+
+        cachedPoster,
 
         getAll: () => items.slice(),
 

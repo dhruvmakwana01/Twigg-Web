@@ -30,6 +30,48 @@ const LOOP_ENTRIES_KEY = "twigg_loop_entries";
 let sharedVideoMuted = true;
 
 
+/* =========================================================
+   TOUCH / MOBILE SETTINGS
+
+   - touch devices (no hover) autoplay by visibility instead of
+     hover
+   - on mobile (800px and below) the DOCUMENT scrolls, so the
+     browser can hide / show its own toolbars; on desktop and
+     tablet the fixed .main box scrolls
+========================================================= */
+
+const touchQuery = window.matchMedia("(hover: none)");
+
+const mobileLayoutQuery = window.matchMedia("(max-width: 800px)");
+
+function isTouchFeed() {
+    return touchQuery.matches;
+}
+
+/* A video is "sufficiently visible" at 60% of its own area, or when
+   it fills at least half of the screen height (very tall cards). */
+const AUTOPLAY_MIN_RATIO = 0.6;
+const AUTOPLAY_MIN_VIEWPORT_SHARE = 0.5;
+
+/* Tap vs scroll: a touch that moved further than this, or that
+   happened while the page was still scrolling, is not a tap. */
+const TAP_SLOP = 10;
+const SCROLL_GUARD_MS = 150;
+
+/* Cards whose video is sufficiently visible (touch autoplay) */
+const autoplayVisible = new Map();
+
+/* The one card whose video is currently auto-playing (touch) */
+let autoplayCard = null;
+
+let autoplayEvaluateTimer = null;
+
+/* Time of the latest scroll event, and the touch being tracked */
+let lastScrollAt = 0;
+
+let tapState = null;
+
+
 /* Disable the browser's automatic scroll restoration. */
 
 if ("scrollRestoration" in history) {
@@ -255,11 +297,25 @@ function buildHomeCard(item) {
     const isVideo =
         item.type === "video";
 
+    /*
+       Touch devices only download video METADATA up front (plus
+       the first frame, via the #t=0.001 media fragment). The full
+       video is fetched only when it autoplays. Desktop / tablet
+       with a mouse keep the original preload="auto".
+    */
+
+    const touch = isTouchFeed();
+
+    const videoSrc =
+        touch
+            ? item.src + "#t=0.001"
+            : item.src;
+
     const media =
         isVideo
             ? `
-                <video muted loop playsinline preload="auto"${item.thumbnail ? ` poster="${escapeHtml(item.thumbnail)}"` : ""}>
-                    <source src="${escapeHtml(item.src)}" type="video/mp4">
+                <video muted loop playsinline preload="${touch ? "metadata" : "auto"}"${item.thumbnail ? ` poster="${escapeHtml(item.thumbnail)}"` : ""}>
+                    <source src="${escapeHtml(videoSrc)}" type="video/mp4">
                 </video>
             `
             : `
@@ -492,37 +548,65 @@ function findHomeScroller() {
 }
 
 
-const homeScroller = findHomeScroller();
+/*
+   On mobile (800px and below) the document scrolls (see home.css).
+   On desktop / tablet the fixed .main box scrolls. This is checked
+   on every call so resizing across the breakpoint keeps working.
+*/
 
-const homeScrollerIsDocument =
-    homeScroller === document.scrollingElement ||
-    homeScroller === document.documentElement ||
-    homeScroller === document.body;
+function getHomeScroller() {
+
+    if (mobileLayoutQuery.matches) {
+
+        return (
+            document.scrollingElement ||
+            document.documentElement
+        );
+    }
+
+    return findHomeScroller();
+}
+
+
+function isDocumentScroller(scroller) {
+
+    return (
+        scroller === document.scrollingElement ||
+        scroller === document.documentElement ||
+        scroller === document.body
+    );
+}
 
 
 function getScrollY() {
 
-    return homeScrollerIsDocument
+    const scroller = getHomeScroller();
+
+    return isDocumentScroller(scroller)
         ? window.scrollY
-        : homeScroller.scrollTop;
+        : scroller.scrollTop;
 }
 
 
 function jumpToScroll(y) {
 
+    const scroller = getHomeScroller();
+
+    const isDocument = isDocumentScroller(scroller);
+
     const target =
-        homeScrollerIsDocument
+        isDocument
             ? document.documentElement
-            : homeScroller;
+            : scroller;
 
     const previous = target.style.scrollBehavior;
 
     target.style.scrollBehavior = "auto";
 
-    if (homeScrollerIsDocument) {
+    if (isDocument) {
         window.scrollTo(0, y);
     } else {
-        homeScroller.scrollTop = y;
+        scroller.scrollTop = y;
     }
 
     target.style.scrollBehavior = previous;
@@ -777,77 +861,18 @@ function setupImageAspectRatio(card, image) {
 function setupVideoAspectRatio(card, video) {
 
     /*
-       The first available video frame is captured and
-       stored as the video's poster (unless the shared data
-       already provides a thumbnail).
+       The poster comes from the SHARED thumbnail pipeline
+       (TwiggMedia.applyPoster in media-data.js): the same cached
+       frame is reused by Home, Loop and later visits. Returns a
+       promise that resolves true once a poster is applied.
     */
 
-    const generateVideoThumbnail = () => {
+    const media = window.TwiggMedia;
 
-        if (!video.videoWidth || !video.videoHeight) {
-            return;
-        }
-
-        setMediaAspectRatio(
-            card,
-            video.videoWidth,
-            video.videoHeight
-        );
-
-        if (video.poster) {
-            return;
-        }
-
-        try {
-
-            const canvas = document.createElement("canvas");
-
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-
-            const context = canvas.getContext("2d");
-
-            if (!context) {
-                return;
-            }
-
-            const captureFrame = () => {
-
-                try {
-
-                    context.drawImage(
-                        video,
-                        0,
-                        0,
-                        video.videoWidth,
-                        video.videoHeight
-                    );
-
-                    video.poster =
-                        canvas.toDataURL("image/jpeg", 0.88);
-
-                } catch {
-                    /* Canvas extraction may be blocked. */
-                }
-            };
-
-            if (Math.abs(video.currentTime) < 0.01) {
-                captureFrame();
-                return;
-            }
-
-            video.addEventListener(
-                "seeked",
-                captureFrame,
-                { once: true }
-            );
-
-            video.currentTime = 0;
-
-        } catch {
-            /* Thumbnail generation is optional. */
-        }
-    };
+    const item =
+        media
+            ? media.getById(Number(card.dataset.mediaId))
+            : null;
 
     const updateRatio = () => {
         setMediaAspectRatio(
@@ -859,21 +884,22 @@ function setupVideoAspectRatio(card, video) {
 
     video.addEventListener("loadedmetadata", updateRatio);
 
-    video.addEventListener(
-        "loadeddata",
-        generateVideoThumbnail,
-        { once: true }
-    );
-
     if (video.readyState >= 1) {
         updateRatio();
     }
 
-    if (video.readyState >= 2) {
-        generateVideoThumbnail();
-    }
+    const posterReady =
+        (item && media.applyPoster)
+            ? media.applyPoster(
+                video,
+                item,
+                ratio => setMediaAspectRatio(card, ratio, 1)
+            )
+            : Promise.resolve(false);
 
     video.load();
+
+    return posterReady;
 }
 
 
@@ -890,10 +916,18 @@ document
 
         if (image) {
             setupImageAspectRatio(card, image);
+
+            if (window.TwiggSkeleton) {
+                window.TwiggSkeleton.watchImage(card, image);
+            }
         }
 
         if (video) {
-            setupVideoAspectRatio(card, video);
+            const posterReady = setupVideoAspectRatio(card, video);
+
+            if (window.TwiggSkeleton) {
+                window.TwiggSkeleton.watchVideo(card, video, posterReady);
+            }
         }
     });
 
@@ -959,9 +993,17 @@ document
         }
 
 
-        /* ----- HOVER AUTOPLAY ----- */
+        /* ----- HOVER AUTOPLAY (mouse devices only) -----
+
+           Touch devices get emulated mouse events after a tap;
+           those are ignored here. Touch playback is handled by
+           the visibility-based autoplay further down. */
 
         card.addEventListener("mouseenter", () => {
+
+            if (isTouchFeed()) {
+                return;
+            }
 
             if (videoIndicator) {
                 videoIndicator.classList.add("hidden");
@@ -993,6 +1035,10 @@ document
         /* ----- HOVER END ----- */
 
         card.addEventListener("mouseleave", () => {
+
+            if (isTouchFeed()) {
+                return;
+            }
 
             if (videoIndicator) {
                 videoIndicator.classList.remove("hidden");
@@ -1032,12 +1078,23 @@ document
                     );
                 } catch { }
 
+                /*
+                   Mouse: the card whose button was clicked is the
+                   hovered one. Touch: the card that is currently
+                   auto-playing is the only one that may have sound.
+                */
+
+                const activeVideo =
+                    isTouchFeed()
+                        ? (autoplayCard ? autoplayCard.querySelector("video") : null)
+                        : video;
+
                 document
                     .querySelectorAll(".media-card video")
                     .forEach(otherVideo => {
                         otherVideo.muted =
                             sharedVideoMuted ||
-                            otherVideo !== video;
+                            otherVideo !== activeVideo;
                     });
 
                 document
@@ -1058,12 +1115,297 @@ document
                         }
                     });
 
-                if (!sharedVideoMuted) {
-                    safeHomePlay(video);
+                if (!sharedVideoMuted && activeVideo) {
+                    safeHomePlay(activeVideo);
                 }
             });
         }
     });
+
+
+/* =========================================================
+   TOUCH AUTOPLAY (visibility based)
+
+   On touch devices a video starts when it is sufficiently
+   visible and stops when it leaves the screen. Only ONE video
+   plays at a time: the sufficiently-visible card closest to
+   the middle of the screen. Playback is muted unless the shared
+   mute setting says otherwise; if the browser blocks sound,
+   safeHomePlay falls back to muted. Videos that are not visible
+   are never played, so they download nothing beyond metadata.
+========================================================= */
+
+function startAutoplayCard(card) {
+
+    const video = card.querySelector("video");
+
+    if (!video) {
+        return;
+    }
+
+    const indicator = card.querySelector(".video-indicator");
+
+    if (indicator) {
+        indicator.classList.add("hidden");
+    }
+
+    video.muted = sharedVideoMuted;
+
+    const muteButton = card.querySelector(".unmute-button");
+
+    if (muteButton) {
+        muteButton.innerHTML =
+            video.muted
+                ? ICONS.muted
+                : ICONS.unmuted;
+    }
+
+    safeHomePlay(video);
+}
+
+
+function stopAutoplayCard(card) {
+
+    const video = card.querySelector("video");
+
+    if (!video) {
+        return;
+    }
+
+    const indicator = card.querySelector(".video-indicator");
+
+    if (indicator) {
+        indicator.classList.remove("hidden");
+    }
+
+    video.pause();
+
+    video.muted = true;
+
+    try {
+        video.currentTime = 0;
+    } catch { }
+}
+
+
+function releaseAutoplay() {
+
+    if (autoplayCard) {
+
+        stopAutoplayCard(autoplayCard);
+
+        autoplayCard = null;
+    }
+}
+
+
+function evaluateAutoplay() {
+
+    if (
+        !isTouchFeed() ||
+        document.visibilityState === "hidden"
+    ) {
+        releaseAutoplay();
+        return;
+    }
+
+    const middle = window.innerHeight / 2;
+
+    let best = null;
+    let bestDistance = Infinity;
+
+    autoplayVisible.forEach((_, card) => {
+
+        const rect = card.getBoundingClientRect();
+
+        const distance =
+            Math.abs(rect.top + rect.height / 2 - middle);
+
+        if (distance < bestDistance) {
+            best = card;
+            bestDistance = distance;
+        }
+    });
+
+    if (best === autoplayCard) {
+        return;
+    }
+
+    if (autoplayCard) {
+        stopAutoplayCard(autoplayCard);
+    }
+
+    autoplayCard = best;
+
+    if (best) {
+        startAutoplayCard(best);
+    }
+}
+
+
+if ("IntersectionObserver" in window) {
+
+    /*
+       root: null (the viewport). Intersection is still clipped by
+       any scrolling ancestor, so this works for both the mobile
+       document scroll and the tablet / desktop .main scroll.
+    */
+
+    const autoplayObserver =
+        new IntersectionObserver(
+            entries => {
+
+                entries.forEach(entry => {
+
+                    const enough =
+                        entry.isIntersecting &&
+                        (
+                            entry.intersectionRatio >= AUTOPLAY_MIN_RATIO ||
+                            entry.intersectionRect.height >=
+                                window.innerHeight * AUTOPLAY_MIN_VIEWPORT_SHARE
+                        );
+
+                    if (enough) {
+                        autoplayVisible.set(entry.target, true);
+                    } else {
+                        autoplayVisible.delete(entry.target);
+                    }
+                });
+
+                evaluateAutoplay();
+            },
+            {
+                root: null,
+                threshold: [0, 0.25, 0.5, 0.6, 0.75, 1]
+            }
+        );
+
+    document
+        .querySelectorAll(".media-card")
+        .forEach(card => {
+
+            if (card.querySelector("video")) {
+                autoplayObserver.observe(card);
+            }
+        });
+}
+
+
+/* Re-pick the most central video shortly after scrolling stops */
+
+window.addEventListener(
+    "scroll",
+    () => {
+
+        lastScrollAt = Date.now();
+
+        if (!isTouchFeed()) {
+            return;
+        }
+
+        clearTimeout(autoplayEvaluateTimer);
+
+        autoplayEvaluateTimer =
+            setTimeout(evaluateAutoplay, 120);
+    },
+    {
+        passive: true,
+        capture: true
+    }
+);
+
+
+document.addEventListener("visibilitychange", () => {
+
+    if (document.visibilityState === "hidden") {
+        releaseAutoplay();
+    } else {
+        evaluateAutoplay();
+    }
+});
+
+
+if (touchQuery.addEventListener) {
+    touchQuery.addEventListener("change", evaluateAutoplay);
+}
+
+
+/* =========================================================
+   TAP vs SCROLL (touch)
+
+   A card only opens for an intentional tap. A touch is NOT a
+   tap when the finger moved, the browser cancelled the pointer
+   (it started scrolling), or the page was still scrolling when
+   the finger landed / lifted (a light touch to stop momentum).
+   Mouse clicks are never filtered.
+========================================================= */
+
+document.addEventListener(
+    "pointerdown",
+    event => {
+
+        tapState =
+            event.pointerType === "mouse"
+                ? null
+                : {
+                    x: event.clientX,
+                    y: event.clientY,
+                    moved: false,
+                    duringScroll:
+                        Date.now() - lastScrollAt < SCROLL_GUARD_MS
+                };
+    },
+    { passive: true, capture: true }
+);
+
+
+document.addEventListener(
+    "pointermove",
+    event => {
+
+        if (
+            tapState &&
+            !tapState.moved &&
+            Math.hypot(
+                event.clientX - tapState.x,
+                event.clientY - tapState.y
+            ) > TAP_SLOP
+        ) {
+            tapState.moved = true;
+        }
+    },
+    { passive: true, capture: true }
+);
+
+
+document.addEventListener(
+    "pointercancel",
+    () => {
+
+        if (tapState) {
+            tapState.moved = true;
+        }
+    },
+    { passive: true, capture: true }
+);
+
+
+function isAccidentalTap() {
+
+    const state = tapState;
+
+    tapState = null;
+
+    if (!state) {
+        return false;
+    }
+
+    return (
+        state.moved ||
+        state.duringScroll ||
+        Date.now() - lastScrollAt < SCROLL_GUARD_MS
+    );
+}
 
 
 /* =========================================================
@@ -1145,17 +1487,78 @@ document
 const navItems = document.querySelectorAll(".nav-item");
 
 
+/* True when the link points at the page the user is already on. */
+
+function isCurrentPageLink(item) {
+
+    const href = item.getAttribute("href");
+
+    if (!href || href === "#") {
+        return false;
+    }
+
+    try {
+        return new URL(item.href, location.href).pathname === location.pathname;
+    } catch {
+        return false;
+    }
+}
+
+
+/* Smooth scroll of whichever element scrolls Home (document on
+   mobile, the fixed .main box on desktop / tablet). No reload,
+   no feed reset, no new media requests. */
+
+function scrollHomeToTop() {
+
+    const scroller = getHomeScroller();
+
+    const target =
+        isDocumentScroller(scroller)
+            ? window
+            : scroller;
+
+    target.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+
 navItems.forEach(item => {
 
-    item.addEventListener("click", () => {
+    item.addEventListener("click", event => {
+
+        const href = item.getAttribute("href");
+
+        /* Placeholder links: do nothing (and never jump / change #) */
+
+        if (!href || href === "#") {
+            event.preventDefault();
+            return;
+        }
+
+        /* Let "open in new tab" and similar clicks behave normally */
+
+        if (
+            event.ctrlKey ||
+            event.metaKey ||
+            event.shiftKey ||
+            event.altKey ||
+            event.button > 0
+        ) {
+            return;
+        }
+
+        /* Active Home icon: scroll to the top instead of reloading */
+
+        if (isCurrentPageLink(item)) {
+            event.preventDefault();
+            scrollHomeToTop();
+            return;
+        }
+
+        /* Another page: position is saved (also by the listener above)
+           and restored when the user comes back. */
 
         saveHomeState();
-
-        navItems.forEach(navItem => {
-            navItem.classList.remove("active");
-        });
-
-        item.classList.add("active");
     });
 });
 
@@ -1221,6 +1624,9 @@ document
        ../loop/loop.html?card=<media id>&homeScroll=<position>
 
    Ctrl / Cmd + click opens the Loop Page in a new tab.
+
+   On touch devices a touch that was really a scroll gesture
+   (moved, cancelled, or landed on a moving page) is ignored.
 ========================================================= */
 
 document
@@ -1230,6 +1636,10 @@ document
         card.addEventListener("click", event => {
 
             if (event.target.closest(".action-button")) {
+                return;
+            }
+
+            if (isAccidentalTap()) {
                 return;
             }
 
@@ -1267,3 +1677,21 @@ document
             window.location.href = url;
         });
     });
+
+/* =========================================================
+   SKELETON: category tiles (static <img> tags in home.html)
+========================================================= */
+
+if (window.TwiggSkeleton) {
+
+    document
+        .querySelectorAll(".category")
+        .forEach(tile => {
+
+            const image = tile.querySelector("img");
+
+            if (image) {
+                window.TwiggSkeleton.watchImage(tile, image);
+            }
+        });
+}

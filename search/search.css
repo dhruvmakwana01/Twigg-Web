@@ -1257,3 +1257,32 @@ body {
     }
 
 }
+
+/* =========================================================
+   MOBILE: LET THE DOCUMENT SCROLL  (native pull-to-refresh)
+
+   Browsers only offer pull-to-refresh (and collapse their
+   toolbars) when the DOCUMENT scrolls. On mobile .main was a
+   fixed box with its own scrollbar and body was overflow:hidden,
+   so the page itself never scrolled. Same approach as home.css.
+   The bottom navigation bar stays fixed. Desktop/tablet untouched.
+========================================================= */
+
+@media (max-width: 800px) {
+
+    html,
+    body {
+        height: auto;
+        min-height: 100%;
+        overflow: visible;
+    }
+
+    .main {
+        position: static;
+        inset: auto;
+        width: 100%;
+        height: auto;
+        overflow: visible;
+        padding-bottom: calc(var(--mobile-bar-height) + 40px);
+    }
+}

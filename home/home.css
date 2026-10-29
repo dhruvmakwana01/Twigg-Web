@@ -1434,3 +1434,81 @@ body {
         left: 8px;
     }
 }
+
+
+/* =========================================================
+   NEW — MOBILE: LET THE DOCUMENT SCROLL (800px AND BELOW)
+
+   Chrome / Safari only collapse their address bar and bottom
+   toolbar when the DOCUMENT scrolls. Before, .main was a fixed
+   box with its own scrollbar (and body was overflow: hidden),
+   so the browser never saw a page scroll. On mobile .main is
+   now a normal block, so the page itself scrolls. The bottom
+   navigation bar stays fixed. Desktop / tablet are untouched.
+   Loop uses this file too, so it gets the same behaviour.
+========================================================= */
+
+@media (max-width: 800px) {
+
+    html,
+    body {
+        height: auto;
+        min-height: 100%;
+        overflow: visible;
+    }
+
+    .main {
+        position: static;
+        inset: auto;
+        width: 100%;
+        height: auto;
+        overflow: visible;
+        /* room so the last cards clear the fixed bottom bar */
+        padding-bottom: calc(var(--mobile-bar-height) + 40px);
+    }
+}
+
+
+/* =========================================================
+   NEW — TOUCH DEVICES (no hover)
+
+   iOS Safari treats the first tap on an element whose :hover
+   style changes as "the hover", and swallows the click. That is
+   why a video needed one tap to play and a second tap to open.
+   On touch devices the hover look is therefore neutralised, and
+   the save / share / mute buttons stay visible (they used to be
+   reachable only after the first tap). Playback on touch devices
+   is driven by visibility (home.js / loop.js), not by hover.
+========================================================= */
+
+@media (hover: none) {
+
+    .media-card {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .media-card:hover {
+        transform: none;
+        box-shadow: none;
+    }
+
+    .media-card:hover::after {
+        opacity: 0;
+    }
+
+    .media-card:hover .card-profile {
+        opacity: 0;
+        transform: translate(-50%, 6px);
+    }
+
+    .media-card .action-button {
+        opacity: 0.6;
+        pointer-events: auto;
+    }
+
+    .action-button:hover {
+        opacity: 0.6;
+        transform: none;
+        background: rgba(0, 0, 0, 0.34);
+    }
+}
