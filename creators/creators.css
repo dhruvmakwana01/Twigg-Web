@@ -1,0 +1,782 @@
+/* =========================================================
+   TWIGG CREATORS — STYLES
+
+   Loaded AFTER ../home/home.css, which already provides the
+   reset, sidebar, mobile bottom bar, mobile top bar, .main
+   shell and the .video-indicator duration badge. This file
+   only adds what is specific to the Creators page.
+========================================================= */
+
+
+/* =========================================================
+   PAGE HEADING
+========================================================= */
+
+.creators-heading {
+    margin: 0 2px 18px;
+}
+
+.creators-heading h1 {
+    font-size: 26px;
+    font-weight: 650;
+    line-height: 1.2;
+    color: #111;
+}
+
+.creators-heading p {
+    margin-top: 6px;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #6b6b6b;
+}
+
+
+/* =========================================================
+   CREATORS GRID
+========================================================= */
+
+.creators-grid {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 24px 20px;
+    align-items: stretch;
+}
+
+
+/* =========================================================
+   CREATOR CARD
+========================================================= */
+
+.creator-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid #ececec;
+    border-radius: 17px;
+    background: #fff;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+@media (hover: hover) {
+
+    .creator-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.15);
+    }
+}
+
+
+/* =========================================================
+   MEDIA SLIDER
+========================================================= */
+
+.creator-media {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: #eee;
+}
+
+.creator-track {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    outline: none;
+}
+
+.creator-track::-webkit-scrollbar {
+    display: none;
+}
+
+.creator-track:focus-visible {
+    box-shadow: inset 0 0 0 2px #111;
+}
+
+.creator-slide {
+    position: relative;
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    background: #eee;
+}
+
+.creator-slide img,
+.creator-slide video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: #eee;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+
+/* ----- Arrows ----- */
+
+.slider-arrow {
+    position: absolute;
+    top: 50%;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.34);
+    color: #fff;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-50%);
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.slider-arrow.prev {
+    left: 10px;
+}
+
+.slider-arrow.next {
+    right: 10px;
+}
+
+.slider-arrow svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.creator-card:hover .slider-arrow:not(.is-disabled),
+.creator-card:focus-within .slider-arrow:not(.is-disabled) {
+    opacity: 0.6;
+    pointer-events: auto;
+}
+
+.slider-arrow:not(.is-disabled):hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.55);
+    transform: translateY(-50%) scale(1.06);
+}
+
+.slider-arrow:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+
+/* ----- Dots ----- */
+
+.slider-dots {
+    position: absolute;
+    left: 50%;
+    bottom: 10px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transform: translateX(-50%);
+}
+
+.slider-dot {
+    width: 6px;
+    height: 6px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.55);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.slider-dot.active {
+    background: #fff;
+    transform: scale(1.25);
+}
+
+/* The duration badge (.video-indicator, from home.css) hides while its video plays */
+
+.creator-slide .video-indicator {
+    top: 10px;
+    left: 10px;
+}
+
+
+/* =========================================================
+   CARD BODY
+========================================================= */
+
+.creator-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+    padding: 14px 16px 16px;
+}
+
+.creator-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.creator-identity {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Profile picture: uses Home's .card-profile-image / .card-profile-initial
+   (size, circle, border, gradient fallback). The thin ring only keeps the
+   white border visible on the white card body. */
+
+.creator-head .card-profile-image,
+.creator-head .card-profile-initial {
+    box-shadow: 0 0 0 1px #e4e4e4;
+}
+
+.creator-name {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 16px;
+    font-weight: 650;
+    line-height: 1.3;
+    color: #111;
+}
+
+.creator-category {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+    font-size: 13px;
+    line-height: 1.3;
+    color: #6b6b6b;
+}
+
+.creator-rating {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    color: #111;
+}
+
+.creator-rating svg {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    fill: #F6801E;
+}
+
+.creator-reviews {
+    font-weight: 450;
+    color: #6b6b6b;
+}
+
+.creator-description {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 4.5em;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: #444;
+    overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
+   FOOTER: PRICE + ACTIONS
+========================================================= */
+
+.creator-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.creator-price {
+    min-width: 0;
+    white-space: nowrap;
+    font-size: 16px;
+    font-weight: 650;
+    color: #111;
+}
+
+.creator-price span {
+    margin-right: 3px;
+    font-size: 12px;
+    font-weight: 450;
+    color: #6b6b6b;
+}
+
+.creator-actions {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 8px;
+}
+
+.creator-save,
+.creator-message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    border-radius: 15px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.creator-save {
+    width: 40px;
+    padding: 0;
+    border: 1px solid #e4e4e4;
+    background: #fff;
+    color: #151515;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.creator-save svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linejoin: round;
+}
+
+.creator-save.saved svg {
+    fill: currentColor;
+}
+
+.creator-message {
+    gap: 8px;
+    padding: 0 16px;
+    border: 1px solid #151515;
+    background: #151515;
+    color: #fff;
+}
+
+.creator-message svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.creator-save:focus-visible,
+.creator-message:focus-visible {
+    outline: 2px solid #151515;
+    outline-offset: 2px;
+}
+
+@media (hover: hover) {
+
+    .creator-save:hover {
+        transform: translateY(-2px);
+        border-color: #d5d5d5;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    .creator-message:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+    }
+}
+
+
+/* =========================================================
+   TOUCH DEVICES (no hover): arrows stay visible
+========================================================= */
+
+@media (hover: none) {
+
+    .creator-card:hover {
+        transform: none;
+        box-shadow: none;
+    }
+
+    .slider-arrow:not(.is-disabled) {
+        opacity: 0.6;
+        pointer-events: auto;
+    }
+}
+
+
+/* =========================================================
+   TABLET (801px – 1150px)
+========================================================= */
+
+@media (min-width: 801px) and (max-width: 1150px) {
+
+    .creators-grid {
+        gap: 20px 16px;
+    }
+}
+
+
+/* =========================================================
+   MOBILE (800px AND BELOW)
+========================================================= */
+
+@media (max-width: 800px) {
+
+    .creators-heading {
+        margin: 0 0 18px;
+    }
+
+    .creators-heading h1 {
+        font-size: 22px;
+    }
+
+    .creators-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+    }
+
+    .creator-card {
+        border-radius: 13px;
+    }
+}
+
+
+/* =========================================================
+   SMALL MOBILE (500px AND BELOW)
+========================================================= */
+
+@media (max-width: 500px) {
+
+    .creator-body {
+        padding: 12px 14px 14px;
+    }
+
+    .creator-message {
+        padding: 0 14px;
+    }
+
+    .slider-arrow {
+        width: 32px;
+        height: 32px;
+    }
+}
+
+
+/* =========================================================
+   VERY SMALL PHONES (380px AND BELOW)
+========================================================= */
+
+@media (max-width: 380px) {
+
+    .creator-actions {
+        gap: 6px;
+    }
+
+    .creator-message {
+        padding: 0 12px;
+    }
+
+    .creator-price {
+        font-size: 15px;
+    }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+
+    .creator-card,
+    .slider-arrow,
+    .slider-dot,
+    .creator-save,
+    .creator-message {
+        transition: none;
+    }
+}
+
+
+/* =========================================================
+   SEARCH BAR (same look as the Search page)
+========================================================= */
+
+.search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 56px;
+    border: 1px solid #e2e2e2;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-box:hover {
+    border-color: #d2d2d2;
+}
+
+.search-box:focus-within {
+    border-color: #bdbdbd;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.09);
+}
+
+.search-icon {
+    width: 22px;
+    height: 22px;
+    margin-left: 20px;
+    color: #777;
+    flex-shrink: 0;
+    stroke-width: 1.8;
+}
+
+.search-box input {
+    width: 100%;
+    height: 100%;
+    padding: 0 52px 0 14px;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #111;
+    font-family: inherit;
+    font-size: 15px;
+}
+
+.search-box input::placeholder {
+    color: #999;
+}
+
+.clear-search {
+    position: absolute;
+    right: 14px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 50%;
+    background: #f0f0f0;
+    color: #555;
+    font-size: 21px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.clear-search:hover {
+    background: #e4e4e4;
+}
+
+.clear-search.visible {
+    display: flex;
+}
+
+
+/* =========================================================
+   CATEGORIES STRIP (tiles come from home.css)
+========================================================= */
+
+.creators-categories {
+    margin-top: 18px;
+    padding: 4px 4px 10px;
+}
+
+.category.active {
+    box-shadow: 0 0 0 3px #111;
+}
+
+.category:focus-visible {
+    outline: 2px solid #111;
+    outline-offset: 2px;
+}
+
+
+/* =========================================================
+   FILTERING + EMPTY STATE
+========================================================= */
+
+.creator-card.is-filtered-out {
+    display: none !important;
+}
+
+.creators-empty {
+    padding: 70px 20px;
+    text-align: center;
+}
+
+.creators-empty[hidden] {
+    display: none;
+}
+
+.creators-empty h2 {
+    margin-bottom: 8px;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.creators-empty p {
+    font-size: 14px;
+    color: #888;
+}
+
+
+/* =========================================================
+   MUTE / UNMUTE BUTTON (same behaviour as Home)
+   Only shown while the current slide is a video.
+========================================================= */
+
+.creator-mute {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    z-index: 10;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.34);
+    color: #fff;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.creator-media.on-video .creator-mute {
+    display: flex;
+}
+
+.creator-card:hover .creator-mute,
+.creator-card:focus-within .creator-mute {
+    opacity: 0.6;
+    pointer-events: auto;
+}
+
+.creator-mute:hover {
+    opacity: 1;
+    transform: scale(1.06);
+    background: rgba(0, 0, 0, 0.55);
+}
+
+.creator-mute:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+.creator-mute svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+}
+
+@media (hover: none) {
+
+    .creator-media.on-video .creator-mute {
+        opacity: 0.6;
+        pointer-events: auto;
+    }
+}
+
+
+/* =========================================================
+   SEARCH BAR RESPONSIVE SIZES
+========================================================= */
+
+@media (min-width: 801px) and (max-width: 1150px) {
+
+    .search-box {
+        height: 54px;
+        border-radius: 17px;
+    }
+}
+
+@media (max-width: 800px) {
+
+    .search-box {
+        height: 52px;
+        border-radius: 15px;
+    }
+
+    .creators-categories {
+        margin-top: 14px;
+    }
+
+    .creators-grid {
+        margin-top: 18px;
+    }
+}
+
+@media (max-width: 500px) {
+
+    .search-box {
+        height: 50px;
+    }
+
+    .search-icon {
+        margin-left: 15px;
+        width: 21px;
+        height: 21px;
+    }
+
+    .search-box input {
+        font-size: 14px;
+        padding-left: 11px;
+    }
+}
+
+@media (max-width: 380px) {
+
+    .search-box {
+        height: 48px;
+    }
+}
