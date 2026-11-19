@@ -420,24 +420,14 @@
                 </section>
 
 
-                <!-- POPULAR SEARCHES -->
-
-                <section class="search-section">
-
-                    <h2>Popular Searches</h2>
-
-                    <div id="popularSearches" class="popular-searches"></div>
-
-                </section>
-
-
-                <!-- ALL CATEGORIES -->
+                <!-- ALL CATEGORIES
+                     (same tiles as Home, rendered by ../shared/categories.js) -->
 
                 <section class="search-section">
 
                     <h2>All Categories</h2>
 
-                    <div id="allCategories" class="category-grid"></div>
+                    <div id="allCategories" class="categories"></div>
 
                 </section>
 
@@ -455,7 +445,7 @@
 
                     <h2>Categories</h2>
 
-                    <div id="categoryResults" class="category-grid"></div>
+                    <div id="categoryResults" class="categories"></div>
 
                 </section>
 
@@ -485,6 +475,7 @@
     </main>
 
 
+    <script src="../shared/categories.js"></script>
     <script src="../shared/skeleton.js"></script>
     <script src="search.js"></script>
     <script src="../filter/filter.js"></script>

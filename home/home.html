@@ -369,72 +369,15 @@
         </header>
 
 
-        <!-- CATEGORIES -->
+        <!-- CATEGORIES
 
-        <section class="categories">
+             Tiles are rendered by ../shared/categories.js (the
+             data-twigg-categories attribute tells it to fill this
+             section). To change a category, edit categories.js. -->
 
-            <div class="category">
-                <img src="categoryimg/videoediting.png" alt="Video Editing">
-                <div class="category-name">Video Editing</div>
-            </div>
+        <h2 class="categories-title">Categories</h2>
 
-            <div class="category">
-                <img src="https://i.pinimg.com/1200x/f0/10/30/f010301be8f9d67a390f94983756463f.jpg"
-                    alt="Social Media Design">
-                <div class="category-name">Social Media Design</div>
-            </div>
-
-            <div class="category">
-                <img src="https://i.pinimg.com/1200x/b8/4e/5f/b84e5fc3f2a69397a976a284767d3c0b.jpg" alt="Logo Design">
-                <div class="category-name">Logo Design</div>
-            </div>
-
-            <div class="category">
-                <img src="https://i.pinimg.com/736x/e4/27/99/e42799695833e5259ca324b2a4bec8e6.jpg"
-                    alt="Web and Mobile Design">
-                <div class="category-name">Web &amp; Mobile Design</div>
-            </div>
-
-            <div class="category">
-                <img src="https://i.pinimg.com/736x/07/77/a8/0777a871e588f0f3ca433585eae6fd36.jpg" alt="Branding">
-                <div class="category-name">Branding</div>
-            </div>
-
-            <div class="category">
-                <img src="https://i.pinimg.com/736x/2d/a8/39/2da839435973fdd6cbd1fc7ef241d2fe.jpg"
-                    alt="Motion Graphics">
-                <div class="category-name">Motion Graphics</div>
-            </div>
-
-            <div class="category">
-                <img src="https://i.pinimg.com/736x/3f/58/b6/3f58b6094eb21c868274b1c47e92429d.jpg"
-                    alt="Packaging Design">
-                <div class="category-name">Packaging Design</div>
-            </div>
-
-            <div class="category">
-                <img src="https://i.pinimg.com/736x/08/94/6b/08946b7a8885fb1a23d765b9df84f3a0.jpg" alt="Logo Animation">
-                <div class="category-name">Logo Animation</div>
-            </div>
-
-            <div class="category">
-                <img src="https://i.pinimg.com/736x/d6/49/d2/d649d20f69d648981f981ea452b281e9.jpg"
-                    alt="3D Product Animation">
-                <div class="category-name">3D Product Animation</div>
-            </div>
-
-            <div class="category">
-                <img src="https://i.pinimg.com/736x/c5/fb/10/c5fb101720b7f715545c846839039789.jpg" alt="Book Design">
-                <div class="category-name">Book Design</div>
-            </div>
-
-            <div class="category">
-                <img src="https://i.pinimg.com/736x/00/bb/fe/00bbfe12608747031524389ddcf67403.jpg"
-                    alt="Intro and Outro Videos">
-                <div class="category-name">Intro &amp; Outro Videos</div>
-            </div>
-
-        </section>
+        <section class="categories" id="homeCategories" data-twigg-categories></section>
 
 
         <!-- MOBILE FLOATING FILTER BUTTON (mobile only) -->
@@ -462,6 +405,7 @@
     </main>
 
 
+    <script src="../shared/categories.js"></script>
     <script src="../shared/media-data.js"></script>
     <script src="../shared/skeleton.js"></script>
     <script src="home.js"></script>

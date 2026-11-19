@@ -2,98 +2,16 @@
    SEARCH DATA
 ========================================================= */
 
-const categories = [
+/*
+ * Categories come from the shared file ../shared/categories.js
+ * (the same two categories, images and keywords used by Home
+ * and Creators). Edit them there, not here.
+ */
 
-    {
-        name: "Video Editing",
-        image: "../home/categoryimg/videoediting.png",
-        keywords:
-            "video editing editor videos reels youtube short form long form"
-    },
-
-    {
-        name: "Social Media Design",
-        image: "https://i.pinimg.com/1200x/f0/10/30/f010301be8f9d67a390f94983756463f.jpg",
-        keywords:
-            "social media design instagram facebook posts social content"
-    },
-
-    {
-        name: "Logo Design",
-        image: "https://i.pinimg.com/1200x/b8/4e/5f/b84e5fc3f2a69397a976a284767d3c0b.jpg",
-        keywords:
-            "logo design logos brand identity designer"
-    },
-
-    {
-        name: "Web & Mobile Design",
-        image: "https://i.pinimg.com/736x/e4/27/99/e42799695833e5259ca324b2a4bec8e6.jpg",
-        keywords:
-            "web mobile website app ui ux interface design"
-    },
-
-    {
-        name: "Branding",
-        image: "https://i.pinimg.com/736x/07/77/a8/0777a871e588f0f3ca433585eae6fd36.jpg",
-        keywords:
-            "branding brand identity visual identity brand design"
-    },
-
-    {
-        name: "Motion Graphics",
-        image: "https://i.pinimg.com/736x/2d/a8/39/2da839435973fdd6cbd1fc7ef241d2fe.jpg",
-        keywords:
-            "motion graphics animation motion design animated"
-    },
-
-    {
-        name: "Packaging Design",
-        image: "https://i.pinimg.com/736x/3f/58/b6/3f58b6094eb21c868274b1c47e92429d.jpg",
-        keywords:
-            "packaging package product box label design"
-    },
-
-    {
-        name: "Logo Animation",
-        image: "https://i.pinimg.com/736x/08/94/6b/08946b7a8885fb1a23d765b9df84f3a0.jpg",
-        keywords:
-            "logo animation animated logo motion logo"
-    },
-
-    {
-        name: "3D Product Animation",
-        image: "https://i.pinimg.com/736x/d6/49/d2/d649d20f69d648981f981ea452b281e9.jpg",
-        keywords:
-            "3d product animation three dimensional product rendering"
-    },
-
-    {
-        name: "Book Design",
-        image: "https://i.pinimg.com/736x/c5/fb/10/c5fb101720b7f715545c846839039789.jpg",
-        keywords:
-            "book design cover books editorial publication"
-    },
-
-    {
-        name: "Intro & Outro Videos",
-        image: "https://i.pinimg.com/736x/00/bb/fe/00bbfe12608747031524389ddcf67403.jpg",
-        keywords:
-            "intro outro videos opening ending youtube video"
-    }
-
-];
-
-
-/* =========================================================
-   POPULAR SEARCHES
-========================================================= */
-
-const popularSearches = [
-    "Video Editing",
-    "Logo Design",
-     "Social Media Design",
-    "Motion Graphics"
-];
+const categories =
+    window.TwiggCategories
+        ? window.TwiggCategories.getAll()
+        : [];
 
 
 /* =========================================================
@@ -187,9 +105,6 @@ const creatorResults =
 const noResults =
     document.getElementById("noResults");
 
-const popularSearchesContainer =
-    document.getElementById("popularSearches");
-
 const allCategoriesContainer =
     document.getElementById("allCategories");
 
@@ -251,104 +166,70 @@ function saveRecentSearch(term) {
 
 
 /* =========================================================
-   POPULAR SEARCHES
-========================================================= */
-
-function renderPopularSearches() {
-
-    popularSearchesContainer.innerHTML = "";
-
-    popularSearches.forEach(term => {
-
-        const button =
-            document.createElement("button");
-
-        button.type = "button";
-
-        button.className =
-            "popular-search";
-
-        button.textContent = term;
-
-        button.addEventListener(
-            "click",
-            () => {
-
-                searchInput.value = term;
-
-                saveRecentSearch(term);
-
-                renderRecentSearches();
-
-                performSearch(term);
-
-                clearSearch.classList.add(
-                    "visible"
-                );
-
-            }
-        );
-
-        popularSearchesContainer.appendChild(
-            button
-        );
-
-    });
-
-}
-
-
-/* =========================================================
    ALL CATEGORIES
+
+   The tile itself is the shared Home-style tile built by
+   categories.js; this page only decides what a click does.
 ========================================================= */
 
 function createCategoryCard(category) {
 
     const card =
-        document.createElement("article");
+        window.TwiggCategories.createTile(
+            category,
+            { interactive: true }
+        );
 
-    card.className =
-        "category-card";
+    const image =
+        card.querySelector("img");
 
-    card.innerHTML = `
+    if (image && window.TwiggSkeleton) {
+        window.TwiggSkeleton.watchImage(card, image);
+    }
 
-        <img
-            src="${category.image}"
-            alt="${category.name}" loading="lazy" data-sk>
+    const open = () => {
 
-        <div class="category-card-name">
-            ${category.name}
-        </div>
+        searchInput.value =
+            category.name;
 
-    `;
+        saveRecentSearch(
+            category.name
+        );
+
+        renderRecentSearches();
+
+        performSearch(
+            category.name
+        );
+
+        clearSearch.classList.add(
+            "visible"
+        );
+
+    };
 
     card.addEventListener(
         "click",
-        () => {
+        open
+    );
 
-            searchInput.value =
-                category.name;
+    card.addEventListener(
+        "keydown",
+        event => {
 
-            saveRecentSearch(
-                category.name
-            );
+            if (
+                event.key === "Enter" ||
+                event.key === " "
+            ) {
 
-            renderRecentSearches();
+                event.preventDefault();
 
-            performSearch(
-                category.name
-            );
+                open();
 
-            clearSearch.classList.add(
-                "visible"
-            );
+            }
 
         }
     );
-
-    if (window.TwiggSkeleton) {
-        window.TwiggSkeleton.scan(card);
-    }
 
     return card;
 
@@ -575,23 +456,16 @@ function performSearch(term) {
 
 
     /* -----------------------------------------------------
-       MATCH CATEGORIES
+       MATCH CATEGORIES (name + keywords, from categories.js)
     ----------------------------------------------------- */
 
     const matchingCategories =
-        categories.filter(category => {
-
-            const searchableText = (
-                category.name +
-                " " +
-                category.keywords
-            ).toLowerCase();
-
-            return searchableText.includes(
+        categories.filter(category =>
+            window.TwiggCategories.matches(
+                category,
                 term
-            );
-
-        });
+            )
+        );
 
 
     /* -----------------------------------------------------
@@ -740,7 +614,7 @@ function showDefaultState() {
 
 /*
  * Clicking/focusing the search bar does NOT
- * hide Popular Searches or All Categories.
+ * hide All Categories.
  *
  * If recent searches exist, they appear
  * underneath the default content.
@@ -798,7 +672,6 @@ searchInput.addEventListener(
             /*
              * Return to:
              *
-             * Popular Searches
              * All Categories
              *
              * Recent Searches will appear
@@ -946,8 +819,6 @@ navItems.forEach(item => {
 /* =========================================================
    INITIALIZE
 ========================================================= */
-
-renderPopularSearches();
 
 renderAllCategories();
 

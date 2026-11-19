@@ -57,16 +57,7 @@
 
     const CATEGORIES = [
         "Video Editing",
-        "Social Media Design",
-        "Logo Design",
-        "Web & Mobile Design",
-        "Branding",
-        "Motion Graphics",
-        "Packaging Design",
-        "Logo Animation",
-        "3D Product Animation",
-        "Book Design",
-        "Intro & Outro Videos"
+        "AI Generated Videos",
     ];
 
     const DELIVERY_OPTIONS = [

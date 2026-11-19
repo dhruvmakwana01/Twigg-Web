@@ -13,7 +13,7 @@
     <link rel="icon" type="image/svg+xml"
         href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='225 425 220 240'%3E%3Cdefs%3E%3ClinearGradient id='g' gradientUnits='userSpaceOnUse' x1='217.2762' y1='575.5398' x2='365.8892' y2='438.8525'%3E%3Cstop offset='0' stop-color='%23B90066'/%3E%3Cstop offset='.5335' stop-color='%23FB0838'/%3E%3Cstop offset='1' stop-color='%23F6801E'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' d='M295.2 567.6v-130c-38.4 15.1-65.5 52.5-65.5 96.2 0 27.6 10.8 52.6 28.4 71.2l23.7-13.9c8.3-4.9 13.4-13.8 13.4-23.4z'/%3E%3Cpath fill='url(%23g)' d='M338 430.6c-9.8-.5-19.4.4-28.5 2.5v27.4c0 9.7 5.2 18.7 13.6 23.5l112.1 64.4c.6-4.1.9-8.3 1-12.5-2.5-55.4-46.4-102.7-101.9-105.3z'/%3E%3Cpath fill='url(%23g)' d='M380.8 551.6l-113.2 62.5c3.2 2.6 6.6 5.1 10.2 7.3 15.3 9.7 32.4 14.9 49.6 15.8 6.7.4 11.8 6.4 11.1 13 0 .1 0 .1 0 .2-1.4 7.6-5.2 16.5-5.2 16.5s72.7-33.5 98-100.7L408 552.1c-8.3-5-18.7-5.2-27.2-.5z'/%3E%3C/svg%3E">
 
-    <!-- Home styles are reused (sidebar, mobile bar, responsive shell) -->
+    <!-- Home styles are reused (sidebar, mobile bar, responsive shell, categories) -->
     <link rel="stylesheet" href="../home/home.css">
     <link rel="stylesheet" href="creators.css">
 </head>
@@ -323,7 +323,8 @@
         </div>
 
 
-        <!-- CATEGORIES (same tiles as Home; click one to filter, click again to clear) -->
+        <!-- CATEGORIES (same tiles as Home, rendered by ../shared/categories.js
+             from creators.js; click one to filter, click again to clear) -->
 
         <section class="categories creators-categories" id="creatorCategories"></section>
 
@@ -343,6 +344,7 @@
     </main>
 
 
+    <script src="../shared/categories.js"></script>
     <script src="../shared/media-data.js"></script>
     <script src="../shared/skeleton.js"></script>
     <script src="creators.js"></script>

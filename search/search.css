@@ -405,125 +405,184 @@ body {
 
 
 /* =========================================================
-   POPULAR SEARCHES
+   CATEGORIES
+   Shared component: this is the SAME markup and the SAME
+   styling as the Home page Categories section (home.css),
+   so Home, Creators and Search show identical tiles. The tiles
+   themselves are built by ../shared/categories.js.
+
+   Two equal cards share the full content width.
 ========================================================= */
 
-.popular-searches {
-    display: flex;
-    flex-wrap: wrap;
+.categories {
+    --category-bg: #f4f4f7;
+    /* matches the icon canvas */
+    --category-height: 120px;
+    --category-gap: 17px;
 
-    gap: 10px;
-}
-
-.popular-search {
-    display: inline-flex;
-    align-items: center;
-
-    min-height: 38px;
-
-    padding:
-        0
-        16px;
-
-    border: 1px solid #e1e1e1;
-    border-radius: 20px;
-
-    background: #fff;
-
-    color: #333;
-
-    font-size: 13px;
-
-    cursor: pointer;
-
-    transition:
-        background 0.2s ease,
-        transform 0.2s ease;
-}
-
-.popular-search:hover {
-    background: #f4f4f4;
-
-    transform: translateY(-1px);
-}
-
-
-/* =========================================================
-   CATEGORY GRID
-========================================================= */
-
-.category-grid {
     display: grid;
-
-    grid-template-columns:
-        repeat(
-            auto-fill,
-            minmax(145px, 1fr)
-        );
-
-    gap: 18px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--category-gap);
+    padding: 0 0 10px;
 }
 
-.category-card {
+.category {
     position: relative;
-
-    aspect-ratio: 1 / 1;
-
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    height: var(--category-height);
     overflow: hidden;
-
-    border-radius: 17px;
-
-    background: #eee;
-
+    border-radius: 20px;
+    background: var(--category-bg);
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.category-card img {
-    width: 100%;
-    height: 100%;
-
+.category img {
     display: block;
-
+    flex: 0 0 auto;
+    width: var(--category-height);
+    height: 100%;
     object-fit: cover;
-
-    transition:
-        transform 0.3s ease;
+    transition: transform 0.45s ease;
 }
 
-.category-card:hover img {
-    transform: scale(1.05);
-}
-
-.category-card::after {
-    content: "";
-
-    position: absolute;
-
-    inset: 0;
-
-    background:
-        linear-gradient(
-            to top,
-            rgba(0, 0, 0, 0.72),
-            rgba(0, 0, 0, 0.05) 60%
-        );
-}
-
-.category-card-name {
-    position: absolute;
-
-    left: 13px;
-    right: 13px;
-    bottom: 12px;
-
-    z-index: 2;
-
-    color: #fff;
-
-    font-size: 13px;
-    font-weight: 550;
-
+.category-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    color: #111;
+    font-size: 16px;
+    font-weight: 600;
     line-height: 1.25;
+    letter-spacing: -0.01em;
+}
+
+/* Subtle chevron */
+
+.category::after {
+    content: "";
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    margin-right: 26px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23111' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 5l7 7-7 7'/%3E%3C/svg%3E") center / 18px no-repeat;
+    opacity: 0.4;
+    pointer-events: none;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.category:focus-visible {
+    outline: 2px solid #111;
+    outline-offset: 2px;
+}
+
+@media (hover: hover) {
+
+    .category:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+    }
+
+    .category:hover img {
+        transform: scale(1.05);
+    }
+
+    .category:hover::after {
+        transform: translateX(3px);
+        opacity: 0.75;
+    }
+}
+
+
+/* ---------- Tablet 801px – 1150px ---------- */
+
+@media (min-width: 801px) and (max-width: 1150px) {
+
+    .categories {
+        --category-height: 108px;
+    }
+
+    .category {
+        gap: 16px;
+    }
+
+    .category-name {
+        font-size: 15px;
+    }
+
+    .category::after {
+        margin-right: 20px;
+    }
+}
+
+
+/* ---------- Mobile 800px and below ---------- */
+
+@media (max-width: 800px) {
+
+    .categories {
+        --category-height: 76px;
+        --category-gap: 10px;
+        padding: 0 0 8px;
+    }
+
+    .category {
+        gap: 12px;
+        border-radius: 16px;
+    }
+
+    .category-name {
+        font-size: 13px;
+    }
+
+    .category::after {
+        width: 14px;
+        height: 14px;
+        margin-right: 14px;
+        background-size: 14px;
+    }
+}
+
+
+/* ---------- Small mobile 560px and below: compact cards ---------- */
+
+@media (max-width: 560px) {
+
+    .categories {
+        --category-height: 64px;
+        --category-gap: 8px;
+    }
+
+    .category {
+        gap: 10px;
+        padding-right: 8px;
+        border-radius: 14px;
+    }
+
+    .category-name {
+        font-size: 12px;
+        line-height: 1.2;
+    }
+
+    .category::after {
+        display: none;
+    }
+}
+
+
+/* ---------- Very small phones 380px and below ---------- */
+
+@media (max-width: 380px) {
+
+    .categories {
+        --category-height: 58px;
+    }
+
+    .category-name {
+        font-size: 11.5px;
+    }
 }
 
 
@@ -806,16 +865,6 @@ body {
 
     .search-section {
         margin-top: 40px;
-    }
-
-    .category-grid {
-        grid-template-columns:
-            repeat(
-                auto-fill,
-                minmax(120px, 1fr)
-            );
-
-        gap: 14px;
     }
 
 }
@@ -1103,28 +1152,6 @@ body {
         margin-top: 34px;
     }
 
-    .category-grid {
-        grid-template-columns:
-            repeat(
-                2,
-                minmax(0, 1fr)
-            );
-
-        gap: 10px;
-    }
-
-    .category-card {
-        border-radius: 14px;
-    }
-
-    .category-card-name {
-        left: 10px;
-        right: 10px;
-        bottom: 9px;
-
-        font-size: 11px;
-    }
-
     .creator-grid {
         grid-template-columns: 1fr;
 
@@ -1208,18 +1235,6 @@ body {
 
     .search-section h2 {
         font-size: 17px;
-    }
-
-    .popular-search {
-        min-height: 35px;
-
-        padding: 0 13px;
-
-        font-size: 12px;
-    }
-
-    .category-grid {
-        gap: 9px;
     }
 
 }

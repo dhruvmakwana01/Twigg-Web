@@ -3,7 +3,8 @@
 
    Loaded AFTER ../home/home.css, which already provides the
    reset, sidebar, mobile bottom bar, mobile top bar, .main
-   shell and the .video-indicator duration badge. This file
+   shell, the .video-indicator duration badge and the shared
+   Categories section (.categories / .category). This file
    only adds what is specific to the Creators page.
 ========================================================= */
 
@@ -614,19 +615,23 @@
 
 
 /* =========================================================
-   CATEGORIES STRIP (tiles come from home.css)
+   CATEGORIES (shared component, styled by home.css)
+
+   The tiles look exactly like Home's. This page only adds the
+   space above the row and the "selected" state, because here a
+   tile filters the creators below. Nothing in this section
+   restyles the tiles themselves.
 ========================================================= */
 
 .creators-categories {
     margin-top: 18px;
-    padding: 4px 4px 10px;
 }
 
-.category.active {
+.creators-categories .category.active {
     box-shadow: 0 0 0 3px #111;
 }
 
-.category:focus-visible {
+.creators-categories .category:focus-visible {
     outline: 2px solid #111;
     outline-offset: 2px;
 }

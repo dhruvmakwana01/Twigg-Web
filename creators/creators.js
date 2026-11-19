@@ -5,6 +5,10 @@
    (../shared/media-data.js). No media is duplicated: every
    creator's slider simply lists the items that creator owns.
 
+   The category tiles come from ../shared/categories.js (the
+   same tiles as Home); this page only adds the filter
+   behaviour on top of them.
+
    Also includes (same logic as Home):
      - shared mute / unmute choice
      - returning to the same scroll position after visiting
@@ -81,23 +85,15 @@
 
 
     /* =====================================================
-       CATEGORIES (same tiles as Home)
+       CATEGORIES (shared with Home and Search)
+
+       Names, images and keywords live in ../shared/categories.js.
     ===================================================== */
 
-    const CATEGORIES = [
-
-        { name: "Video Editing", image: "../home/categoryimg/videoediting.png" },
-        { name: "Social Media Design", image: "https://i.pinimg.com/1200x/f0/10/30/f010301be8f9d67a390f94983756463f.jpg" },
-        { name: "Logo Design", image: "https://i.pinimg.com/1200x/b8/4e/5f/b84e5fc3f2a69397a976a284767d3c0b.jpg" },
-        { name: "Web & Mobile Design", image: "https://i.pinimg.com/736x/e4/27/99/e42799695833e5259ca324b2a4bec8e6.jpg" },
-        { name: "Branding", image: "https://i.pinimg.com/736x/07/77/a8/0777a871e588f0f3ca433585eae6fd36.jpg" },
-        { name: "Motion Graphics", image: "https://i.pinimg.com/736x/2d/a8/39/2da839435973fdd6cbd1fc7ef241d2fe.jpg" },
-        { name: "Packaging Design", image: "https://i.pinimg.com/736x/3f/58/b6/3f58b6094eb21c868274b1c47e92429d.jpg" },
-        { name: "Logo Animation", image: "https://i.pinimg.com/736x/08/94/6b/08946b7a8885fb1a23d765b9df84f3a0.jpg" },
-        { name: "3D Product Animation", image: "https://i.pinimg.com/736x/d6/49/d2/d649d20f69d648981f981ea452b281e9.jpg" },
-        { name: "Book Design", image: "https://i.pinimg.com/736x/c5/fb/10/c5fb101720b7f715545c846839039789.jpg" },
-        { name: "Intro & Outro Videos", image: "https://i.pinimg.com/736x/00/bb/fe/00bbfe12608747031524389ddcf67403.jpg" }
-    ];
+    const CATEGORIES =
+        window.TwiggCategories
+            ? window.TwiggCategories.getAll()
+            : [];
 
 
     /* =====================================================
@@ -1044,18 +1040,14 @@
     const filterState = { query: "", category: "" };
 
 
-    /* ----- Category tiles ----- */
+    /* ----- Category tiles (shared component from categories.js) ----- */
 
-    if (categoriesStrip) {
+    if (categoriesStrip && window.TwiggCategories) {
 
-        categoriesStrip.innerHTML =
-            CATEGORIES.map(category => `
-                <div class="category" role="button" tabindex="0" aria-pressed="false"
-                    data-category="${escapeHtml(category.name)}">
-                    <img src="${escapeHtml(category.image)}" alt="${escapeHtml(category.name)}">
-                    <div class="category-name">${escapeHtml(category.name)}</div>
-                </div>
-            `).join("");
+        window.TwiggCategories.render(
+            categoriesStrip,
+            { interactive: true, toggle: true }
+        );
 
         categoriesStrip.querySelectorAll(".category").forEach(tile => {
 
@@ -1538,4 +1530,3 @@
     });
 
 })();
-

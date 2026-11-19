@@ -1,9 +1,18 @@
 /* =========================================================
    TWIGG — SHARED MEDIA DATA   (shared/media-data.js)
 
-   Temporary stand-in for the backend. Home, Loop and Reels
-   all READ from this one file; each page keeps its own
-   rendering and interaction logic in its own JS file.
+   Temporary stand-in for the backend. Home, Loop, Reels,
+   Creators and Search all READ from this one file; each page
+   keeps its own rendering and interaction logic in its own
+   JS file.
+
+   CATEGORIES
+     Category names, images and keywords now live in
+     shared/categories.js (window.TwiggCategories), which must be
+     loaded BEFORE this file. Every media item below uses one of
+     those category names in its `category` field (VE / AI).
+     TwiggMedia.getCategories() and TwiggMedia.renderCategories()
+     remain as thin wrappers around TwiggCategories.
 
    FEEDS (derived automatically from the media type)
      • every item (image OR video) → "home" and "loop"
@@ -48,6 +57,42 @@
 
     const photo = id =>
         `https://images.unsplash.com/photo-${id}?auto=format&fit=max&w=900&q=90`;
+
+
+    /* =====================================================
+       CATEGORIES
+
+       Data and rendering live in shared/categories.js.
+       The names below are read from there (fallbacks only
+       protect pages that forgot to load categories.js).
+    ===================================================== */
+
+    function categoryName(id, fallback) {
+
+        const category =
+            window.TwiggCategories
+                ? window.TwiggCategories.getById(id)
+                : null;
+
+        return category ? category.name : fallback;
+    }
+
+    const VE = categoryName("video-editing", "Video Editing");
+    const AI = categoryName("ai-generated-videos", "AI Generated Videos");
+
+    function getCategories() {
+
+        return window.TwiggCategories
+            ? window.TwiggCategories.getAll()
+            : [];
+    }
+
+    function renderCategories(container) {
+
+        if (window.TwiggCategories) {
+            window.TwiggCategories.render(container);
+        }
+    }
 
 
     /* Captions: description text shown under each post. */
@@ -118,47 +163,49 @@
     const V = "home/videos/";
     const RV = "reels/videos/";
 
+    /* `category` is always VE ("Video Editing") or AI ("AI Generated Videos") */
+
     const RAW = [
 
-        m(0, "video", V + "b9f4e7d4-ce0a-426a-937e-daebd25f5842.MP4", "Video", "Aarav Studio", "Video Editing", "4.9", "1,204"),
-        m(1, "image", photo("1561070791-2526d30994b5"), "Creative design", "Maya Designs", "Social Media Design", "4.8", "94"),
-        m(2, "image", photo("1586717791821-3f44a563fa4c"), "Graphic design", "Pixel Forge", "Logo Design", "5.0", "1,875"),
-        m(3, "video", V + "d27829dc-6302-47a3-8c71-5f8a157f47e5.MP4", "Video", "Nora Creative", "Web & Mobile Design", "4.7", "2,380"),
-        m(4, "image", photo("1558655146-9f40138edfeb"), "Creative branding", "Kabir Motion", "Branding", "4.6", "990"),
-        m(5, "video", V + "22512-328261507_medium.mp4", "Video", "Lumen Works", "Motion Graphics", "4.9", "842"),
-        m(6, "image", photo("1497366811353-6870744d04b2"), "Interior design", "Aarav Studio", "Packaging Design", "4.5", "445"),
-        m(7, "video", V + "22619-328940133_medium.mp4", "Video", "Maya Designs", "Logo Animation", "4.9", "1,204"),
-        m(8, "image", photo("1618005198919-d3d4b5a92ead"), "Abstract design", "Pixel Forge", "3D Product Animation", "4.8", "94"),
-        m(9, "video", V + "212404_medium.mp4", "Video", "Nora Creative", "Book Design", "5.0", "1,875"),
-        m(10, "image", photo("1559028012-481c04fa702d"), "Website design", "Kabir Motion", "Intro & Outro Videos", "4.7", "2,380"),
-        m(11, "video", V + "338904_medium.mp4", "Video", "Lumen Works", "Video Editing", "4.6", "990"),
-        m(12, "image", photo("1634017839464-5c339ebe3cb4"), "Abstract artwork", "Aarav Studio", "Social Media Design", "4.9", "842"),
-        m(13, "image", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTsnn_crhJrO4NbGugSy9ofq1PdH5NhJYEPwRsTaV9b6Q&s=10", "Creative business design", "Maya Designs", "Logo Design", "4.5", "445"),
-        m(14, "video", V + "364783_medium.mp4", "Video", "Pixel Forge", "Web & Mobile Design", "4.9", "1,204"),
-        m(15, "image", photo("1513364776144-60967b0f800f"), "Art and illustration", "Nora Creative", "Branding", "4.8", "94"),
-        m(16, "image", photo("1557682250-33bd709cbe85"), "Color design", "Kabir Motion", "Motion Graphics", "5.0", "1,875"),
-        m(17, "video", V + "ad509c81-b69a-4021-be22-37d432bd7531.MP4", "Video", "Lumen Works", "Packaging Design", "4.7", "2,380"),
-        m(18, "image", photo("1542744095-fcf48d80b0fd"), "Business design", "Aarav Studio", "Logo Animation", "4.6", "990"),
-        m(19, "image", photo("1497366754035-f200968a6e72"), "Interior design", "Maya Designs", "3D Product Animation", "4.9", "842"),
-        m(20, "video", V + "21d1f8ec-5dab-476d-b3a9-16412b7745b0.MP4", "Video", "Pixel Forge", "Book Design", "4.5", "445"),
-        m(21, "image", photo("1561214115-f2f134cc4912"), "Art gallery", "Nora Creative", "Intro & Outro Videos", "4.9", "1,204"),
-        m(22, "image", photo("1550745165-9bc0b252726f"), "Creative technology", "Kabir Motion", "Video Editing", "4.8", "94"),
-        m(23, "video", V + "6ede3033-72bb-46c7-a61c-c8eaf77445b4.MP4", "Video", "Lumen Works", "Social Media Design", "5.0", "1,875"),
-        m(24, "image", photo("1634017839464-5c339ebe3cb4"), "Abstract artwork", "Aarav Studio", "Logo Design", "4.7", "2,380"),
-        m(25, "image", photo("1497215728101-856f4ea42174"), "Workspace design", "Maya Designs", "Web & Mobile Design", "4.6", "990"),
-        m(26, "video", V + "e75e166b-f8bc-497f-8c07-c557c8d0de77.MP4", "Video", "Pixel Forge", "Branding", "4.9", "842"),
-        m(27, "image", photo("1513364776144-60967b0f800f"), "Art and illustration", "Nora Creative", "Motion Graphics", "4.5", "445"),
-        m(28, "image", photo("1542744095-fcf48d80b0fd"), "Business creative", "Kabir Motion", "Packaging Design", "4.9", "1,204"),
-        m(29, "video", V + "ad3b477e-ccf1-49df-8bfa-ec0b8c80965a.MP4", "Video", "Lumen Works", "Logo Animation", "4.8", "94"),
+        m(0, "video", V + "b9f4e7d4-ce0a-426a-937e-daebd25f5842.MP4", "Video", "Aarav Studio", VE, "4.9", "1,204"),
+        m(1, "image", photo("1561070791-2526d30994b5"), "Creative design", "Maya Designs", VE, "4.8", "94"),
+        m(2, "image", photo("1586717791821-3f44a563fa4c"), "Graphic design", "Pixel Forge", AI, "5.0", "1,875"),
+        m(3, "video", V + "d27829dc-6302-47a3-8c71-5f8a157f47e5.MP4", "Video", "Nora Creative", AI, "4.7", "2,380"),
+        m(4, "image", photo("1558655146-9f40138edfeb"), "Creative branding", "Kabir Motion", AI, "4.6", "990"),
+        m(5, "video", V + "22512-328261507_medium.mp4", "Video", "Lumen Works", AI, "4.9", "842"),
+        m(6, "image", photo("1497366811353-6870744d04b2"), "Interior design", "Aarav Studio", VE, "4.5", "445"),
+        m(7, "video", V + "22619-328940133_medium.mp4", "Video", "Maya Designs", AI, "4.9", "1,204"),
+        m(8, "image", photo("1618005198919-d3d4b5a92ead"), "Abstract design", "Pixel Forge", AI, "4.8", "94"),
+        m(9, "video", V + "212404_medium.mp4", "Video", "Nora Creative", VE, "5.0", "1,875"),
+        m(10, "image", photo("1559028012-481c04fa702d"), "Website design", "Kabir Motion", VE, "4.7", "2,380"),
+        m(11, "video", V + "338904_medium.mp4", "Video", "Lumen Works", VE, "4.6", "990"),
+        m(12, "image", photo("1634017839464-5c339ebe3cb4"), "Abstract artwork", "Aarav Studio", VE, "4.9", "842"),
+        m(13, "image", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTsnn_crhJrO4NbGugSy9ofq1PdH5NhJYEPwRsTaV9b6Q&s=10", "Creative business design", "Maya Designs", AI, "4.5", "445"),
+        m(14, "video", V + "364783_medium.mp4", "Video", "Pixel Forge", AI, "4.9", "1,204"),
+        m(15, "image", photo("1513364776144-60967b0f800f"), "Art and illustration", "Nora Creative", AI, "4.8", "94"),
+        m(16, "image", photo("1557682250-33bd709cbe85"), "Color design", "Kabir Motion", AI, "5.0", "1,875"),
+        m(17, "video", V + "ad509c81-b69a-4021-be22-37d432bd7531.MP4", "Video", "Lumen Works", VE, "4.7", "2,380"),
+        m(18, "image", photo("1542744095-fcf48d80b0fd"), "Business design", "Aarav Studio", AI, "4.6", "990"),
+        m(19, "image", photo("1497366754035-f200968a6e72"), "Interior design", "Maya Designs", AI, "4.9", "842"),
+        m(20, "video", V + "21d1f8ec-5dab-476d-b3a9-16412b7745b0.MP4", "Video", "Pixel Forge", VE, "4.5", "445"),
+        m(21, "image", photo("1561214115-f2f134cc4912"), "Art gallery", "Nora Creative", VE, "4.9", "1,204"),
+        m(22, "image", photo("1550745165-9bc0b252726f"), "Creative technology", "Kabir Motion", VE, "4.8", "94"),
+        m(23, "video", V + "6ede3033-72bb-46c7-a61c-c8eaf77445b4.MP4", "Video", "Lumen Works", VE, "5.0", "1,875"),
+        m(24, "image", photo("1634017839464-5c339ebe3cb4"), "Abstract artwork", "Aarav Studio", AI, "4.7", "2,380"),
+        m(25, "image", photo("1497215728101-856f4ea42174"), "Workspace design", "Maya Designs", AI, "4.6", "990"),
+        m(26, "video", V + "e75e166b-f8bc-497f-8c07-c557c8d0de77.MP4", "Video", "Pixel Forge", AI, "4.9", "842"),
+        m(27, "image", photo("1513364776144-60967b0f800f"), "Art and illustration", "Nora Creative", AI, "4.5", "445"),
+        m(28, "image", photo("1542744095-fcf48d80b0fd"), "Business creative", "Kabir Motion", VE, "4.9", "1,204"),
+        m(29, "video", V + "ad3b477e-ccf1-49df-8bfa-ec0b8c80965a.MP4", "Video", "Lumen Works", AI, "4.8", "94"),
 
-        m(30, "video", RV + "80444097-841c-4bb7-b7b1-70beedcd4240.mov", "Reel", "Studio Craft", "Packaging Design", "4.9", "1,204"),
-        m(31, "video", RV + "4bf27b85-3357-40aa-93eb-759303f8ee52.mov", "Reel", "Markwell Studio", "Logo Design", "4.8", "842"),
-        m(32, "video", RV + "2d83975e-223c-400b-a8ce-f30ddc591c53.mov", "Reel", "Pixel & Co", "Web & Mobile Design", "5.0", "2,380"),
-        m(33, "video", RV + "75f99231-503c-4f5e-b455-f58ab5063358.MP4", "Reel", "Inkwell Press", "Book Design", "4.5", "94"),
-        m(34, "video", RV + "2c8f8923-0e71-4ec0-8159-c665d9ff756e.MP4", "Reel", "Reel Intro Studio", "Intro & Outro Videos", "4.7", "445"),
-        m(35, "video", RV + "c377903b-d9cd-485a-bb5b-e29ff8e0c4b5.MP4", "Reel", "Kinetic House", "Motion Graphics", "4.8", "990"),
-        m(36, "video", RV + "6e7bd8c9-15be-4677-9a14-18c2cb5b14ca.MP4", "Reel", "Studio Nova", "Product Photography", "4.9", "1,875"),
-        m(37, "video", RV + "27da01c8-e09c-4168-afc5-baa39d098c73.MP4", "Reel", "ColorLab Studio", "Color Grading", "5.0", "3,040")
+        m(30, "video", RV + "80444097-841c-4bb7-b7b1-70beedcd4240.mov", "Reel", "Studio Craft", VE, "4.9", "1,204"),
+        m(31, "video", RV + "4bf27b85-3357-40aa-93eb-759303f8ee52.mov", "Reel", "Markwell Studio", AI, "4.8", "842"),
+        m(32, "video", RV + "2d83975e-223c-400b-a8ce-f30ddc591c53.mov", "Reel", "Pixel & Co", AI, "5.0", "2,380"),
+        m(33, "video", RV + "75f99231-503c-4f5e-b455-f58ab5063358.MP4", "Reel", "Inkwell Press", VE, "4.5", "94"),
+        m(34, "video", RV + "2c8f8923-0e71-4ec0-8159-c665d9ff756e.MP4", "Reel", "Reel Intro Studio", VE, "4.7", "445"),
+        m(35, "video", RV + "c377903b-d9cd-485a-bb5b-e29ff8e0c4b5.MP4", "Reel", "Kinetic House", AI, "4.8", "990"),
+        m(36, "video", RV + "6e7bd8c9-15be-4677-9a14-18c2cb5b14ca.MP4", "Reel", "Studio Nova", VE, "4.9", "1,875"),
+        m(37, "video", RV + "27da01c8-e09c-4168-afc5-baa39d098c73.MP4", "Reel", "ColorLab Studio", VE, "5.0", "3,040")
     ];
 
 
@@ -388,7 +435,7 @@
     }
 
 
-        /* =====================================================
+    /* =====================================================
        VIDEO THUMBNAILS (shared by Home, Loop, ...)
 
        One place that turns a video into a poster image:
@@ -691,6 +738,10 @@
 
         getFeed: feed =>
             items.filter(item => item.feeds.includes(feed)),
+
+        getCategories,
+
+        renderCategories,
 
         setItems,
 
