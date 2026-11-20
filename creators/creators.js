@@ -13,6 +13,10 @@
      - shared mute / unmute choice
      - returning to the same scroll position after visiting
        another page
+
+   CHANGE: the creator's avatar + name block now links to the
+   Creator Profile page (../creator-profile/creator-profile.html
+   ?creator=<slug>).
 ========================================================= */
 
 (() => {
@@ -392,6 +396,9 @@
         const messageUrl =
             "../message/message.html?creator=" + encodeURIComponent(creator.slug);
 
+        const profileUrl =
+            "../creator%20profile/creator-profile.html?creator=" + encodeURIComponent(creator.slug);
+
         return `
             <article class="creator-card" data-creator="${escapeHtml(creator.slug)}">
 
@@ -424,7 +431,9 @@
 
                 <div class="creator-body">
 
-                    <div class="creator-head">
+                    <a class="creator-head" href="${escapeHtml(profileUrl)}"
+                        style="text-decoration:none;color:inherit"
+                        aria-label="Open ${escapeHtml(creator.name)}'s profile">
 
                         ${creator.profileImage
                             ? `<img class="card-profile-image" src="${escapeHtml(creator.profileImage)}"
@@ -442,7 +451,7 @@
                             </div>
                         </div>
 
-                    </div>
+                    </a>
 
                     <p class="creator-description">${escapeHtml(creator.description)}</p>
 
@@ -1527,6 +1536,12 @@
 
             saveState();
         });
+    });
+
+    /* Opening a creator's profile also remembers where the user was */
+
+    document.querySelectorAll(".creator-head").forEach(link => {
+        link.addEventListener("click", saveState);
     });
 
 })();

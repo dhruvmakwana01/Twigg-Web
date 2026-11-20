@@ -1,3 +1,4 @@
+
 /* =========================================================
    TWIGG — SHARED CATEGORIES   (shared/categories.js)
 
@@ -68,17 +69,17 @@
         {
             id: "video-editing",
             name: "Video Editing",
-            image: "home/categoryimg/video_editing_icon_pastel_glass_large.png",
+            image: "home/categoryimg/Minimalist Pink and Orange Play Icon.png",
             keywords:
                 "video editing editor videos reels youtube short form long form edit cut color grading intro outro"
         },
 
         {
-            id: "ai-generated-videos",
-            name: "AI Generated Videos",
-            image: "home/categoryimg/ai_generated_video_editing_icon_larger_elements.png",
+            id: "ai-video-creation",
+            name: "AI Video Creation",
+            image: "home/categoryimg/Orbiting Gradient Play Icon (1).png",
             keywords:
-                "ai generated videos artificial intelligence generative video text to video avatar ai clone motion animation"
+                "ai video creation artificial intelligence generative video text to video avatar ai clone motion animation"
         }
     ];
 
