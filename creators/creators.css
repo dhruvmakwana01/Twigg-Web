@@ -263,14 +263,31 @@
     box-shadow: 0 0 0 1px #e4e4e4;
 }
 
+/* Name + verified badge on one line; a long name is cut with "…"
+   and the badge always stays visible next to it. */
+
 .creator-name {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
     font-size: 16px;
     font-weight: 650;
     line-height: 1.3;
     color: #111;
+}
+
+.creator-name-text {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.creator-verified {
+    flex-shrink: 0;
+    width: 0.9em;
+    height: 0.9em;
 }
 
 .creator-category {
@@ -760,12 +777,19 @@
         margin-top: 14px;
     }
 
+    /* Same spacing as Home's grid, so the floating filter button overlaps
+       the first cards by the same amount as on Home. */
+
     .creators-grid {
-        margin-top: 18px;
+        margin-top: 22px;
     }
 }
 
 @media (max-width: 500px) {
+
+    .creators-grid {
+        margin-top: 18px;
+    }
 
     .search-box {
         height: 50px;

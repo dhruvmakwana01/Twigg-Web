@@ -42,6 +42,7 @@
     /* Where the user left off on this page */
     const CREATORS_SCROLL_KEY = "twigg_creators_scroll";
     const CREATORS_FILTER_KEY = "twigg_creators_filter";
+    const CREATORS_ORDER_KEY = "twigg_creators_order";
 
     /* Touch autoplay thresholds (same values as Home) */
     const AUTOPLAY_MIN_RATIO = 0.6;
@@ -75,23 +76,14 @@
         navigationEntry.type === "reload";
 
     /*
-       CHANGE: the saved scroll position / filter are only brought back
-       when the user is RETURNING to this page, i.e.
-         - browser Back / Forward, or
-         - arriving from a creator's profile page.
-       Any other arrival (first open, tapping "Creators" in the menu from
-       another page, typing the address) starts at the very top.
+       Same behaviour as Home: the page remembers where the user left off
+       (scroll position, search / category filter and the shuffled order)
+       and brings it back whenever they return from another page, however
+       they return (browser Back, a profile, the bottom bar, ...).
+       Only a real browser refresh starts fresh: new shuffle, back to the top.
     */
 
-    const cameFromProfile =
-        /creator[%20\s_-]*profile/i.test(document.referrer || "");
-
-    const isBackForward =
-        Boolean(navigationEntry) &&
-        navigationEntry.type === "back_forward";
-
-    const shouldRestore =
-        !isReload && (isBackForward || cameFromProfile);
+    const shouldRestore = !isReload;
 
     /* A real browser refresh starts fresh. */
 
@@ -100,17 +92,8 @@
         try {
             sessionStorage.removeItem(CREATORS_SCROLL_KEY);
             sessionStorage.removeItem(CREATORS_FILTER_KEY);
+            sessionStorage.removeItem(CREATORS_ORDER_KEY);
             sessionStorage.removeItem(MUTE_KEY);
-        } catch { }
-    }
-
-    /* A fresh open also forgets any old position / filter. */
-
-    if (!shouldRestore) {
-
-        try {
-            sessionStorage.removeItem(CREATORS_SCROLL_KEY);
-            sessionStorage.removeItem(CREATORS_FILTER_KEY);
         } catch { }
     }
 
@@ -231,6 +214,10 @@
         prev: `<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"></path></svg>`,
 
         next: `<svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg>`,
+
+        /* Verified badge (same artwork as the Creator Profile page) */
+
+        verified: `<svg class="creator-verified" viewBox="0 0 24 24" role="img" aria-label="Verified" focusable="false"><title>Verified</title><path fill="#1d9bf0" d="M12 1.8l2.4 1.6 2.9-.3 1.2 2.7 2.6 1.3-.3 2.9L22.4 12l-1.6 2.4.3 2.9-2.6 1.3-1.2 2.7-2.9-.3L12 22.2l-2.4-1.6-2.9.3-1.2-2.7-2.6-1.3.3-2.9L1.6 12l1.6-2.4-.3-2.9 2.6-1.3 1.2-2.7 2.9.3z"></path><path fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M7.9 12.3l2.8 2.9 5.4-5.8"></path></svg>`,
 
         star: `<svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6.1 6.6.9-4.8 4.6 1.2 6.6L12 17.5 6.1 20.7l1.2-6.6L2.5 9.5l6.6-.9z"></path></svg>`,
 
@@ -395,6 +382,57 @@
 
 
     /* =====================================================
+       SHUFFLE
+
+       The creators appear in a new random order every time the page is
+       REFRESHED. When the user comes back from another page the same order
+       is reused, so the saved scroll position still lands on the same creator.
+    ===================================================== */
+
+    function orderCreators(list) {
+
+        if (shouldRestore) {
+
+            try {
+
+                const saved = JSON.parse(sessionStorage.getItem(CREATORS_ORDER_KEY) || "null");
+
+                if (
+                    Array.isArray(saved) &&
+                    saved.length === list.length &&
+                    list.every(creator => saved.includes(creator.slug))
+                ) {
+                    return saved.map(slugValue =>
+                        list.find(creator => creator.slug === slugValue)
+                    );
+                }
+
+            } catch { }
+        }
+
+        /* Fisher–Yates shuffle (on a copy) */
+
+        const shuffled = list.slice();
+
+        for (let i = shuffled.length - 1; i > 0; i--) {
+
+            const j = Math.floor(Math.random() * (i + 1));
+
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+
+        try {
+            sessionStorage.setItem(
+                CREATORS_ORDER_KEY,
+                JSON.stringify(shuffled.map(creator => creator.slug))
+            );
+        } catch { }
+
+        return shuffled;
+    }
+
+
+    /* =====================================================
        RENDER
     ===================================================== */
 
@@ -477,7 +515,7 @@
                             : `<div class="card-profile-initial">${escapeHtml(creator.name.charAt(0).toUpperCase())}</div>`}
 
                         <div class="creator-identity">
-                            <h2 class="creator-name">${escapeHtml(creator.name)}</h2>
+                            <h2 class="creator-name"><span class="creator-name-text">${escapeHtml(creator.name)}</span>${ICONS.verified}</h2>
                             <div class="creator-category">${escapeHtml(creator.category)}</div>
 
                             <div class="creator-rating">
@@ -1204,7 +1242,7 @@
 
     if (grid) {
 
-        const creators = buildCreators();
+        const creators = orderCreators(buildCreators());
 
         grid.innerHTML = creators.map(buildCard).join("");
 
@@ -1557,12 +1595,12 @@
 
 
     /*
-       CHANGE: fresh open (not returning) -> start at the very top so the
+       No saved position (first visit, or after a refresh) -> start at the very top so the
        top bar is visible. Done now and once more after the page has loaded
        (late layout shifts), unless the user has already started scrolling.
     */
 
-    if (!shouldRestore) {
+    if (savedScroll === null) {
 
         jumpToScroll(0);
 

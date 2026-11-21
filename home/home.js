@@ -213,6 +213,14 @@ const ICONS = {
 };
 
 
+/* Verified badge: the same artwork the Creator Profile page uses.
+   Shown next to the creator's name in the hover profile of a card.
+   Every creator is verified unless the creator data says
+   `verified: false`. */
+
+const VERIFIED_BADGE = `<svg class="verified-badge" viewBox="0 0 24 24" role="img" aria-label="Verified" focusable="false"><title>Verified</title><path fill="#1d9bf0" d="M12 1.8l2.4 1.6 2.9-.3 1.2 2.7 2.6 1.3-.3 2.9L22.4 12l-1.6 2.4.3 2.9-2.6 1.3-1.2 2.7-2.9-.3L12 22.2l-2.4-1.6-2.9.3-1.2-2.7-2.6-1.3.3-2.9L1.6 12l1.6-2.4-.3-2.9 2.6-1.3 1.2-2.7 2.9.3z"></path><path fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M7.9 12.3l2.8 2.9 5.4-5.8"></path></svg>`;
+
+
 /* =========================================================
    MUTE HELPERS
 ========================================================= */
@@ -234,8 +242,17 @@ function refreshHomeMuteIcons() {
 
 /*
    Plays a video. If the browser blocks playback WITH sound
-   (autoplay policy), the video falls back to muted, the
-   shared setting becomes muted and the icons are refreshed.
+   (autoplay policy), the video falls back to muted.
+
+   Desktop / mouse devices: the shared setting also becomes
+   muted (unchanged behaviour).
+
+   Touch devices: the user's mute / unmute CHOICE is kept. Only
+   this one video plays muted (the browser would not allow sound
+   for it), the speaker icon shows its real state, and the next
+   video tries again with sound. Before, the choice itself was
+   overwritten with "muted" and every following video stayed
+   muted, which is why videos "muted themselves" while scrolling.
 */
 
 function safeHomePlay(video) {
@@ -253,6 +270,24 @@ function safeHomePlay(video) {
             ) {
 
                 video.muted = true;
+
+                if (isTouchFeed()) {
+
+                    const card = video.closest(".media-card");
+
+                    const button =
+                        card
+                            ? card.querySelector(".unmute-button")
+                            : null;
+
+                    if (button) {
+                        button.innerHTML = ICONS.muted;
+                    }
+
+                    video.play().catch(() => { });
+
+                    return;
+                }
 
                 sharedVideoMuted = true;
 
@@ -327,6 +362,7 @@ function buildHomeCard(item) {
         <article class="media-card"
             data-media-id="${item.id}"
             data-profile-name="${escapeHtml(item.creator.name)}"
+            data-profile-verified="${item.creator.verified === false ? "false" : "true"}"
             ${item.creator.profileImage ? `data-profile-image="${escapeHtml(item.creator.profileImage)}"` : ""}>
 
             ${media}
@@ -1067,6 +1103,35 @@ document
 
                 event.stopPropagation();
 
+                /*
+                   Touch: the browser may have refused sound for the
+                   playing video (the choice is still "unmuted" but the
+                   video plays muted, and the icon shows that). Tapping
+                   the speaker then turns the sound on for this video.
+                   A tap is a user gesture, so the browser allows it.
+                */
+
+                if (isTouchFeed() && !sharedVideoMuted && autoplayCard) {
+
+                    const playing = autoplayCard.querySelector("video");
+
+                    if (playing && playing.muted) {
+
+                        playing.muted = false;
+
+                        const playingButton =
+                            autoplayCard.querySelector(".unmute-button");
+
+                        if (playingButton) {
+                            playingButton.innerHTML = ICONS.unmuted;
+                        }
+
+                        safeHomePlay(playing);
+
+                        return;
+                    }
+                }
+
                 sharedVideoMuted = !sharedVideoMuted;
 
                 /* Remember the choice for the Reels and Loop pages. */
@@ -1131,8 +1196,12 @@ document
    plays at a time: the sufficiently-visible card closest to
    the middle of the screen. Playback is muted unless the shared
    mute setting says otherwise; if the browser blocks sound,
-   safeHomePlay falls back to muted. Videos that are not visible
-   are never played, so they download nothing beyond metadata.
+   safeHomePlay plays that video muted and keeps the user's
+   choice. Videos that are not visible are never played, so
+   they download nothing beyond metadata.
+
+   The playing card carries .is-playing: on phones the speaker
+   icon is shown only on that card (see home.css).
 ========================================================= */
 
 function startAutoplayCard(card) {
@@ -1160,6 +1229,8 @@ function startAutoplayCard(card) {
                 : ICONS.unmuted;
     }
 
+    card.classList.add("is-playing");
+
     safeHomePlay(video);
 }
 
@@ -1177,6 +1248,8 @@ function stopAutoplayCard(card) {
     if (indicator) {
         indicator.classList.remove("hidden");
     }
+
+    card.classList.remove("is-playing");
 
     video.pause();
 
@@ -1564,7 +1637,8 @@ navItems.forEach(item => {
 
 
 /* =========================================================
-   CARD PROFILE (image + name, shown on hover via CSS)
+   CARD PROFILE (image + name + verified badge, shown on hover
+   via CSS)
 ========================================================= */
 
 document
@@ -1579,6 +1653,9 @@ document
             card.dataset.profileName || "Twigg Creator";
 
         const imageSrc = card.dataset.profileImage;
+
+        const verified =
+            card.dataset.profileVerified !== "false";
 
         const profile = document.createElement("div");
 
@@ -1610,8 +1687,21 @@ document
 
         label.textContent = name;
 
+        /* Name + badge stay together (the name is the part that is
+           shortened with "…" when it is too long). */
+
+        const identity = document.createElement("div");
+
+        identity.className = "card-profile-identity";
+
+        identity.appendChild(label);
+
+        if (verified) {
+            identity.insertAdjacentHTML("beforeend", VERIFIED_BADGE);
+        }
+
         profile.appendChild(avatar);
-        profile.appendChild(label);
+        profile.appendChild(identity);
 
         card.appendChild(profile);
     });

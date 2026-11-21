@@ -1653,3 +1653,125 @@ body {
         transform-origin: center;
     }
 }
+
+
+/* =========================================================
+   NEW — VERIFIED BADGE (all screen sizes)
+
+   The badge sits right after the creator's name:
+   - hover profile on Home and Loop grid cards
+     (.card-profile-identity = name + badge)
+   - the main (featured) media on the Loop page
+     (.loop-name-row = name + badge)
+   Loop uses this file too, so the Loop rules live here.
+   The name keeps its own ellipsis; the badge never shrinks.
+========================================================= */
+
+.verified-badge {
+    display: block;
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+}
+
+.card-profile-identity {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+}
+
+.loop-name-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.loop-name-row .loop-name {
+    flex: 0 1 auto;
+    min-width: 0;
+}
+
+.loop-name-row .verified-badge {
+    width: 18px;
+    height: 18px;
+}
+
+@media (max-width: 800px) {
+
+    .card-profile-identity .verified-badge {
+        width: 13px;
+        height: 13px;
+    }
+
+    .loop-name-row .verified-badge {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+@media (max-width: 500px) {
+
+    .card-profile-identity {
+        gap: 3px;
+    }
+
+    .card-profile-identity .verified-badge {
+        width: 12px;
+        height: 12px;
+    }
+}
+
+
+/* =========================================================
+   NEW — MOBILE MEDIA CARDS: SPEAKER ICON ONLY
+   (phones / touch screens: 800px and below WITH no hover)
+
+   - Save and Share are hidden on the cards (their code and
+     behaviour are untouched; desktop / tablet / mouse devices
+     still show them on hover).
+   - The Mute / Unmute speaker shows ONLY on the video that is
+     currently playing (home.js / loop.js add .is-playing to that
+     card), at the bottom-right corner, in the same subtle
+     translucent circle as before.
+   - Images never show an overlay icon.
+   Card size, spacing and the masonry layout are not changed.
+========================================================= */
+
+@media (max-width: 800px) and (hover: none) {
+
+    .media-card .media-actions .save-button,
+    .media-card .media-actions .share-button {
+        display: none !important;
+    }
+
+    .media-card .media-actions .unmute-button {
+        left: auto;
+        right: 14px;
+        bottom: 14px;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .media-card.is-playing .media-actions .unmute-button {
+        opacity: 0.75;
+        pointer-events: auto;
+    }
+}
+
+@media (max-width: 500px) and (hover: none) {
+
+    .media-card .media-actions .unmute-button {
+        right: 10px;
+        bottom: 10px;
+    }
+}
+
+@media (max-width: 380px) and (hover: none) {
+
+    .media-card .media-actions .unmute-button {
+        right: 8px;
+        bottom: 8px;
+    }
+}

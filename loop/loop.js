@@ -116,6 +116,8 @@
             alt: media.title,
             name: media.creator.name,
             profileImage: media.creator.profileImage,
+            /* Every creator is verified unless the data says `verified: false` */
+            verified: media.creator.verified !== false,
             category: media.category,
             rating: media.rating,
             reviews: media.reviews,
@@ -232,6 +234,12 @@
             </svg>
         `
     };
+
+
+    /* Verified badge: the same artwork the Creator Profile page uses.
+       Styled by home.css (.verified-badge), which this page also loads. */
+
+    const VERIFIED_BADGE = `<svg class="verified-badge" viewBox="0 0 24 24" role="img" aria-label="Verified" focusable="false"><title>Verified</title><path fill="#1d9bf0" d="M12 1.8l2.4 1.6 2.9-.3 1.2 2.7 2.6 1.3-.3 2.9L22.4 12l-1.6 2.4.3 2.9-2.6 1.3-1.2 2.7-2.9-.3L12 22.2l-2.4-1.6-2.9.3-1.2-2.7-2.6-1.3.3-2.9L1.6 12l1.6-2.4-.3-2.9 2.6-1.3 1.2-2.7 2.9.3z"></path><path fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M7.9 12.3l2.8 2.9 5.4-5.8"></path></svg>`;
 
 
     /* =====================================================
@@ -428,10 +436,46 @@
     }
 
 
+    /* Shows the "muted" speaker on the control that belongs to this
+       video (grid card button, or the featured card's mute button),
+       WITHOUT touching the user's saved choice. */
+
+    function showVideoAsMuted(video) {
+
+        const card = video.closest(".media-card");
+
+        let button =
+            card
+                ? card.querySelector(".unmute-button")
+                : null;
+
+        if (
+            !button &&
+            featuredEls &&
+            featuredEls.video === video
+        ) {
+            button = featuredEls.muteBtn;
+        }
+
+        if (button) {
+            button.innerHTML = ICONS.muted;
+        }
+    }
+
+
     /*
        Plays a video. If the browser blocks playback WITH sound
-       (autoplay policy) the video falls back to muted and the
-       shared setting becomes muted.
+       (autoplay policy) the video falls back to muted.
+
+       Desktop / mouse devices: the shared setting also becomes
+       muted (unchanged behaviour).
+
+       Touch devices: the user's mute / unmute CHOICE is kept. Only
+       this one video plays muted (the browser would not allow sound
+       for it), its speaker icon shows the real state, and the next
+       video tries again with sound. Before, the choice itself was
+       overwritten with "muted", so every following video stayed
+       muted while the user was scrolling.
     */
 
     function safePlay(video) {
@@ -449,6 +493,15 @@
                 ) {
 
                     video.muted = true;
+
+                    if (isTouchFeed()) {
+
+                        showVideoAsMuted(video);
+
+                        video.play().catch(() => { });
+
+                        return;
+                    }
 
                     setSharedMuted(true);
 
@@ -1117,8 +1170,11 @@
        the screen. While the featured video is on screen and
        playing it has priority, so the grid stays still.
        Playback is muted unless the shared mute setting says
-       otherwise (safePlay falls back to muted if the browser
-       blocks sound).
+       otherwise (safePlay plays that video muted if the browser
+       blocks sound, and keeps the user's choice).
+
+       The playing card carries .is-playing: on phones the
+       speaker icon is shown only on that card (see home.css).
     ===================================================== */
 
     function featuredIsPlaying() {
@@ -1148,6 +1204,17 @@
 
         video.muted = sharedMuted;
 
+        const muteButton = card.querySelector(".unmute-button");
+
+        if (muteButton) {
+            muteButton.innerHTML =
+                video.muted
+                    ? ICONS.muted
+                    : ICONS.unmuted;
+        }
+
+        card.classList.add("is-playing");
+
         safePlay(video);
     }
 
@@ -1165,6 +1232,8 @@
         if (indicator) {
             indicator.classList.remove("hidden");
         }
+
+        card.classList.remove("is-playing");
 
         video.pause();
 
@@ -1421,6 +1490,35 @@
 
                 event.stopPropagation();
 
+                /*
+                   Touch: the browser may have refused sound for the
+                   playing video (the choice is still "unmuted" but the
+                   video plays muted, and the icon shows that). Tapping
+                   the speaker then turns the sound on for this video.
+                   A tap is a user gesture, so the browser allows it.
+                */
+
+                if (isTouchFeed() && !sharedMuted && activeGridCard) {
+
+                    const playing = activeGridCard.querySelector("video");
+
+                    if (playing && playing.muted) {
+
+                        playing.muted = false;
+
+                        const playingButton =
+                            activeGridCard.querySelector(".unmute-button");
+
+                        if (playingButton) {
+                            playingButton.innerHTML = ICONS.unmuted;
+                        }
+
+                        safePlay(playing);
+
+                        return;
+                    }
+                }
+
                 setSharedMuted(!sharedMuted);
 
                 if (isTouchFeed()) {
@@ -1468,7 +1566,7 @@
 
 
     /* =====================================================
-       GRID CARD PROFILE
+       GRID CARD PROFILE (image + name + verified badge)
     ===================================================== */
 
     function addCardProfile(card, item) {
@@ -1504,8 +1602,21 @@
 
         label.textContent = item.name;
 
+        /* Name + badge stay together (the name is the part that is
+           shortened with "…" when it is too long). */
+
+        const identity = document.createElement("div");
+
+        identity.className = "card-profile-identity";
+
+        identity.appendChild(label);
+
+        if (item.verified) {
+            identity.insertAdjacentHTML("beforeend", VERIFIED_BADGE);
+        }
+
         profile.appendChild(avatar);
-        profile.appendChild(label);
+        profile.appendChild(identity);
 
         card.appendChild(profile);
     }
@@ -2138,7 +2249,10 @@
 
                     <div class="loop-creator-text">
 
-                        <div class="loop-name">${esc(item.name)}</div>
+                        <div class="loop-name-row">
+                            <div class="loop-name">${esc(item.name)}</div>
+                            ${item.verified ? VERIFIED_BADGE : ""}
+                        </div>
 
                         <div class="loop-category">${esc(item.category)}</div>
 
@@ -2468,6 +2582,29 @@
                 muteBtn.addEventListener("click", event => {
 
                     event.stopPropagation();
+
+                    /*
+                       Touch: if the browser refused sound for this
+                       playing video (the choice is still "unmuted" but
+                       the video plays muted, and the icon shows that),
+                       this tap turns its sound on.
+                    */
+
+                    if (
+                        isTouchFeed() &&
+                        !sharedMuted &&
+                        video.muted &&
+                        !video.paused
+                    ) {
+
+                        video.muted = false;
+
+                        muteBtn.innerHTML = ICONS.unmuted;
+
+                        muteBtn.setAttribute("aria-label", "Mute");
+
+                        return;
+                    }
 
                     setSharedMuted(!sharedMuted);
 

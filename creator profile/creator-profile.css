@@ -835,6 +835,38 @@
     object-fit: cover;
 }
 
+/* Creator name + verified badge on one line (same badge as the profile
+   header, sized from the name's font size). */
+
+/* The spacing is a fixed margin on the badge (not a flex gap or em-based),
+   and the same rules are repeated for .is-portrait, so the distance between
+   the name and the badge is identical for portrait (vertical) and landscape
+   (horizontal) posts, whatever loop.css does to .loop-name in each layout. */
+
+.cp-viewer .loop-featured .loop-name,
+.cp-viewer .loop-featured.is-portrait .loop-name {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0;
+}
+
+.cp-viewer .loop-featured .loop-name > span,
+.cp-viewer .loop-featured.is-portrait .loop-name > span {
+    flex: 0 1 auto;
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.cp-viewer .loop-featured .loop-name .cp-verified,
+.cp-viewer .loop-featured.is-portrait .loop-name .cp-verified {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    margin: 0 0 0 6px;
+}
+
 
 /* ---------- Toast (shared notification, also used for "Saved") ---------- */
 

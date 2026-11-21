@@ -44,6 +44,11 @@
    controls, progress bar, like / save / share / report buttons
    and caption. The behaviour below is the Loop card's behaviour
    (loop.js), adapted to show several cards of one creator.
+
+   VERIFIED BADGE
+   Every creator is verified: the badge shows next to the name in
+   the profile header (HTML) and next to the name on every post
+   in the post viewer (VERIFIED_BADGE below).
 ========================================================= */
 
 (() => {
@@ -75,6 +80,11 @@
     const touchQuery = window.matchMedia("(hover: none)");
 
     const $ = id => document.getElementById(id);
+
+    /* Verified badge (same artwork as the profile header) */
+
+    const VERIFIED_BADGE =
+        `<svg class="cp-verified" viewBox="0 0 24 24" role="img" aria-label="Verified" focusable="false"><title>Verified</title><path fill="#1d9bf0" d="M12 1.8l2.4 1.6 2.9-.3 1.2 2.7 2.6 1.3-.3 2.9L22.4 12l-1.6 2.4.3 2.9-2.6 1.3-1.2 2.7-2.9-.3L12 22.2l-2.4-1.6-2.9.3-1.2-2.7-2.6-1.3.3-2.9L1.6 12l1.6-2.4-.3-2.9 2.6-1.3 1.2-2.7 2.9.3z"></path><path fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M7.9 12.3l2.8 2.9 5.4-5.8"></path></svg>`;
 
 
     /* =====================================================
@@ -1224,7 +1234,7 @@
 
                     <div class="loop-creator-text">
 
-                        <div class="loop-name">${esc(creator.name)}</div>
+                        <div class="loop-name"><span>${esc(creator.name)}</span>${VERIFIED_BADGE}</div>
 
                         <div class="loop-category">${esc(item.category)}</div>
 
