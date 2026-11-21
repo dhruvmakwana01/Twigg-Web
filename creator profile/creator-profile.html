@@ -161,7 +161,10 @@
 
     <main class="main">
 
-        <!-- MOBILE TOP BAR (mobile only) -->
+        <!-- MOBILE TOP BAR (mobile only)
+             Mobile layout (see creator-profile.css): Create on the left,
+             logo centred, Notification on the right. The element sizes
+             are unchanged; only their positions are rearranged. -->
 
         <header class="mobile-topbar">
 
@@ -173,7 +176,7 @@
 
             <div class="mobile-topbar-actions">
 
-                <a href="#" class="mobile-topbar-icon" aria-label="Create">
+                <a href="#" class="mobile-topbar-icon mobile-topbar-create" aria-label="Create">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">
                         <circle cx="12" cy="12" r="8" />
                         <path d="M12 8v8" />
@@ -181,7 +184,7 @@
                     </svg>
                 </a>
 
-                <a href="#" class="mobile-topbar-icon" aria-label="Notification">
+                <a href="#" class="mobile-topbar-icon mobile-topbar-notify" aria-label="Notification">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M6 17h12l-1.5-3V10a4.5 4.5 0 0 0-9 0v4z" />
                         <path d="M10 20h4" />
@@ -211,11 +214,14 @@
 
                     <div class="cp-avatar" id="cpAvatar"></div>
 
+                    <!-- Order on every screen size: Message, Save, Share, Report -->
+
                     <div class="cp-actions">
 
-                        <button class="cp-icon-btn" id="cpReport" type="button" aria-pressed="false" aria-label="Report this creator" title="Report">
-                            <svg viewBox="0 0 24 24"><path d="M6 3v18"></path><path d="M6 4h11l-2.5 4L17 12H6"></path></svg>
-                        </button>
+                        <a class="cp-message" id="cpMessage" href="../message/message.html">
+                            <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"></rect><path d="M7 9l5 4 5-4"></path></svg>
+                            <span>Message</span>
+                        </a>
 
                         <button class="cp-icon-btn" id="cpSave" type="button" aria-pressed="false" aria-label="Save creator" title="Save">
                             <svg viewBox="0 0 24 24"><path d="M6 4h12v16l-6-4-6 4z"></path></svg>
@@ -225,15 +231,21 @@
                             <svg viewBox="0 0 24 24"><path d="M12 16V4"></path><path d="M7 9l5-5 5 5"></path><path d="M5 13v6h14v-6"></path></svg>
                         </button>
 
-                        <a class="cp-message" id="cpMessage" href="../message/message.html">
-                            <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"></rect><path d="M7 9l5 4 5-4"></path></svg>
-                            <span>Message</span>
-                        </a>
+                        <button class="cp-icon-btn" id="cpReport" type="button" aria-pressed="false" aria-label="Report this creator" title="Report">
+                            <svg viewBox="0 0 24 24"><path d="M6 3v18"></path><path d="M6 4h11l-2.5 4L17 12H6"></path></svg>
+                        </button>
 
                     </div>
 
                     <div class="cp-meta">
-                        <h1 class="cp-name" id="cpName"></h1>
+                        <h1 class="cp-name">
+                            <span id="cpNameText"></span>
+                            <svg class="cp-verified" viewBox="0 0 24 24" role="img" aria-label="Verified" focusable="false">
+                                <title>Verified</title>
+                                <path fill="#1d9bf0" d="M12 1.8l2.4 1.6 2.9-.3 1.2 2.7 2.6 1.3-.3 2.9L22.4 12l-1.6 2.4.3 2.9-2.6 1.3-1.2 2.7-2.9-.3L12 22.2l-2.4-1.6-2.9.3-1.2-2.7-2.6-1.3.3-2.9L1.6 12l1.6-2.4-.3-2.9 2.6-1.3 1.2-2.7 2.9.3z"></path>
+                                <path fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M7.9 12.3l2.8 2.9 5.4-5.8"></path>
+                            </svg>
+                        </h1>
                         <div class="cp-category" id="cpCategory"></div>
                         <div class="cp-rating" id="cpRating"></div>
                         <p class="cp-bio" id="cpBio"></p>

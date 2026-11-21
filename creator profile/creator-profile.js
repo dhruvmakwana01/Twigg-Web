@@ -24,6 +24,19 @@
        }
      };
 
+   FEED GRID
+   The feed is laid out in TWO columns on mobile and tablet
+   (up to 1150px) and THREE columns on desktop (1151px and up).
+   Each post goes into the shortest column (estimated from its
+   aspect ratio), so every column fills evenly, left to right,
+   for any number of posts and any screen size. Once real media
+   sizes are known the layout re-balances itself, and it also
+   rebuilds when the screen crosses the tablet / desktop breakpoint.
+
+   SAVED NOTIFICATION
+   One shared toast (notifySaved) shows "Saved" after anything is
+   successfully saved (creator or post). Unsaving shows nothing.
+
    POST VIEWER
    Opening a post shows this creator's posts as a vertical list of
    the SAME media card the Loop page uses (loop.css is loaded by
@@ -46,6 +59,16 @@
     const TAB_KEY = "twigg_profile_tab_";
 
     const TABS = ["feed", "packages", "reviews", "services"];
+
+    /* Feed columns: 3 on desktop, 2 on tablet and mobile.
+       The breakpoint matches the tablet range in creator-profile.css
+       (tablet is 801px – 1150px, so desktop starts at 1151px). */
+
+    const DESKTOP_QUERY = window.matchMedia("(min-width: 1151px)");
+
+    function gridColumnCount() {
+        return DESKTOP_QUERY.matches ? 3 : 2;
+    }
 
     const EXTRAS = window.TwiggCreatorExtras || {};
 
@@ -90,16 +113,21 @@
         }
     }
 
+    /* Returns true when the data was really stored */
+
     function writeSet(key, set) {
 
         try {
             localStorage.setItem(key, JSON.stringify(Array.from(set)));
-        } catch { }
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     let toastTimer = null;
 
-    function toast(text) {
+    function toast(text, duration) {
 
         const el = $("cpToast");
 
@@ -108,7 +136,14 @@
 
         clearTimeout(toastTimer);
 
-        toastTimer = setTimeout(() => el.classList.remove("show"), 2200);
+        toastTimer = setTimeout(() => el.classList.remove("show"), duration || 2200);
+    }
+
+    /* The ONE notification used for every successful save.
+       Call it only when something was saved, never on unsave. */
+
+    function notifySaved() {
+        toast("Saved", 1600);
     }
 
     const STAR_PATH = "M12 2.5l2.9 6.1 6.6.9-4.8 4.6 1.2 6.6L12 17.5 6.1 20.7l1.2-6.6L2.5 9.5l6.6-.9z";
@@ -139,6 +174,26 @@
         root.querySelectorAll("img").forEach(img => {
             img.addEventListener("error", () => img.remove(), { once: true });
         });
+    }
+
+
+    /* ----- aspect ratios (cached, shared with Home / Loop) ----- */
+
+    let ratios = {};
+
+    try {
+        ratios = JSON.parse(sessionStorage.getItem(HOME_RATIO_KEY) || "{}") || {};
+    } catch {
+        ratios = {};
+    }
+
+    function rememberRatio(id, ratio) {
+
+        ratios[id] = ratio;
+
+        try {
+            sessionStorage.setItem(HOME_RATIO_KEY, JSON.stringify(ratios));
+        } catch { }
     }
 
 
@@ -220,7 +275,10 @@
 
         document.title = `${creator.name} · Twigg`;
 
-        $("cpName").textContent = creator.name;
+        /* The name sits in its own span so the verified badge
+           (every account is verified) stays next to it. */
+
+        $("cpNameText").textContent = creator.name;
         $("cpCategory").textContent = creator.category;
         $("cpBio").textContent = creator.bio;
 
@@ -256,7 +314,7 @@
         }
 
 
-        /* Save */
+        /* Save ("Saved" pop-up only when something is saved, not on unsave) */
 
         const saveButton = $("cpSave");
 
@@ -275,16 +333,25 @@
             const set = readSet(SAVED_KEY);
 
             if (set.has(creator.slug)) {
+
                 set.delete(creator.slug);
-                toast("Removed from saved");
-            } else {
-                set.add(creator.slug);
-                toast("Creator saved");
+
+                writeSet(SAVED_KEY, set);
+
+                renderSaved();
+
+                return;
             }
 
-            writeSet(SAVED_KEY, set);
+            set.add(creator.slug);
+
+            const stored = writeSet(SAVED_KEY, set);
 
             renderSaved();
+
+            if (stored) {
+                notifySaved();
+            }
         });
 
 
@@ -443,7 +510,8 @@
 
 
     /* =====================================================
-       FEED (Pinterest-style grid)
+       FEED (two-column grid on mobile / tablet,
+             three-column grid on desktop)
     ===================================================== */
 
     function feedItems() {
@@ -453,13 +521,146 @@
         );
     }
 
+    /* Measured aspect ratio (width / height) per media id */
+
+    const cardRatio = new Map();
+
+    let feedCards = [];      /* cards in feed order */
+    let feedColumns = [];    /* the column elements (2 or 3) */
+    let layoutTimer = null;
+
     function setRatio(card, width, height) {
 
         const ratio = width / height;
 
         if (Number.isFinite(ratio) && ratio > 0) {
+
             card.style.setProperty("--media-ratio", String(ratio));
+
+            cardRatio.set(String(card.dataset.mediaId), ratio);
+
+            scheduleLayout();
         }
+    }
+
+    /* Best known ratio for a card: measured, cached, or a neutral 1 */
+
+    function knownRatio(card) {
+
+        const id = String(card.dataset.mediaId);
+
+        const measured = cardRatio.get(id);
+
+        if (measured) {
+            return measured;
+        }
+
+        const cached = Number(ratios[id]);
+
+        return Number.isFinite(cached) && cached > 0 ? cached : 1;
+    }
+
+    /* Put every card (in feed order) into the currently shortest column.
+       Heights are in column-width units: height = 1 / ratio (+ a little
+       for the gap). Ties go to the left-most column, so the first row of
+       posts always lands in columns 1, 2 (and 3 on desktop), left to
+       right, and no column can stay empty while the others keep filling. */
+
+    function applyGridLayout() {
+
+        if (!feedColumns.length || !feedCards.length) {
+            return;
+        }
+
+        const heights = feedColumns.map(() => 0);
+        const buckets = feedColumns.map(() => []);
+
+        feedCards.forEach(card => {
+
+            let target = 0;
+
+            for (let i = 1; i < heights.length; i++) {
+                if (heights[i] < heights[target] - 0.0001) {
+                    target = i;
+                }
+            }
+
+            heights[target] += 1 / knownRatio(card) + 0.04;
+
+            buckets[target].push(card);
+        });
+
+        /* Only touch columns whose content actually changes, so
+           media that is already in the right place is not moved. */
+
+        buckets.forEach((list, index) => {
+
+            const column = feedColumns[index];
+            const current = Array.from(column.children);
+
+            const same =
+                current.length === list.length &&
+                current.every((node, i) => node === list[i]);
+
+            if (!same) {
+                list.forEach(card => column.appendChild(card));
+            }
+        });
+    }
+
+    /* Re-balance once media sizes have settled */
+
+    function scheduleLayout() {
+
+        clearTimeout(layoutTimer);
+
+        layoutTimer = setTimeout(applyGridLayout, 220);
+    }
+
+    /* Create the empty column elements for the current screen size */
+
+    function createColumns(count) {
+
+        return Array.from({ length: count }, () => {
+
+            const column = document.createElement("div");
+
+            column.className = "cp-grid-col";
+
+            return column;
+        });
+    }
+
+    /* The screen crossed the tablet / desktop breakpoint:
+       swap 2 columns for 3 (or back) and re-place the same cards. */
+
+    function rebuildColumns() {
+
+        const grid = document.querySelector("#panel-feed .cp-grid");
+
+        if (!grid || !feedCards.length) {
+            return;
+        }
+
+        const count = gridColumnCount();
+
+        if (feedColumns.length === count) {
+            return;
+        }
+
+        grid.style.setProperty("--cp-cols", String(count));
+
+        feedColumns = createColumns(count);
+
+        grid.replaceChildren(...feedColumns);
+
+        applyGridLayout();
+    }
+
+    if (DESKTOP_QUERY.addEventListener) {
+        DESKTOP_QUERY.addEventListener("change", rebuildColumns);
+    } else if (DESKTOP_QUERY.addListener) {
+        DESKTOP_QUERY.addListener(rebuildColumns);
     }
 
     function buildCard(item) {
@@ -582,6 +783,11 @@
         const panel = $("panel-feed");
         const list = feedItems();
 
+        clearTimeout(layoutTimer);
+
+        feedCards = [];
+        feedColumns = [];
+
         if (!list.length) {
 
             panel.innerHTML =
@@ -590,15 +796,34 @@
             return;
         }
 
+        const columnCount = gridColumnCount();
+
         panel.innerHTML =
             (state.category
                 ? `<div class="cp-filter-chip">${esc(state.category)}
                        <button type="button" id="cpClearFilter" aria-label="Show all posts">×</button>
                    </div>`
                 : "") +
-            `<section class="pinterest-grid">${list.map(buildCard).join("")}</section>`;
+            `<section class="pinterest-grid cp-grid" style="--cp-cols:${columnCount}">${
+                Array.from({ length: columnCount }, () => `<div class="cp-grid-col"></div>`).join("")
+            }</section>`;
 
-        panel.querySelectorAll(".media-card").forEach(setupCard);
+        feedColumns = Array.from(panel.querySelectorAll(".cp-grid-col"));
+
+        feedCards = list.map(item => {
+
+            const holder = document.createElement("template");
+
+            holder.innerHTML = buildCard(item).trim();
+
+            return holder.content.firstElementChild;
+        });
+
+        /* First placement (uses cached ratios when there are any) */
+
+        applyGridLayout();
+
+        feedCards.forEach(setupCard);
 
         const clear = $("cpClearFilter");
 
@@ -714,25 +939,6 @@
         }
     }
 
-
-    /* ----- aspect ratios (cached, shared with Home / Loop) ----- */
-
-    let ratios = {};
-
-    try {
-        ratios = JSON.parse(sessionStorage.getItem(HOME_RATIO_KEY) || "{}") || {};
-    } catch {
-        ratios = {};
-    }
-
-    function rememberRatio(id, ratio) {
-
-        ratios[id] = ratio;
-
-        try {
-            sessionStorage.setItem(HOME_RATIO_KEY, JSON.stringify(ratios));
-        } catch { }
-    }
 
     /* Portrait media: info + actions go to the side on desktop / tablet
        (loop.css), on the bottom bar on mobile. */
@@ -1291,11 +1497,19 @@
             likeBtn.classList.toggle("is-liked", likedIds.has(id));
         });
 
+        /* Save: "Saved" pop-up only when the post becomes saved, not on unsave */
+
         saveBtn.addEventListener("click", () => {
 
-            savedIds.has(id) ? savedIds.delete(id) : savedIds.add(id);
+            const nowSaved = !savedIds.has(id);
 
-            saveBtn.classList.toggle("is-saved", savedIds.has(id));
+            nowSaved ? savedIds.add(id) : savedIds.delete(id);
+
+            saveBtn.classList.toggle("is-saved", nowSaved);
+
+            if (nowSaved) {
+                notifySaved();
+            }
         });
 
         wrap.querySelector(".loop-share-btn").addEventListener("click", () => sharePost(id));
