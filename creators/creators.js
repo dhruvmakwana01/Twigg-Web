@@ -74,6 +74,25 @@
         navigationEntry &&
         navigationEntry.type === "reload";
 
+    /*
+       CHANGE: the saved scroll position / filter are only brought back
+       when the user is RETURNING to this page, i.e.
+         - browser Back / Forward, or
+         - arriving from a creator's profile page.
+       Any other arrival (first open, tapping "Creators" in the menu from
+       another page, typing the address) starts at the very top.
+    */
+
+    const cameFromProfile =
+        /creator[%20\s_-]*profile/i.test(document.referrer || "");
+
+    const isBackForward =
+        Boolean(navigationEntry) &&
+        navigationEntry.type === "back_forward";
+
+    const shouldRestore =
+        !isReload && (isBackForward || cameFromProfile);
+
     /* A real browser refresh starts fresh. */
 
     if (isReload) {
@@ -82,6 +101,16 @@
             sessionStorage.removeItem(CREATORS_SCROLL_KEY);
             sessionStorage.removeItem(CREATORS_FILTER_KEY);
             sessionStorage.removeItem(MUTE_KEY);
+        } catch { }
+    }
+
+    /* A fresh open also forgets any old position / filter. */
+
+    if (!shouldRestore) {
+
+        try {
+            sessionStorage.removeItem(CREATORS_SCROLL_KEY);
+            sessionStorage.removeItem(CREATORS_FILTER_KEY);
         } catch { }
     }
 
@@ -1359,7 +1388,7 @@
 
     /* ----- Restore the search / category the user had ----- */
 
-    if (!isReload) {
+    if (shouldRestore) {
 
         try {
 
@@ -1395,7 +1424,7 @@
 
     let savedScroll = null;
 
-    if (!isReload) {
+    if (shouldRestore) {
 
         try {
 
@@ -1523,6 +1552,41 @@
             revealTimer = setTimeout(reveal, 1500);
 
             correctionTimer = setTimeout(stopRestoring, 3500);
+        }
+    }
+
+
+    /*
+       CHANGE: fresh open (not returning) -> start at the very top so the
+       top bar is visible. Done now and once more after the page has loaded
+       (late layout shifts), unless the user has already started scrolling.
+    */
+
+    if (!shouldRestore) {
+
+        jumpToScroll(0);
+
+        let userMoved = false;
+
+        const markMoved = () => {
+            userMoved = true;
+        };
+
+        ["wheel", "touchstart", "keydown", "mousedown"].forEach(type => {
+            window.addEventListener(type, markMoved, { passive: true, once: true });
+        });
+
+        const toTop = () => {
+
+            if (!userMoved) {
+                jumpToScroll(0);
+            }
+        };
+
+        if (document.readyState === "complete") {
+            toTop();
+        } else {
+            window.addEventListener("load", toTop, { once: true });
         }
     }
 
