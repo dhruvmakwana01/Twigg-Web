@@ -1568,3 +1568,88 @@ body {
         background: rgba(0, 0, 0, 0.34);
     }
 }
+
+
+/* =========================================================
+   MOBILE TOP BAR + BOTTOM BAR — SAME LOOK AS THE CREATOR PROFILE PAGE
+   (mobile only, 800px and below; desktop & tablet are unaffected)
+
+   Top bar:    Create (left) · logo (centred) · Notification (right).
+   Bottom bar: the six navigation icons.
+
+   Bigger icons, SAME bar heights: the individual `scale` property
+   enlarges what is drawn but not the layout size, so neither bar
+   gets taller and nothing moves. Icons grow from their outer edge
+   (or the centre) so they stay inside the screen.
+
+   Because Loop and Creators load this file too, they get the same
+   bars. Create / Notification are matched by their class OR their
+   aria-label, so the rules work with either markup.
+========================================================= */
+
+@media (max-width: 800px) {
+
+    /* Top bar: 3-column grid, outer columns equal, so the logo is
+       centred on the bar whatever the icon widths are. */
+
+    .main .mobile-topbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        align-items: center;
+        justify-content: normal;
+    }
+
+    .main .mobile-topbar .mobile-topbar-actions {
+        display: contents;
+    }
+
+    /* Every icon in the actions group goes to the RIGHT end of the bar
+       by default (so Notification always sits at the far right, whatever
+       its class / aria-label is). Create is then moved to the left. */
+
+    .main .mobile-topbar .mobile-topbar-actions > * {
+        grid-row: 1;
+        justify-self: end;
+        scale: 1.35;
+        transform-origin: right center;
+    }
+
+    /* Create: left side (matched by class, aria-label or its "+" icon) */
+
+    .main .mobile-topbar .mobile-topbar-create,
+    .main .mobile-topbar .mobile-topbar-actions a[aria-label="Create"],
+    .main .mobile-topbar .mobile-topbar-actions > *:has(path[d="M12 8v8"]) {
+        grid-column: 1;
+        grid-row: 1;
+        justify-self: start;
+        scale: 1.35;
+        transform-origin: left center;
+    }
+
+    .main .mobile-topbar .mobile-topbar-logo {
+        grid-column: 2;
+        grid-row: 1;
+        justify-self: center;
+        scale: 1.3;
+        transform-origin: center;
+    }
+
+    /* Notification: far right (matched by class, aria-label or its bell icon) */
+
+    .main .mobile-topbar .mobile-topbar-notify,
+    .main .mobile-topbar .mobile-topbar-actions a[aria-label^="Notif"],
+    .main .mobile-topbar .mobile-topbar-actions > *:has(path[d^="M6 17h12"]) {
+        grid-column: 3;
+        grid-row: 1;
+        justify-self: end;
+        scale: 1.35;
+        transform-origin: right center;
+    }
+
+    /* Bottom bar: the six navigation icons */
+
+    .sidebar .navigation .nav-item .nav-icon {
+        scale: 1.3;
+        transform-origin: center;
+    }
+}

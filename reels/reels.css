@@ -1555,3 +1555,22 @@ body.fallback-fullscreen-active .reels-feed {
         max-height: min(36dvh, calc(var(--card-h, 100dvh) * 0.4));
     }
 }
+
+
+/* =========================================================
+   MOBILE BOTTOM BAR — SAME LOOK AS THE CREATOR PROFILE PAGE
+   (mobile only, 800px and below; desktop & tablet are unaffected)
+
+   Bigger icons, SAME bar height: the individual `scale` property
+   enlarges what is drawn but not the layout size, so the bar does
+   not get taller and nothing moves. Reels has no top bar, so only
+   the bottom bar changes here.
+========================================================= */
+
+@media (max-width: 800px) {
+
+    .sidebar .navigation .nav-item .nav-icon {
+        scale: 1.3;
+        transform-origin: center;
+    }
+}
