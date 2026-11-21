@@ -47,6 +47,9 @@
 
 /* =========================================================
    CREATOR CARD
+
+   CHANGE: the whole card opens the creator's profile (see
+   creators.js), so it shows the pointer cursor.
 ========================================================= */
 
 .creator-card {
@@ -57,6 +60,7 @@
     border: 1px solid #ececec;
     border-radius: 17px;
     background: #fff;
+    cursor: pointer;
     transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 

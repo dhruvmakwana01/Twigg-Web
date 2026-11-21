@@ -14,9 +14,15 @@
      - returning to the same scroll position after visiting
        another page
 
-   CHANGE: the creator's avatar + name block now links to the
-   Creator Profile page (../creator-profile/creator-profile.html
-   ?creator=<slug>).
+   The avatar + name block links to the Creator Profile page
+   (../creator-profile/creator-profile.html?creator=<slug>).
+
+   CHANGE: the WHOLE card now opens that same profile page
+   (one delegated click listener on the grid, see
+   "CARD CLICK -> CREATOR PROFILE" below). Clicks on the media
+   arrows, slider dots, mute button, save button, message button
+   and any link keep their own behaviour and do not navigate to
+   the profile.
 ========================================================= */
 
 (() => {
@@ -400,7 +406,8 @@
             "../creator%20profile/creator-profile.html?creator=" + encodeURIComponent(creator.slug);
 
         return `
-            <article class="creator-card" data-creator="${escapeHtml(creator.slug)}">
+            <article class="creator-card" data-creator="${escapeHtml(creator.slug)}"
+                data-profile-url="${escapeHtml(profileUrl)}">
 
                 <div class="creator-media">
 
@@ -1226,6 +1233,93 @@
 
             cards.forEach(card => observer.observe(card));
         }
+    }
+
+
+    /* =====================================================
+       CARD CLICK -> CREATOR PROFILE
+
+       ONE delegated listener on the grid (so no per-card
+       duplicates). A click anywhere on a card opens that
+       creator's profile, EXCEPT when it lands on:
+         - the left / right media arrows
+         - the slider dots
+         - the mute / unmute button
+         - the save button
+         - the message button (and any other link, such as the
+           avatar + name block, which already navigates by
+           itself, so it is never navigated twice)
+       Those controls keep their existing behaviour untouched.
+
+       Swiping the media never fires a click (the browser
+       treats a scroll gesture as a scroll, not a click), so
+       swiping does not navigate. Selecting text on the card
+       with the mouse is also ignored.
+    ===================================================== */
+
+    const CARD_CLICK_IGNORE =
+        ".slider-arrow, .slider-dot, .creator-mute, .creator-save, .creator-message, a, button";
+
+    if (grid) {
+
+        grid.addEventListener("click", event => {
+
+            /* Another handler already dealt with this click */
+
+            if (event.defaultPrevented) {
+                return;
+            }
+
+            /* Primary (left) click only, no modifier keys */
+
+            if (
+                event.button > 0 ||
+                event.ctrlKey ||
+                event.metaKey ||
+                event.shiftKey ||
+                event.altKey
+            ) {
+                return;
+            }
+
+            const target = event.target;
+
+            if (!(target instanceof Element)) {
+                return;
+            }
+
+            /* Buttons, arrows, dots and links keep their own behaviour */
+
+            if (target.closest(CARD_CLICK_IGNORE)) {
+                return;
+            }
+
+            const card = target.closest(".creator-card");
+
+            if (!card || !grid.contains(card)) {
+                return;
+            }
+
+            /* The user was selecting text, not clicking */
+
+            const selection = window.getSelection && window.getSelection();
+
+            if (selection && !selection.isCollapsed && card.contains(selection.anchorNode)) {
+                return;
+            }
+
+            const url = card.dataset.profileUrl;
+
+            if (!url) {
+                return;
+            }
+
+            /* Remember where the user was, then open the profile */
+
+            saveState();
+
+            window.location.href = url;
+        });
     }
 
 
